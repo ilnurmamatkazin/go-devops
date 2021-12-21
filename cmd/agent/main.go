@@ -37,7 +37,7 @@ func main() {
 
 	client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
 		if len(via) >= 2 {
-			return errors.New("Остановлено после двух Redirect")
+			return errors.New("остановлено после двух redirect")
 		}
 		return nil
 	}
