@@ -32,16 +32,31 @@ func ParseMetric(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	arr := strings.Split(r.URL.Path, "/")
+	fmt.Println()
 
-	if len(arr) != 4 {
-		http.Error(w, "Request is not /update/type/name/value", http.StatusBadRequest)
+	arr := strings.Split(r.URL.Path, "/")
+	elementCount := len(arr)
+
+	fmt.Println(r.URL.Path)
+	fmt.Println(arr)
+	fmt.Println(elementCount)
+
+	if elementCount != 5 {
+		switch elementCount {
+		case 1, 2, 3, 4:
+			http.Error(w, "Request is not /update/type/name/value", http.StatusNotFound)
+		default:
+			http.Error(w, "Request is not /update/type/name/value", http.StatusBadRequest)
+		}
+
 		return
 	}
 
-	valueMetric := arr[3]
-	nameMetric := arr[2]
-	typeMetric := arr[1]
+	valueMetric := arr[4]
+	nameMetric := arr[3]
+	typeMetric := arr[2]
+
+	fmt.Println("!!!!!", valueMetric, nameMetric, typeMetric)
 
 	switch typeMetric {
 	case "gauge":
@@ -78,7 +93,7 @@ func ParseMetric(w http.ResponseWriter, r *http.Request) {
 		mutex.Unlock()
 
 	default:
-		http.Error(w, "Metric type is not gaude or counter", http.StatusBadRequest)
+		http.Error(w, "Metric type is not gaude or counter", http.StatusNotImplemented)
 		return
 
 	}
