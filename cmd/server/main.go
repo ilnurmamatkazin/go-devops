@@ -22,24 +22,22 @@ var (
 )
 
 func ParseMetric(w http.ResponseWriter, r *http.Request) {
+	if len(storage) == 0 {
+		storage = make(map[string]interface{})
+	}
+
 	if r.Method != http.MethodPost {
 		http.Error(w, "Only POST requests are allowed!", http.StatusMethodNotAllowed)
 		return
 	}
 
-	if ct := strings.ToLower(r.Header.Get("Content-Type")); ct != "text/plain; charset=utf-8" {
-		http.Error(w, "Content-Type is not text/plain", http.StatusBadRequest)
-		return
-	}
-
-	fmt.Println()
+	// if ct := strings.ToLower(r.Header.Get("Content-Type")); ct != "text/plain; charset=utf-8" {
+	// 	http.Error(w, "Content-Type is not text/plain", http.StatusInternalServerError)
+	// 	return
+	// }
 
 	arr := strings.Split(r.URL.Path, "/")
 	elementCount := len(arr)
-
-	fmt.Println(r.URL.Path)
-	fmt.Println(arr)
-	fmt.Println(elementCount)
 
 	if elementCount != 5 {
 		switch elementCount {
@@ -55,8 +53,6 @@ func ParseMetric(w http.ResponseWriter, r *http.Request) {
 	valueMetric := arr[4]
 	nameMetric := arr[3]
 	typeMetric := arr[2]
-
-	fmt.Println("!!!!!", valueMetric, nameMetric, typeMetric)
 
 	switch typeMetric {
 	case "gauge":
@@ -88,6 +84,7 @@ func ParseMetric(w http.ResponseWriter, r *http.Request) {
 		}
 
 		counter = append(counter, i)
+
 		storage[nameMetric] = counter
 
 		mutex.Unlock()
