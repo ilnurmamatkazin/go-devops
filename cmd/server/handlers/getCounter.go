@@ -3,7 +3,6 @@ package handlers
 import (
 	"net/http"
 	"strconv"
-	"strings"
 
 	"github.com/go-chi/chi/v5"
 )
@@ -15,7 +14,7 @@ func getCounter(w http.ResponseWriter, r *http.Request) {
 	value := storageCounter[nameMetric]
 	mutexCounter.Unlock()
 
-	if value == nil {
+	if value == 0 {
 		http.NotFound(w, r)
 		return
 	}
@@ -23,12 +22,6 @@ func getCounter(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
 
-	valueText := []string{}
-
-	for _, item := range value {
-		valueText = append(valueText, strconv.Itoa(item))
-	}
-
-	w.Write([]byte(strings.Join(valueText, ", ")))
+	w.Write([]byte(strconv.Itoa(value)))
 
 }

@@ -10,7 +10,7 @@ import (
 
 var (
 	mutexCounter, mutexGauge sync.Mutex
-	storageCounter           map[string][]int
+	storageCounter           map[string]int
 	storageGauge             map[string]float64
 )
 
@@ -24,20 +24,24 @@ func NewRouter() *chi.Mux {
 	// зададим встроенные middleware, чтобы улучшить стабильность приложения
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
-	r.Use(middleware.Logger)
+	// r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 
 	r.Route("/", func(r chi.Router) {
 		r.Get("/", getInfo)
 	})
 
-	r.Route("/update/counter", func(r chi.Router) {
-		r.Post("/{nameMetric}/{valueMetric}", ParseCounterMetric)
+	r.Route("/update", func(r chi.Router) {
+		r.Post("/counter/{nameMetric}/{valueMetric}", ParseCounterMetric)
+		r.Post("/gauge/{nameMetric}/{valueMetric}", ParseGaugeMetric)
+		r.Post("/{unknown}/{nameMetric}/{valueMetric}", func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusNotImplemented)
+		})
 	})
 
-	r.Route("/update/gauge", func(r chi.Router) {
-		r.Post("/{nameMetric}/{valueMetric}", ParseGaugeMetric)
-	})
+	// r.Route("/update/gauge", func(r chi.Router) {
+	// 	r.Post("/{nameMetric}/{valueMetric}", ParseGaugeMetric)
+	// })
 
 	r.Route("/value/gauge", func(r chi.Router) {
 		r.Get("/{nameMetric}", getGauge)

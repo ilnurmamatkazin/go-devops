@@ -10,15 +10,11 @@ import (
 
 func ParseCounterMetric(w http.ResponseWriter, r *http.Request) {
 	if len(storageCounter) == 0 {
-		storageCounter = make(map[string][]int)
+		storageCounter = make(map[string]int)
 	}
 
 	valueMetric := chi.URLParam(r, "valueMetric")
 	nameMetric := chi.URLParam(r, "nameMetric")
-
-	var counter []int
-
-	fmt.Println("$$$$", r.URL.Path, valueMetric, nameMetric)
 
 	i, err := strconv.Atoi(valueMetric)
 	if err != nil {
@@ -27,16 +23,7 @@ func ParseCounterMetric(w http.ResponseWriter, r *http.Request) {
 	}
 
 	mutexCounter.Lock()
-	counter = storageCounter[nameMetric]
-
-	if counter == nil {
-		counter = make([]int, 0)
-	}
-
-	counter = append(counter, i)
-
-	storageCounter[nameMetric] = counter
-
+	storageCounter[nameMetric] = storageCounter[nameMetric] + i
 	mutexCounter.Unlock()
 
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")

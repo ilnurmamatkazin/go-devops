@@ -21,13 +21,11 @@ func main() {
 
 	r := handlers.NewRouter()
 
-	// storage = make(map[string]interface{})
-
 	go http.ListenAndServe(fmt.Sprintf(":%d", port), r)
 
-	fmt.Println("Server started...")
+	// fmt.Println("Server started...")
 
 	<-quit
 
-	fmt.Println("Server shutdown")
+	// fmt.Println("Server shutdown")
 }

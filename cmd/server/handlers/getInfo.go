@@ -3,20 +3,12 @@ package handlers
 import (
 	"fmt"
 	"net/http"
-	"strconv"
-	"strings"
 )
 
 func getInfo(w http.ResponseWriter, r *http.Request) {
 	mutexCounter.Lock()
-	value := storageCounter["PollCount"]
+	valueInt := storageCounter["PollCount"]
 	mutexCounter.Unlock()
-
-	valueText := []string{}
-
-	for _, item := range value {
-		valueText = append(valueText, strconv.Itoa(item))
-	}
 
 	mutexGauge.Lock()
 	html := fmt.Sprintf(`
@@ -84,7 +76,7 @@ func getInfo(w http.ResponseWriter, r *http.Request) {
 		storageGauge["StackSys"],
 		storageGauge["Sys"],
 		storageGauge["RandomValue"],
-		strings.Join(valueText, ", "),
+		valueInt,
 	)
 	mutexGauge.Unlock()
 

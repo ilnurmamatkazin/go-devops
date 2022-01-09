@@ -1,8 +1,6 @@
 package main
 
 import (
-	"bytes"
-	"encoding/binary"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -65,14 +63,12 @@ func TestParseMetric(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			buf := new(bytes.Buffer)
-			_ = binary.Write(buf, binary.LittleEndian, 100)
-
 			request := httptest.NewRequest(http.MethodPost, tt.request, nil)
 			w := httptest.NewRecorder()
 			h := http.HandlerFunc(handlers.ParseCounterMetric)
 			h.ServeHTTP(w, request)
 			result := w.Result()
+			defer result.Body.Close()
 
 			assert.Equal(t, tt.want.statusCode, result.StatusCode)
 			// assert.Equal(t, tt.want.contentType, result.Header.Get("Content-Type"))

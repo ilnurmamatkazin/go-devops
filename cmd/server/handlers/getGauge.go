@@ -1,9 +1,6 @@
 package handlers
 
 import (
-	// "bytes"
-	// "encoding/binary"
-	"fmt"
 	"net/http"
 	"strconv"
 
@@ -21,8 +18,6 @@ func getGauge(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
-
-	fmt.Println(value)
 
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
