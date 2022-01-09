@@ -6,7 +6,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
-	"io"
+	"io/ioutil"
 	"math/rand"
 	"net/http"
 	"os"
@@ -147,7 +147,7 @@ func sendMetric(ctxBase context.Context, client *http.Client, typeMetric, nameMe
 	fmt.Println("Статус-код ", response.Status)
 	defer response.Body.Close()
 	// читаем поток из тела ответа
-	body, err := io.ReadAll(response.Body)
+	body, err := ioutil.ReadAll(response.Body)
 	if err != nil {
 		fmt.Println(err)
 		return

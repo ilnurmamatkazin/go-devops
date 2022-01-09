@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/ilnurmamatkazin/go-devops/cmd/server/handlers"
 	"github.com/stretchr/testify/assert"
 	// "github.com/stretchr/testify/require"
 )
@@ -69,7 +70,7 @@ func TestParseMetric(t *testing.T) {
 
 			request := httptest.NewRequest(http.MethodPost, tt.request, nil)
 			w := httptest.NewRecorder()
-			h := http.HandlerFunc(ParseMetric)
+			h := http.HandlerFunc(handlers.ParseCounterMetric)
 			h.ServeHTTP(w, request)
 			result := w.Result()
 
