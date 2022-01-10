@@ -77,7 +77,8 @@ func (mr *MemoryRepository) CreateCounter(metric models.MetricCounter) (err erro
 	}
 
 	mr.Lock()
-	mr.counter[metric.Name] = metric.Value
+	value := mr.counter[metric.Name]
+	mr.counter[metric.Name] = value + metric.Value
 	mr.Unlock()
 
 	return
