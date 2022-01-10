@@ -1,12 +1,13 @@
 package handlers
 
 import (
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // import (
@@ -48,21 +49,26 @@ func testRequest(t *testing.T, ts *httptest.Server, method, path string) (*http.
 }
 
 func TestNewRouter(t *testing.T) {
-	r := NewRouter()
+	h := New()
+	r := h.NewRouter()
 	ts := httptest.NewServer(r)
 	defer ts.Close()
 
 	resp, _ := testRequest(t, ts, "POST", "/update/counter/testCounter/100")
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 	// assert.Equal(t, "brand:renault", body)
+	defer resp.Body.Close()
 
 	resp, _ = testRequest(t, ts, "POST", "/update/counter/testCounter/invalid_value")
 	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+	defer resp.Body.Close()
 
 	resp, _ = testRequest(t, ts, "POST", "/update/counter/")
 	assert.Equal(t, http.StatusNotFound, resp.StatusCode)
+	defer resp.Body.Close()
 
 	resp, _ = testRequest(t, ts, "POST", "/update/unknown/testCounter/100")
 	assert.Equal(t, http.StatusNotImplemented, resp.StatusCode)
+	defer resp.Body.Close()
 
 }

@@ -19,13 +19,14 @@ func main() {
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
 
-	r := handlers.NewRouter()
+	h := handlers.New()
+	r := h.NewRouter()
 
 	go http.ListenAndServe(fmt.Sprintf(":%d", port), r)
 
-	fmt.Println("Server started...")
+	// fmt.Println("Server started...")
 
 	<-quit
 
-	fmt.Println("Server shutdown")
+	// fmt.Println("Server shutdown")
 }

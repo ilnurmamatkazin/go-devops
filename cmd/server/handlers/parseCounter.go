@@ -6,14 +6,10 @@ import (
 	"strconv"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/ilnurmamatkazin/go-devops/cmd/server/models"
 )
 
-func ParseCounterMetric(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("$$$$$")
-	if len(storageCounter) == 0 {
-		storageCounter = make(map[string]int)
-	}
-
+func (h *Handler) parseCounterMetric(w http.ResponseWriter, r *http.Request) {
 	valueMetric := chi.URLParam(r, "valueMetric")
 	nameMetric := chi.URLParam(r, "nameMetric")
 
@@ -23,11 +19,8 @@ func ParseCounterMetric(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	mutexCounter.Lock()
-	storageCounter[nameMetric] = storageCounter[nameMetric] + i
-	mutexCounter.Unlock()
-
-	fmt.Println("@@@@@@", storageCounter)
+	metric := models.MetricCounter{Name: nameMetric, Value: i}
+	_ = h.repository.CreateCounter(metric)
 
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(http.StatusOK)

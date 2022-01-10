@@ -5,23 +5,27 @@ import (
 	"strconv"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/ilnurmamatkazin/go-devops/cmd/server/models"
 )
 
-func getGauge(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) getGauge(w http.ResponseWriter, r *http.Request) {
 	nameMetric := chi.URLParam(r, "nameMetric")
 
-	mutexGauge.Lock()
-	value := storageGauge[nameMetric]
-	mutexGauge.Unlock()
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 
-	if value == 0 {
-		http.NotFound(w, r)
+	value, err := h.repository.ReadGauge(nameMetric)
+	if err != nil {
+		re, ok := err.(*models.RequestError)
+		if ok {
+			w.WriteHeader(re.StatusCode)
+		} else {
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+
 		return
 	}
 
-	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
-
 	w.Write([]byte(strconv.FormatFloat(value, 'f', -1, 64)))
 
 }

@@ -6,13 +6,10 @@ import (
 	"strconv"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/ilnurmamatkazin/go-devops/cmd/server/models"
 )
 
-func ParseGaugeMetric(w http.ResponseWriter, r *http.Request) {
-	if len(storageGauge) == 0 {
-		storageGauge = make(map[string]float64)
-	}
-
+func (h *Handler) parseGaugeMetric(w http.ResponseWriter, r *http.Request) {
 	valueMetric := chi.URLParam(r, "valueMetric")
 	nameMetric := chi.URLParam(r, "nameMetric")
 
@@ -22,11 +19,9 @@ func ParseGaugeMetric(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	mutexGauge.Lock()
-	storageGauge[nameMetric] = f
-	mutexGauge.Unlock()
+	metric := models.MetricGauge{Name: nameMetric, Value: f}
+	_ = h.repository.CreateGauge(metric)
 
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
-
 }
