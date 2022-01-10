@@ -39,10 +39,6 @@ func NewRouter() *chi.Mux {
 		})
 	})
 
-	// r.Route("/update/gauge", func(r chi.Router) {
-	// 	r.Post("/{nameMetric}/{valueMetric}", ParseGaugeMetric)
-	// })
-
 	r.Route("/value/gauge", func(r chi.Router) {
 		r.Get("/{nameMetric}", getGauge)
 	})

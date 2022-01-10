@@ -9,6 +9,7 @@ import (
 )
 
 func ParseCounterMetric(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("$$$$$")
 	if len(storageCounter) == 0 {
 		storageCounter = make(map[string]int)
 	}
@@ -25,6 +26,8 @@ func ParseCounterMetric(w http.ResponseWriter, r *http.Request) {
 	mutexCounter.Lock()
 	storageCounter[nameMetric] = storageCounter[nameMetric] + i
 	mutexCounter.Unlock()
+
+	fmt.Println("@@@@@@", storageCounter)
 
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
