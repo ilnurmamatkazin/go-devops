@@ -26,5 +26,5 @@ func (h *Handler) getCounter(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(strconv.Itoa(value)))
+	w.Write([]byte(strconv.Itoa(int(value))))
 }

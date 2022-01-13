@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"fmt"
 	"net/http"
 	"strconv"
 
@@ -13,14 +12,14 @@ func (h *Handler) parseCounterMetric(w http.ResponseWriter, r *http.Request) {
 	valueMetric := chi.URLParam(r, "valueMetric")
 	nameMetric := chi.URLParam(r, "nameMetric")
 
-	i, err := strconv.Atoi(valueMetric)
+	i, err := strconv.ParseInt(valueMetric, 10, 64) //strconv.Atoi(valueMetric)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("%s value is not integer", nameMetric), http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	metric := models.MetricCounter{Name: nameMetric, Value: i}
-	_ = h.repository.CreateCounter(metric)
+	_ = h.repository.SetCounter(metric)
 
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(http.StatusOK)

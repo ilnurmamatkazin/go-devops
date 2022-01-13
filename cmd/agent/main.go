@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/binary"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -15,6 +16,8 @@ import (
 	"sync"
 	"syscall"
 	"time"
+
+	"github.com/ilnurmamatkazin/go-devops/cmd/agent/models"
 )
 
 const (
@@ -28,7 +31,7 @@ func main() {
 	var (
 		mutex     sync.Mutex
 		rtm       runtime.MemStats
-		pollCount uint64
+		pollCount int64
 	)
 
 	// конструируем HTTP-клиент
@@ -123,6 +126,13 @@ func sendMetric(ctxBase context.Context, client *http.Client, typeMetric, nameMe
 	ctx, cancel := context.WithTimeout(ctxBase, 1*time.Second)
 	defer cancel()
 
+	err = sendMetricText(ctx, client, typeMetric, nameMetric, value)
+	err = sendMetricJSON(ctx, client, typeMetric, nameMetric, value)
+
+	return
+}
+
+func sendMetricText(ctx context.Context, client *http.Client, typeMetric, nameMetric string, value interface{}) (err error) {
 	endpoint := fmt.Sprintf("http://%s:%d/update/%s/%s/%v", url, port, typeMetric, nameMetric, value)
 
 	buf := new(bytes.Buffer)
@@ -134,7 +144,6 @@ func sendMetric(ctxBase context.Context, client *http.Client, typeMetric, nameMe
 		return
 	}
 
-	// в заголовках запроса сообщаем, что данные кодированы стандартной URL-схемой
 	request.Header.Set("Content-Type", "text/plain; charset=utf-8")
 
 	// отправляем запрос и получаем ответ
@@ -158,36 +167,74 @@ func sendMetric(ctxBase context.Context, client *http.Client, typeMetric, nameMe
 	return
 }
 
-// func test(ctxBase context.Context, client *http.Client) {
-// 	ctx, cancel := context.WithTimeout(ctxBase, 1*time.Second)
-// 	defer cancel()
+func sendMetricJSON(ctx context.Context, client *http.Client, typeMetric, nameMetric string, value interface{}) (err error) {
+	var metric models.Metric
 
-// 	endpoint := "http://localhost:8080/update/unknown/testCounter/100"
+	endpoint := fmt.Sprintf("http://%s:%d/update", url, port)
 
-// 	request, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, nil)
-// 	if err != nil {
-// 		fmt.Println(err)
-// 		return
-// 	}
+	metric.ID = nameMetric
+	metric.MType = typeMetric
 
-// 	// в заголовках запроса сообщаем, что данные кодированы стандартной URL-схемой
-// 	request.Header.Set("Content-Type", "text/plain; charset=UTF-8")
+	switch typeMetric {
+	case "counter":
+		var i int64
+		i = value.(int64)
+		metric.Delta = &i
+	case "gauge":
+		var f float64
 
-// 	// отправляем запрос и получаем ответ
-// 	response, err := client.Do(request)
-// 	if err != nil {
-// 		fmt.Println(err)
-// 		return
-// 	}
-// 	// печатаем код ответа
-// 	fmt.Println("Статус-код ", response.Status)
-// 	defer response.Body.Close()
-// 	// читаем поток из тела ответа
-// 	body, err := io.ReadAll(response.Body)
-// 	if err != nil {
-// 		fmt.Println(err)
-// 		return
-// 	}
-// 	// и печатаем его
-// 	fmt.Println(string(body))
-// }
+		switch value := value.(type) {
+		case float64:
+			f = value
+		case uint64:
+			f = float64(value)
+		case uint32:
+			f = float64(value)
+
+		default:
+		}
+
+		metric.Value = &f
+	default:
+		err = errors.New("Недопустимый тип")
+		return
+	}
+
+	b, err := json.Marshal(metric)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	buf := new(bytes.Buffer)
+	err = binary.Write(buf, binary.LittleEndian, b)
+
+	request, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, buf)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	// в заголовках запроса сообщаем, что данные кодированы стандартной URL-схемой
+	request.Header.Set("Content-Type", "application/json")
+
+	// отправляем запрос и получаем ответ
+	response, err := client.Do(request)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	// печатаем код ответа
+	fmt.Println("Статус-код ", response.Status)
+	defer response.Body.Close()
+	// читаем поток из тела ответа
+	body, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	// и печатаем его
+	fmt.Println(string(body))
+
+	return
+}

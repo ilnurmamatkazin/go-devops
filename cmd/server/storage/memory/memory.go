@@ -10,14 +10,14 @@ import (
 )
 
 type MemoryRepository struct {
-	counter map[string]int
+	counter map[string]int64
 	gauge   map[string]float64
 	sync.Mutex
 }
 
 func NewMemoryRepository() *MemoryRepository {
 	return &MemoryRepository{
-		counter: make(map[string]int),
+		counter: make(map[string]int64),
 		gauge:   make(map[string]float64),
 	}
 }
@@ -37,7 +37,7 @@ func (mr *MemoryRepository) ReadGauge(name string) (value float64, err error) {
 	return
 }
 
-func (mr *MemoryRepository) ReadCounter(name string) (value int, err error) {
+func (mr *MemoryRepository) ReadCounter(name string) (value int64, err error) {
 	mr.Lock()
 	value = mr.counter[name]
 	mr.Unlock()
@@ -52,16 +52,13 @@ func (mr *MemoryRepository) ReadCounter(name string) (value int, err error) {
 	return
 }
 
-func (mr *MemoryRepository) CreateGauge(metric models.MetricGauge) (err error) {
+func (mr *MemoryRepository) SetGauge(metric models.MetricGauge) (err error) {
 	if mr.gauge == nil {
 		mr.Lock()
 		mr.gauge = make(map[string]float64)
 		mr.Unlock()
 	}
 
-	// if _, ok := mr.customers[c.GetID()]; ok {
-	// 	return fmt.Errorf("customer already exists: %w", customer.ErrFailedToAddCustomer)
-	// }
 	mr.Lock()
 	mr.gauge[metric.Name] = metric.Value
 	mr.Unlock()
@@ -69,10 +66,10 @@ func (mr *MemoryRepository) CreateGauge(metric models.MetricGauge) (err error) {
 	return
 }
 
-func (mr *MemoryRepository) CreateCounter(metric models.MetricCounter) (err error) {
+func (mr *MemoryRepository) SetCounter(metric models.MetricCounter) (err error) {
 	if mr.counter == nil {
 		mr.Lock()
-		mr.counter = make(map[string]int)
+		mr.counter = make(map[string]int64)
 		mr.Unlock()
 	}
 
