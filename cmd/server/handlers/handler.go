@@ -28,7 +28,7 @@ func (h *Handler) NewRouter() *chi.Mux {
 	// зададим встроенные middleware, чтобы улучшить стабильность приложения
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
-	r.Use(middleware.Logger)
+	// r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 	// r.Use(middleware.AllowContentType("application/json"))
 

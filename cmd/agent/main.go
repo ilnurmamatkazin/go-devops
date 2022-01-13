@@ -126,7 +126,7 @@ func sendMetric(ctxBase context.Context, client *http.Client, typeMetric, nameMe
 	ctx, cancel := context.WithTimeout(ctxBase, 1*time.Second)
 	defer cancel()
 
-	err = sendMetricText(ctx, client, typeMetric, nameMetric, value)
+	// err = sendMetricText(ctx, client, typeMetric, nameMetric, value)
 	err = sendMetricJSON(ctx, client, typeMetric, nameMetric, value)
 
 	return
@@ -196,7 +196,7 @@ func sendMetricJSON(ctx context.Context, client *http.Client, typeMetric, nameMe
 
 		metric.Value = &f
 	default:
-		err = errors.New("Недопустимый тип")
+		err = errors.New("недопустимый тип")
 		return
 	}
 
@@ -219,22 +219,22 @@ func sendMetricJSON(ctx context.Context, client *http.Client, typeMetric, nameMe
 	request.Header.Set("Content-Type", "application/json")
 
 	// отправляем запрос и получаем ответ
-	response, err := client.Do(request)
+	_, err = client.Do(request)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-	// печатаем код ответа
-	fmt.Println("Статус-код ", response.Status)
-	defer response.Body.Close()
-	// читаем поток из тела ответа
-	body, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	// и печатаем его
-	fmt.Println(string(body))
+	// // печатаем код ответа
+	// fmt.Println("Статус-код ", response.Status)
+	// defer response.Body.Close()
+	// // читаем поток из тела ответа
+	// body, err := ioutil.ReadAll(response.Body)
+	// if err != nil {
+	// 	fmt.Println(err)
+	// 	return
+	// }
+	// // и печатаем его
+	// fmt.Println(string(body))
 
 	return
 }
