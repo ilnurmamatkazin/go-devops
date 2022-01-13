@@ -64,9 +64,9 @@ func main() {
 		for {
 			select {
 			case <-quit:
-				fmt.Println("Shutdown Agent ...")
-				t := time.NewTicker(5 * time.Second)
-				<-t.C
+				// fmt.Println("Shutdown Agent ...")
+				// t := time.NewTicker(5 * time.Second)
+				// <-t.C
 				done <- true
 
 				break loop
@@ -104,6 +104,7 @@ func main() {
 				sendMetric(ctx, client, "gauge", "NumGC", rtm.NumGC)
 				sendMetric(ctx, client, "gauge", "OtherSys", rtm.OtherSys)
 				sendMetric(ctx, client, "gauge", "PauseTotalNs", rtm.PauseTotalNs)
+				sendMetric(ctx, client, "gauge", "TotalAlloc", rtm.TotalAlloc)
 				sendMetric(ctx, client, "gauge", "StackInuse", rtm.StackInuse)
 				sendMetric(ctx, client, "gauge", "StackSys", rtm.StackSys)
 				sendMetric(ctx, client, "gauge", "Sys", rtm.Sys)
@@ -118,7 +119,7 @@ func main() {
 
 	<-done
 
-	fmt.Println("Agent exiting")
+	// fmt.Println("Agent exiting")
 
 }
 
@@ -199,7 +200,8 @@ func sendMetricJSON(ctx context.Context, client *http.Client, typeMetric, nameMe
 		} else if (nameMetric == "LastGC") && (f == 0) ||
 			(nameMetric == "Lookups") && (f == 0) ||
 			(nameMetric == "NumForcedGC") && (f == 0) ||
-			(nameMetric == "NumGC") && (f == 0) {
+			(nameMetric == "NumGC") && (f == 0) ||
+			(nameMetric == "PauseTotalNs") && (f == 0) {
 			f = float64(rand.Intn(100))
 		}
 

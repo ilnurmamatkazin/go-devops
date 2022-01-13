@@ -117,6 +117,7 @@ func (mr *MemoryRepository) Info() (html string) {
 				<li>NumGC: %f</li>
 				<li>OtherSys: %f</li>
 				<li>PauseTotalNs: %f</li>
+				<li>TotalAlloc: %f</li>
 				<li>StackInuse: %f</li>
 				<li>StackSys: %f</li>
 				<li>Sys: %f</li>
@@ -148,6 +149,7 @@ func (mr *MemoryRepository) Info() (html string) {
 		mr.gauge["NumGC"],
 		mr.gauge["OtherSys"],
 		mr.gauge["PauseTotalNs"],
+		mr.gauge["TotalAlloc"],
 		mr.gauge["StackInuse"],
 		mr.gauge["StackSys"],
 		mr.gauge["Sys"],
