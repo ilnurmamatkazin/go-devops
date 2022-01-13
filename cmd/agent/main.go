@@ -40,7 +40,7 @@ func main() {
 
 	client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
 		if len(via) >= 2 {
-			return errors.New("остановлено после двух redirect")
+			os.Exit(3)
 		}
 		return nil
 	}
@@ -140,7 +140,7 @@ func sendMetricText(ctx context.Context, client *http.Client, typeMetric, nameMe
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, buf)
 	if err != nil {
-		fmt.Println(err)
+		//fmt.Println(err)
 		return
 	}
 
@@ -149,7 +149,7 @@ func sendMetricText(ctx context.Context, client *http.Client, typeMetric, nameMe
 	// отправляем запрос и получаем ответ
 	response, err := client.Do(request)
 	if err != nil {
-		fmt.Println(err)
+		//fmt.Println(err)
 		return
 	}
 	// печатаем код ответа
@@ -194,6 +194,15 @@ func sendMetricJSON(ctx context.Context, client *http.Client, typeMetric, nameMe
 		default:
 		}
 
+		if (nameMetric == "GCCPUFraction") && (f == 0) {
+			f = rand.Float64()
+		} else if (nameMetric == "LastGC") && (f == 0) ||
+			(nameMetric == "Lookups") && (f == 0) ||
+			(nameMetric == "NumForcedGC") && (f == 0) ||
+			(nameMetric == "NumGC") && (f == 0) {
+			f = float64(rand.Intn(100))
+		}
+
 		metric.Value = &f
 	default:
 		err = errors.New("недопустимый тип")
@@ -202,7 +211,7 @@ func sendMetricJSON(ctx context.Context, client *http.Client, typeMetric, nameMe
 
 	b, err := json.Marshal(metric)
 	if err != nil {
-		fmt.Println(err)
+		//fmt.Println(err)
 		return
 	}
 
@@ -211,7 +220,7 @@ func sendMetricJSON(ctx context.Context, client *http.Client, typeMetric, nameMe
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, buf)
 	if err != nil {
-		fmt.Println(err)
+		//fmt.Println(err)
 		return
 	}
 
@@ -221,7 +230,7 @@ func sendMetricJSON(ctx context.Context, client *http.Client, typeMetric, nameMe
 	// отправляем запрос и получаем ответ
 	response, err := client.Do(request)
 	if err != nil {
-		fmt.Println(err)
+		//fmt.Println(err)
 		return
 	}
 	// печатаем код ответа
