@@ -6,7 +6,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
-	"io"
+	"io/ioutil"
 	"math/rand"
 	"net/http"
 	"os"
@@ -37,7 +37,7 @@ func main() {
 
 	client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
 		if len(via) >= 2 {
-			return errors.New("Остановлено после двух Redirect")
+			return errors.New("остановлено после двух redirect")
 		}
 		return nil
 	}
@@ -47,6 +47,7 @@ func main() {
 	client.Transport = transport
 
 	ctx := context.Background()
+
 	tickerPoll := time.NewTicker(pollInterval * time.Second)
 	tickerReport := time.NewTicker(reportInterval * time.Second)
 
@@ -60,7 +61,7 @@ func main() {
 		for {
 			select {
 			case <-quit:
-				fmt.Println("Shutdown Server ...")
+				fmt.Println("Shutdown Agent ...")
 				t := time.NewTicker(5 * time.Second)
 				<-t.C
 				done <- true
@@ -114,22 +115,16 @@ func main() {
 
 	<-done
 
-	fmt.Println("Server exiting")
+	fmt.Println("Agent exiting")
 
 }
 
 func sendMetric(ctxBase context.Context, client *http.Client, typeMetric, nameMetric string, value interface{}) (err error) {
-	fmt.Println("sendMetrics")
-
 	ctx, cancel := context.WithTimeout(ctxBase, 1*time.Second)
 	defer cancel()
 
 	endpoint := fmt.Sprintf("http://%s:%d/update/%s/%s/%v", url, port, typeMetric, nameMetric, value)
 
-	// конструируем запрос
-	// запрос методом POST должен, кроме заголовков, содержать тело
-	// тело должно быть источником потокового чтения io.Reader
-	// в большинстве случаев отлично подходит bytes.Buffer
 	buf := new(bytes.Buffer)
 	err = binary.Write(buf, binary.LittleEndian, value)
 
@@ -140,7 +135,7 @@ func sendMetric(ctxBase context.Context, client *http.Client, typeMetric, nameMe
 	}
 
 	// в заголовках запроса сообщаем, что данные кодированы стандартной URL-схемой
-	request.Header.Set("Content-Type", "text/plain; charset=UTF-8")
+	request.Header.Set("Content-Type", "text/plain; charset=utf-8")
 
 	// отправляем запрос и получаем ответ
 	response, err := client.Do(request)
@@ -152,7 +147,7 @@ func sendMetric(ctxBase context.Context, client *http.Client, typeMetric, nameMe
 	fmt.Println("Статус-код ", response.Status)
 	defer response.Body.Close()
 	// читаем поток из тела ответа
-	body, err := io.ReadAll(response.Body)
+	body, err := ioutil.ReadAll(response.Body)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -162,3 +157,37 @@ func sendMetric(ctxBase context.Context, client *http.Client, typeMetric, nameMe
 
 	return
 }
+
+// func test(ctxBase context.Context, client *http.Client) {
+// 	ctx, cancel := context.WithTimeout(ctxBase, 1*time.Second)
+// 	defer cancel()
+
+// 	endpoint := "http://localhost:8080/update/unknown/testCounter/100"
+
+// 	request, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, nil)
+// 	if err != nil {
+// 		fmt.Println(err)
+// 		return
+// 	}
+
+// 	// в заголовках запроса сообщаем, что данные кодированы стандартной URL-схемой
+// 	request.Header.Set("Content-Type", "text/plain; charset=UTF-8")
+
+// 	// отправляем запрос и получаем ответ
+// 	response, err := client.Do(request)
+// 	if err != nil {
+// 		fmt.Println(err)
+// 		return
+// 	}
+// 	// печатаем код ответа
+// 	fmt.Println("Статус-код ", response.Status)
+// 	defer response.Body.Close()
+// 	// читаем поток из тела ответа
+// 	body, err := io.ReadAll(response.Body)
+// 	if err != nil {
+// 		fmt.Println(err)
+// 		return
+// 	}
+// 	// и печатаем его
+// 	fmt.Println(string(body))
+// }
