@@ -6,18 +6,15 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/ilnurmamatkazin/go-devops/cmd/server/service"
-	"github.com/ilnurmamatkazin/go-devops/cmd/server/storage/memory"
 )
 
 type Handler struct {
-	repository *memory.MemoryRepository
-	service    *service.Service
+	service *service.Service
 }
 
 func New() *Handler {
 	return &Handler{
-		repository: memory.NewMemoryRepository(),
-		service:    service.NewService(),
+		service: service.NewService(),
 	}
 }
 

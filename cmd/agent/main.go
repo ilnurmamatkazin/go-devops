@@ -219,15 +219,15 @@ func sendMetricJSON(ctx context.Context, client *http.Client, typeMetric, nameMe
 	request.Header.Set("Content-Type", "application/json")
 
 	// отправляем запрос и получаем ответ
-	_, err = client.Do(request)
+	response, err := client.Do(request)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-	// // печатаем код ответа
+	// печатаем код ответа
 	// fmt.Println("Статус-код ", response.Status)
-	// defer response.Body.Close()
-	// // читаем поток из тела ответа
+	defer response.Body.Close()
+	// читаем поток из тела ответа
 	// body, err := ioutil.ReadAll(response.Body)
 	// if err != nil {
 	// 	fmt.Println(err)

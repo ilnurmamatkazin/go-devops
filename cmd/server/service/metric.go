@@ -44,3 +44,7 @@ func (s *Service) GetMetric(metric *models.Metric) (err error) {
 
 	return
 }
+
+func (s *Service) GetInfo() string {
+	return s.repository.Info()
+}

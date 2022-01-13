@@ -154,6 +154,7 @@ func (mr *MemoryRepository) Info() (html string) {
 		mr.gauge["RandomValue"],
 		valueInt,
 	)
+
 	mr.Mutex.Unlock()
 
 	return

@@ -8,6 +8,7 @@ import (
 type Metric interface {
 	SetMetric(metric models.Metric) error
 	GetMetric(metric *models.Metric) error
+	GetInfo() string
 }
 
 type Service struct {
