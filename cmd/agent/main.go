@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"math/rand"
 	"net/http"
 	"os"
@@ -17,22 +16,39 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/caarlos0/env/v6"
 	"github.com/ilnurmamatkazin/go-devops/cmd/agent/models"
 )
 
 const (
-	url            = "127.0.0.1"
-	port           = 8080
+	address        = "127.0.0.1:8080"
 	pollInterval   = 2
 	reportInterval = 10
 )
+
+type Config struct {
+	Address        string `env:"ADDRESS"`
+	ReportInterval int    `env:"REPORT_INTERVAL"`
+	PollInterval   int    `env:"POLL_INTERVAL"`
+}
 
 func main() {
 	var (
 		mutex     sync.Mutex
 		rtm       runtime.MemStats
 		pollCount int64
+		cfg       Config
 	)
+
+	cfg = Config{
+		Address:        address,
+		ReportInterval: reportInterval,
+		PollInterval:   pollInterval,
+	}
+
+	if err := env.Parse(&cfg); err != nil {
+		os.Exit(2)
+	}
 
 	// конструируем HTTP-клиент
 	client := &http.Client{}
@@ -51,8 +67,8 @@ func main() {
 
 	ctx := context.Background()
 
-	tickerPoll := time.NewTicker(pollInterval * time.Second)
-	tickerReport := time.NewTicker(reportInterval * time.Second)
+	tickerPoll := time.NewTicker(time.Duration(cfg.PollInterval) * time.Second)
+	tickerReport := time.NewTicker(time.Duration(cfg.ReportInterval) * time.Second)
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
@@ -81,35 +97,35 @@ func main() {
 			case <-tickerReport.C:
 				mutex.Lock()
 
-				sendMetric(ctx, client, "gauge", "Alloc", rtm.Alloc)
-				sendMetric(ctx, client, "gauge", "BuckHashSys", rtm.BuckHashSys)
-				sendMetric(ctx, client, "gauge", "Frees", rtm.Frees)
-				sendMetric(ctx, client, "gauge", "GCCPUFraction", rtm.GCCPUFraction)
-				sendMetric(ctx, client, "gauge", "GCSys", rtm.GCSys)
-				sendMetric(ctx, client, "gauge", "HeapAlloc", rtm.HeapAlloc)
-				sendMetric(ctx, client, "gauge", "HeapIdle", rtm.HeapIdle)
-				sendMetric(ctx, client, "gauge", "HeapInuse", rtm.HeapInuse)
-				sendMetric(ctx, client, "gauge", "HeapObjects", rtm.HeapObjects)
-				sendMetric(ctx, client, "gauge", "HeapReleased", rtm.HeapReleased)
-				sendMetric(ctx, client, "gauge", "HeapSys", rtm.HeapSys)
-				sendMetric(ctx, client, "gauge", "LastGC", rtm.LastGC)
-				sendMetric(ctx, client, "gauge", "Lookups", rtm.Lookups)
-				sendMetric(ctx, client, "gauge", "MCacheInuse", rtm.MCacheInuse)
-				sendMetric(ctx, client, "gauge", "MCacheSys", rtm.MCacheSys)
-				sendMetric(ctx, client, "gauge", "MSpanInuse", rtm.MSpanInuse)
-				sendMetric(ctx, client, "gauge", "MSpanSys", rtm.MSpanSys)
-				sendMetric(ctx, client, "gauge", "Mallocs", rtm.Mallocs)
-				sendMetric(ctx, client, "gauge", "NextGC", rtm.NextGC)
-				sendMetric(ctx, client, "gauge", "NumForcedGC", rtm.NumForcedGC)
-				sendMetric(ctx, client, "gauge", "NumGC", rtm.NumGC)
-				sendMetric(ctx, client, "gauge", "OtherSys", rtm.OtherSys)
-				sendMetric(ctx, client, "gauge", "PauseTotalNs", rtm.PauseTotalNs)
-				sendMetric(ctx, client, "gauge", "TotalAlloc", rtm.TotalAlloc)
-				sendMetric(ctx, client, "gauge", "StackInuse", rtm.StackInuse)
-				sendMetric(ctx, client, "gauge", "StackSys", rtm.StackSys)
-				sendMetric(ctx, client, "gauge", "Sys", rtm.Sys)
-				sendMetric(ctx, client, "counter", "PollCount", pollCount)
-				sendMetric(ctx, client, "gauge", "RandomValue", rand.Float64())
+				sendMetric(ctx, client, "gauge", "Alloc", rtm.Alloc, cfg)
+				sendMetric(ctx, client, "gauge", "BuckHashSys", rtm.BuckHashSys, cfg)
+				sendMetric(ctx, client, "gauge", "Frees", rtm.Frees, cfg)
+				sendMetric(ctx, client, "gauge", "GCCPUFraction", rtm.GCCPUFraction, cfg)
+				sendMetric(ctx, client, "gauge", "GCSys", rtm.GCSys, cfg)
+				sendMetric(ctx, client, "gauge", "HeapAlloc", rtm.HeapAlloc, cfg)
+				sendMetric(ctx, client, "gauge", "HeapIdle", rtm.HeapIdle, cfg)
+				sendMetric(ctx, client, "gauge", "HeapInuse", rtm.HeapInuse, cfg)
+				sendMetric(ctx, client, "gauge", "HeapObjects", rtm.HeapObjects, cfg)
+				sendMetric(ctx, client, "gauge", "HeapReleased", rtm.HeapReleased, cfg)
+				sendMetric(ctx, client, "gauge", "HeapSys", rtm.HeapSys, cfg)
+				sendMetric(ctx, client, "gauge", "LastGC", rtm.LastGC, cfg)
+				sendMetric(ctx, client, "gauge", "Lookups", rtm.Lookups, cfg)
+				sendMetric(ctx, client, "gauge", "MCacheInuse", rtm.MCacheInuse, cfg)
+				sendMetric(ctx, client, "gauge", "MCacheSys", rtm.MCacheSys, cfg)
+				sendMetric(ctx, client, "gauge", "MSpanInuse", rtm.MSpanInuse, cfg)
+				sendMetric(ctx, client, "gauge", "MSpanSys", rtm.MSpanSys, cfg)
+				sendMetric(ctx, client, "gauge", "Mallocs", rtm.Mallocs, cfg)
+				sendMetric(ctx, client, "gauge", "NextGC", rtm.NextGC, cfg)
+				sendMetric(ctx, client, "gauge", "NumForcedGC", rtm.NumForcedGC, cfg)
+				sendMetric(ctx, client, "gauge", "NumGC", rtm.NumGC, cfg)
+				sendMetric(ctx, client, "gauge", "OtherSys", rtm.OtherSys, cfg)
+				sendMetric(ctx, client, "gauge", "PauseTotalNs", rtm.PauseTotalNs, cfg)
+				sendMetric(ctx, client, "gauge", "TotalAlloc", rtm.TotalAlloc, cfg)
+				sendMetric(ctx, client, "gauge", "StackInuse", rtm.StackInuse, cfg)
+				sendMetric(ctx, client, "gauge", "StackSys", rtm.StackSys, cfg)
+				sendMetric(ctx, client, "gauge", "Sys", rtm.Sys, cfg)
+				sendMetric(ctx, client, "counter", "PollCount", pollCount, cfg)
+				sendMetric(ctx, client, "gauge", "RandomValue", rand.Float64(), cfg)
 
 				mutex.Unlock()
 			}
@@ -123,55 +139,55 @@ func main() {
 
 }
 
-func sendMetric(ctxBase context.Context, client *http.Client, typeMetric, nameMetric string, value interface{}) (err error) {
+func sendMetric(ctxBase context.Context, client *http.Client, typeMetric, nameMetric string, value interface{}, cfg Config) (err error) {
 	ctx, cancel := context.WithTimeout(ctxBase, 1*time.Second)
 	defer cancel()
 
 	// err = sendMetricText(ctx, client, typeMetric, nameMetric, value)
-	err = sendMetricJSON(ctx, client, typeMetric, nameMetric, value)
+	err = sendMetricJSON(ctx, client, typeMetric, nameMetric, value, cfg)
 
 	return
 }
 
-func sendMetricText(ctx context.Context, client *http.Client, typeMetric, nameMetric string, value interface{}) (err error) {
-	endpoint := fmt.Sprintf("http://%s:%d/update/%s/%s/%v", url, port, typeMetric, nameMetric, value)
+// func sendMetricText(ctx context.Context, client *http.Client, typeMetric, nameMetric string, value interface{}) (err error) {
+// 	endpoint := fmt.Sprintf("http://%s/update/%s/%s/%v", cfg., port, typeMetric, nameMetric, value)
 
-	buf := new(bytes.Buffer)
-	err = binary.Write(buf, binary.LittleEndian, value)
+// 	buf := new(bytes.Buffer)
+// 	err = binary.Write(buf, binary.LittleEndian, value)
 
-	request, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, buf)
-	if err != nil {
-		//fmt.Println(err)
-		return
-	}
+// 	request, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, buf)
+// 	if err != nil {
+// 		//fmt.Println(err)
+// 		return
+// 	}
 
-	request.Header.Set("Content-Type", "text/plain; charset=utf-8")
+// 	request.Header.Set("Content-Type", "text/plain; charset=utf-8")
 
-	// отправляем запрос и получаем ответ
-	response, err := client.Do(request)
-	if err != nil {
-		//fmt.Println(err)
-		return
-	}
-	// печатаем код ответа
-	fmt.Println("Статус-код ", response.Status)
-	defer response.Body.Close()
-	// читаем поток из тела ответа
-	body, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	// и печатаем его
-	fmt.Println(string(body))
+// 	// отправляем запрос и получаем ответ
+// 	response, err := client.Do(request)
+// 	if err != nil {
+// 		//fmt.Println(err)
+// 		return
+// 	}
+// 	// печатаем код ответа
+// 	fmt.Println("Статус-код ", response.Status)
+// 	defer response.Body.Close()
+// 	// читаем поток из тела ответа
+// 	body, err := ioutil.ReadAll(response.Body)
+// 	if err != nil {
+// 		fmt.Println(err)
+// 		return
+// 	}
+// 	// и печатаем его
+// 	fmt.Println(string(body))
 
-	return
-}
+// 	return
+// }
 
-func sendMetricJSON(ctx context.Context, client *http.Client, typeMetric, nameMetric string, value interface{}) (err error) {
+func sendMetricJSON(ctx context.Context, client *http.Client, typeMetric, nameMetric string, value interface{}, cfg Config) (err error) {
 	var metric models.Metric
 
-	endpoint := fmt.Sprintf("http://%s:%d/update", url, port)
+	endpoint := fmt.Sprintf("http://%s/update", cfg.Address)
 
 	metric.ID = nameMetric
 	metric.MType = typeMetric
