@@ -12,6 +12,8 @@ import (
 	"os"
 	"os/signal"
 	"runtime"
+	"strconv"
+	"strings"
 	"sync"
 	"syscall"
 	"time"
@@ -22,14 +24,14 @@ import (
 
 const (
 	address        = "localhost:8080"
-	pollInterval   = 2
-	reportInterval = 10
+	pollInterval   = "2s"
+	reportInterval = "10s"
 )
 
 type Config struct {
 	Address        string `env:"ADDRESS"`
-	ReportInterval int    `env:"REPORT_INTERVAL"`
-	PollInterval   int    `env:"POLL_INTERVAL"`
+	ReportInterval string `env:"REPORT_INTERVAL"`
+	PollInterval   string `env:"POLL_INTERVAL"`
 }
 
 func main() {
@@ -67,8 +69,11 @@ func main() {
 
 	ctx := context.Background()
 
-	tickerPoll := time.NewTicker(time.Duration(cfg.PollInterval) * time.Second)
-	tickerReport := time.NewTicker(time.Duration(cfg.ReportInterval) * time.Second)
+	pi, _ := strconv.Atoi(strings.Split(cfg.PollInterval, "s")[0])
+	ri, _ := strconv.Atoi(strings.Split(cfg.ReportInterval, "s")[0])
+
+	tickerPoll := time.NewTicker(time.Duration(pi) * time.Second)
+	tickerReport := time.NewTicker(time.Duration(ri) * time.Second)
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
