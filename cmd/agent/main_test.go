@@ -26,9 +26,9 @@ func Test_sendMetric(t *testing.T) {
 	}
 
 	cfg := Config{
-		Address:        address,
-		ReportInterval: reportInterval,
-		PollInterval:   pollInterval,
+		Address:        ADDRESS,
+		ReportInterval: REPORT_INTERVAL,
+		PollInterval:   POLL_INTERVAL,
 	}
 
 	if err := env.Parse(&cfg); err != nil {

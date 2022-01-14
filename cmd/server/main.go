@@ -12,15 +12,26 @@ import (
 )
 
 const (
-	address = "localhost:8080"
+	ADDRESS        = "localhost:8080"
+	STORE_INTERVAL = 300
+	STORE_FILE     = "./tmp/devops-metrics-db.json"
+	RESTORE        = true
 )
 
 type Config struct {
-	Address string `env:"ADDRESS"`
+	Address       string `env:"ADDRESS"`
+	StoreInterval int    `env:"STORE_INTERVAL"`
+	StoreFile     string `env:"STORE_FILE"`
+	Restore       bool   `env:"RESTORE"`
 }
 
 func main() {
-	cfg := Config{Address: address}
+	cfg := Config{
+		Address:       ADDRESS,
+		StoreInterval: STORE_INTERVAL,
+		StoreFile:     STORE_FILE,
+		Restore:       RESTORE,
+	}
 
 	if err := env.Parse(&cfg); err != nil {
 		os.Exit(2)

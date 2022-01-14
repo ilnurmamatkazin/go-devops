@@ -23,9 +23,9 @@ import (
 )
 
 const (
-	address        = "localhost:8080"
-	pollInterval   = "2s"
-	reportInterval = "10s"
+	ADDRESS         = "localhost:8080"
+	POLL_INTERVAL   = "2s"
+	REPORT_INTERVAL = "10s"
 )
 
 type Config struct {
@@ -43,9 +43,9 @@ func main() {
 	)
 
 	cfg = Config{
-		Address:        address,
-		ReportInterval: reportInterval,
-		PollInterval:   pollInterval,
+		Address:        ADDRESS,
+		ReportInterval: REPORT_INTERVAL,
+		PollInterval:   POLL_INTERVAL,
 	}
 
 	if err := env.Parse(&cfg); err != nil {
