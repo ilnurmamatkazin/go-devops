@@ -29,9 +29,9 @@ func (h *Handler) NewRouter() *chi.Mux {
 	r.Use(middleware.Recoverer)
 	// r.Use(middleware.AllowContentType("application/json"))
 
-	r.Route("/", func(r chi.Router) {
-		r.Get("/", h.getInfo)
-	})
+	// r.Route("/", func(r chi.Router) {
+	// 	r.Get("/", h.getInfo)
+	// })
 
 	r.Route("/update", func(r chi.Router) {
 		r.Post("/counter/{nameMetric}/{valueMetric}", h.parseCounterMetric)
@@ -43,11 +43,12 @@ func (h *Handler) NewRouter() *chi.Mux {
 		r.With(middleware.AllowContentType("application/json")).Post("/", h.parseMetric)
 	})
 
-	r.Route("/value", func(r chi.Router) {
-		r.Get("/gauge/{nameMetric}", h.getGauge)
-		r.Get("/counter/{nameMetric}", h.getCounter)
+	r.Route("/", func(r chi.Router) {
+		r.Get("/", h.getInfo)
+		r.Get("/value/gauge/{nameMetric}", h.getGauge)
+		r.Get("/value/counter/{nameMetric}", h.getCounter)
 
-		r.With(middleware.AllowContentType("application/json")).Post("/", h.getMetric)
+		r.With(middleware.AllowContentType("application/json")).Post("/value/", h.getMetric)
 	})
 
 	r.NotFound(func(w http.ResponseWriter, r *http.Request) {

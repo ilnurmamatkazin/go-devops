@@ -21,7 +21,7 @@ import (
 )
 
 const (
-	address        = "127.0.0.1:8080"
+	address        = "localhost:8080"
 	pollInterval   = 2
 	reportInterval = 10
 )

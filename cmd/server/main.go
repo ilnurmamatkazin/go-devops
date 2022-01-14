@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	address = "127.0.0.1:8080"
+	address = "localhost:8080"
 )
 
 type Config struct {
@@ -32,7 +32,7 @@ func main() {
 	h := handlers.New()
 	r := h.NewRouter()
 
-	go http.ListenAndServe(strings.Split(cfg.Address, ":")[1], r)
+	go http.ListenAndServe(":"+strings.Split(cfg.Address, ":")[1], r)
 
 	// fmt.Println("Server started...")
 

@@ -3,7 +3,10 @@ package main
 import (
 	"context"
 	"net/http"
+	"os"
 	"testing"
+
+	"github.com/caarlos0/env/v6"
 )
 
 func Test_sendMetric(t *testing.T) {
@@ -21,9 +24,19 @@ func Test_sendMetric(t *testing.T) {
 	}{
 		// TODO: Add test cases.
 	}
+
+	cfg := Config{
+		Address:        address,
+		ReportInterval: reportInterval,
+		PollInterval:   pollInterval,
+	}
+
+	if err := env.Parse(&cfg); err != nil {
+		os.Exit(2)
+	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := sendMetric(tt.args.ctxBase, tt.args.client, tt.args.typeMetric, tt.args.nameMetric, tt.args.value); (err != nil) != tt.wantErr {
+			if err := sendMetric(tt.args.ctxBase, tt.args.client, tt.args.typeMetric, tt.args.nameMetric, tt.args.value, cfg); (err != nil) != tt.wantErr {
 				t.Errorf("sendMetric() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
