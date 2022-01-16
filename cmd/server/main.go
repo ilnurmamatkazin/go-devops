@@ -9,6 +9,9 @@ import (
 
 	"github.com/caarlos0/env/v6"
 	"github.com/ilnurmamatkazin/go-devops/cmd/server/handlers"
+	"github.com/ilnurmamatkazin/go-devops/cmd/server/models"
+	"github.com/ilnurmamatkazin/go-devops/cmd/server/service"
+	"github.com/ilnurmamatkazin/go-devops/cmd/server/storage/memory"
 )
 
 const (
@@ -18,15 +21,8 @@ const (
 	RESTORE        = true
 )
 
-type Config struct {
-	Address       string `env:"ADDRESS"`
-	StoreInterval int    `env:"STORE_INTERVAL"`
-	StoreFile     string `env:"STORE_FILE"`
-	Restore       bool   `env:"RESTORE"`
-}
-
 func main() {
-	cfg := Config{
+	cfg := models.Config{
 		Address:       ADDRESS,
 		StoreInterval: STORE_INTERVAL,
 		StoreFile:     STORE_FILE,
@@ -40,7 +36,9 @@ func main() {
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
 
-	h := handlers.New()
+	m := memory.NewMemoryRepository(cfg)
+	s := service.NewService(m)
+	h := handlers.New(s)
 	r := h.NewRouter()
 
 	go http.ListenAndServe(":"+strings.Split(cfg.Address, ":")[1], r)
@@ -48,6 +46,8 @@ func main() {
 	// fmt.Println("Server started...")
 
 	<-quit
+
+	m.SaveToFile()
 
 	// fmt.Println("Server shutdown")
 }

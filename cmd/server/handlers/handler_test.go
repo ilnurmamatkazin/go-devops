@@ -4,34 +4,23 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 
+	"github.com/caarlos0/env/v6"
+	"github.com/ilnurmamatkazin/go-devops/cmd/server/models"
+	"github.com/ilnurmamatkazin/go-devops/cmd/server/service"
+	"github.com/ilnurmamatkazin/go-devops/cmd/server/storage/memory"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-// import (
-// 	"reflect"
-// 	"testing"
-
-// 	"github.com/go-chi/chi/v5"
-// )
-
-// func TestNewRouter(t *testing.T) {
-// 	tests := []struct {
-// 		name string
-// 		want *chi.Mux
-// 	}{
-// 		// TODO: Add test cases.
-// 	}
-// 	for _, tt := range tests {
-// 		t.Run(tt.name, func(t *testing.T) {
-// 			if got := NewRouter(); !reflect.DeepEqual(got, tt.want) {
-// 				t.Errorf("NewRouter() = %v, want %v", got, tt.want)
-// 			}
-// 		})
-// 	}
-// }
+const (
+	ADDRESS        = "localhost:8080"
+	STORE_INTERVAL = 300
+	STORE_FILE     = "./tmp/devops-metrics-db.json"
+	RESTORE        = true
+)
 
 func testRequest(t *testing.T, ts *httptest.Server, method, path string) (*http.Response, string) {
 	req, err := http.NewRequest(method, ts.URL+path, nil)
@@ -49,8 +38,22 @@ func testRequest(t *testing.T, ts *httptest.Server, method, path string) (*http.
 }
 
 func TestNewRouter(t *testing.T) {
-	h := New()
+	cfg := models.Config{
+		Address:       ADDRESS,
+		StoreInterval: STORE_INTERVAL,
+		StoreFile:     STORE_FILE,
+		Restore:       RESTORE,
+	}
+
+	if err := env.Parse(&cfg); err != nil {
+		os.Exit(2)
+	}
+
+	m := memory.NewMemoryRepository(cfg)
+	s := service.NewService(m)
+	h := New(s)
 	r := h.NewRouter()
+
 	ts := httptest.NewServer(r)
 	defer ts.Close()
 

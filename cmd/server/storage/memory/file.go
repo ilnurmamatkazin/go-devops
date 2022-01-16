@@ -5,80 +5,42 @@ import (
 	"os"
 )
 
-type Event struct {
-	ID       uint    `json:"id"`
-	CarModel string  `json:"car_model"`
-	Price    float64 `json:"price"`
-}
-type producer struct {
-	file    *os.File
-	encoder *json.Encoder
-}
-
-func NewProducer(fileName string) (*producer, error) {
-	file, err := os.OpenFile(fileName, os.O_WRONLY|os.O_CREATE, 0777)
+func (mr *MemoryRepository) SaveToFile() (err error) {
+	mr.file, err = os.OpenFile(mr.fileName, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0777)
 	if err != nil {
-		return nil, err
+		return
 	}
-	return &producer{
-		file:    file,
-		encoder: json.NewEncoder(file),
-	}, nil
-}
-func (p *producer) WriteEvent(event *Event) error {
-	return p.encoder.Encode(&event)
-}
-func (p *producer) Close() error {
-	return p.file.Close()
+
+	defer mr.closeFile()
+
+	mr.Lock()
+	if err = json.NewEncoder(mr.file).Encode(&mr.repository); err != nil {
+		return
+	}
+	mr.Unlock()
+
+	return
 }
 
-type consumer struct {
-	file    *os.File
-	decoder *json.Decoder
-}
-
-func NewConsumer(fileName string) (*consumer, error) {
-	file, err := os.OpenFile(fileName, os.O_RDONLY|os.O_CREATE, 0777)
+func (mr *MemoryRepository) loadFromFile() (err error) {
+	mr.file, err = os.OpenFile(mr.fileName, os.O_RDONLY|os.O_CREATE, 0777)
 	if err != nil {
-		return nil, err
+		return
 	}
-	return &consumer{
-		file:    file,
-		decoder: json.NewDecoder(file),
-	}, nil
-}
-func (c *consumer) ReadEvent() (*Event, error) {
-	event := &Event{}
-	if err := c.decoder.Decode(&event); err != nil {
-		return nil, err
+
+	defer mr.closeFile()
+
+	mr.Lock()
+	if err = json.NewDecoder(mr.file).Decode(&mr.repository); err != nil {
+		return
 	}
-	return event, nil
-}
-func (c *consumer) Close() error {
-	return c.file.Close()
+	mr.Unlock()
+
+	return
 }
 
-// func main() {
-//     fileName := "events.log"
-//     defer os.Remove(fileName)
-//     producer, err := NewProducer(fileName)
-//     if err != nil {
-//         log.Fatal(err)
-//     }
-//     defer producer.Close()
-//     consumer, err := NewConsumer(fileName)
-//     if err != nil {
-//         log.Fatal(err)
-//     }
-//     defer consumer.Close()
-//     for _, event := range events {
-//         if err := producer.WriteEvent(event); err != nil {
-//             log.Fatal(err)
-//         }
-//         readedEvent, err := consumer.ReadEvent()
-//         if err != nil {
-//             log.Fatal(err)
-//         }
-//         fmt.Println(readedEvent)
-//     }
-// }
+//Функция нужна если будем делать логирование
+func (mr *MemoryRepository) closeFile() (err error) {
+	err = mr.file.Close()
+	return
+}

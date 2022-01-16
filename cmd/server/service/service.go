@@ -15,8 +15,8 @@ type Service struct {
 	repository *memory.MemoryRepository
 }
 
-func NewService() *Service {
+func NewService(repository *memory.MemoryRepository) *Service {
 	return &Service{
-		repository: memory.NewMemoryRepository(),
+		repository: repository,
 	}
 }

@@ -4,27 +4,59 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"os"
 	"sync"
+	"time"
 
 	"github.com/ilnurmamatkazin/go-devops/cmd/server/models"
 )
 
 type MemoryRepository struct {
-	counter map[string]int64
-	gauge   map[string]float64
+	repository map[string]float64
 	sync.Mutex
+	file       *os.File
+	fileName   string
+	isSyncMode bool
 }
 
-func NewMemoryRepository() *MemoryRepository {
-	return &MemoryRepository{
-		counter: make(map[string]int64),
-		gauge:   make(map[string]float64),
+func NewMemoryRepository(cfg models.Config) *MemoryRepository {
+	memoryRepository := &MemoryRepository{
+		repository: make(map[string]float64),
 	}
+
+	memoryRepository.fileName = cfg.StoreFile
+
+	if cfg.Restore {
+		if err := memoryRepository.loadFromFile(); err != nil {
+			fmt.Println(err.Error())
+		}
+	}
+
+	if cfg.StoreInterval == 0 {
+		memoryRepository.isSyncMode = true
+	} else {
+		go func(mr *MemoryRepository) {
+			var err error
+			ticker := time.NewTicker(time.Duration(cfg.StoreInterval) * time.Second)
+
+			for {
+				select {
+				case <-ticker.C:
+					if err = mr.SaveToFile(); err != nil {
+						fmt.Println(err.Error())
+					}
+				}
+			}
+
+		}(memoryRepository)
+	}
+
+	return memoryRepository
 }
 
 func (mr *MemoryRepository) ReadGauge(name string) (value float64, err error) {
 	mr.Lock()
-	value = mr.gauge[name]
+	value = mr.repository[name]
 	mr.Unlock()
 
 	if value == 0 {
@@ -39,7 +71,7 @@ func (mr *MemoryRepository) ReadGauge(name string) (value float64, err error) {
 
 func (mr *MemoryRepository) ReadCounter(name string) (value int64, err error) {
 	mr.Lock()
-	value = mr.counter[name]
+	value = int64(mr.repository[name])
 	mr.Unlock()
 
 	if value == 0 {
@@ -53,38 +85,42 @@ func (mr *MemoryRepository) ReadCounter(name string) (value int64, err error) {
 }
 
 func (mr *MemoryRepository) SetGauge(metric models.MetricGauge) (err error) {
-	if mr.gauge == nil {
+	if mr.repository == nil {
 		mr.Lock()
-		mr.gauge = make(map[string]float64)
+		mr.repository = make(map[string]float64)
 		mr.Unlock()
 	}
 
 	mr.Lock()
-	mr.gauge[metric.Name] = metric.Value
+	mr.repository[metric.Name] = metric.Value
 	mr.Unlock()
+
+	if mr.isSyncMode {
+		err = mr.SaveToFile()
+	}
 
 	return
 }
 
 func (mr *MemoryRepository) SetCounter(metric models.MetricCounter) (err error) {
-	if mr.counter == nil {
+	if mr.repository == nil {
 		mr.Lock()
-		mr.counter = make(map[string]int64)
+		mr.repository = make(map[string]float64)
 		mr.Unlock()
 	}
 
 	mr.Lock()
-	value := mr.counter[metric.Name]
-	mr.counter[metric.Name] = value + metric.Value
+	value := mr.repository[metric.Name]
+	mr.repository[metric.Name] = value + float64(metric.Value)
 	mr.Unlock()
 
 	return
 }
 
 func (mr *MemoryRepository) Info() (html string) {
-	mr.Lock()
-	valueInt := mr.counter["PollCount"]
-	mr.Unlock()
+	// mr.Lock()
+	// valueInt := mr.counter["PollCount"]
+	// mr.Unlock()
 
 	mr.Mutex.Lock()
 	html = fmt.Sprintf(`
@@ -126,35 +162,35 @@ func (mr *MemoryRepository) Info() (html string) {
 			</ul>
 		</body>
 	</html>`,
-		mr.gauge["Alloc"],
-		mr.gauge["BuckHashSys"],
-		mr.gauge["Frees"],
-		mr.gauge["GCCPUFraction"],
-		mr.gauge["GCSys"],
-		mr.gauge["HeapAlloc"],
-		mr.gauge["HeapIdle"],
-		mr.gauge["HeapInuse"],
-		mr.gauge["HeapObjects"],
-		mr.gauge["HeapReleased"],
-		mr.gauge["HeapSys"],
-		mr.gauge["LastGC"],
-		mr.gauge["Lookups"],
-		mr.gauge["MCacheInuse"],
-		mr.gauge["MCacheSys"],
-		mr.gauge["MSpanInuse"],
-		mr.gauge["MSpanSys"],
-		mr.gauge["Mallocs"],
-		mr.gauge["NextGC"],
-		mr.gauge["NumForcedGC"],
-		mr.gauge["NumGC"],
-		mr.gauge["OtherSys"],
-		mr.gauge["PauseTotalNs"],
-		mr.gauge["TotalAlloc"],
-		mr.gauge["StackInuse"],
-		mr.gauge["StackSys"],
-		mr.gauge["Sys"],
-		mr.gauge["RandomValue"],
-		valueInt,
+		mr.repository["Alloc"],
+		mr.repository["BuckHashSys"],
+		mr.repository["Frees"],
+		mr.repository["GCCPUFraction"],
+		mr.repository["GCSys"],
+		mr.repository["HeapAlloc"],
+		mr.repository["HeapIdle"],
+		mr.repository["HeapInuse"],
+		mr.repository["HeapObjects"],
+		mr.repository["HeapReleased"],
+		mr.repository["HeapSys"],
+		mr.repository["LastGC"],
+		mr.repository["Lookups"],
+		mr.repository["MCacheInuse"],
+		mr.repository["MCacheSys"],
+		mr.repository["MSpanInuse"],
+		mr.repository["MSpanSys"],
+		mr.repository["Mallocs"],
+		mr.repository["NextGC"],
+		mr.repository["NumForcedGC"],
+		mr.repository["NumGC"],
+		mr.repository["OtherSys"],
+		mr.repository["PauseTotalNs"],
+		mr.repository["TotalAlloc"],
+		mr.repository["StackInuse"],
+		mr.repository["StackSys"],
+		mr.repository["Sys"],
+		mr.repository["RandomValue"],
+		int64(mr.repository["PollCount"]),
 	)
 
 	mr.Mutex.Unlock()
