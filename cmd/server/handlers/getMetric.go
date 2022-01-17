@@ -34,7 +34,7 @@ func (h *Handler) getMetric(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Println("##1111###", metric, err.Error())
+	fmt.Println("##1111###", metric)
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
