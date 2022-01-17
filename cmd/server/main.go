@@ -31,8 +31,11 @@ func main() {
 	}
 
 	if err := env.Parse(&cfg); err != nil {
+		fmt.Println("env.Parse", err.Error())
 		os.Exit(2)
 	}
+
+	fmt.Println(cfg)
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
