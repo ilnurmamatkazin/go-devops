@@ -14,13 +14,18 @@ func (h *Handler) getMetric(w http.ResponseWriter, r *http.Request) {
 		err    error
 	)
 
+	fmt.Println("getMetric", r.URL.Path)
+
 	if err = json.NewDecoder(r.Body).Decode(&metric); err != nil {
-		fmt.Println(r.URL.Path)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
+	fmt.Println(metric)
+
 	if err = h.service.GetMetric(&metric); err != nil {
+		fmt.Println("#####", metric)
+
 		re, ok := err.(*models.RequestError)
 		if ok {
 			http.Error(w, re.Err.Error(), re.StatusCode)

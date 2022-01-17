@@ -26,6 +26,8 @@ func NewMemoryRepository(cfg models.Config) *MemoryRepository {
 
 	memoryRepository.fileName = os.TempDir() + cfg.StoreFile
 
+	fmt.Println("memoryRepository.fileName", memoryRepository.fileName)
+
 	if cfg.Restore {
 		if err := memoryRepository.loadFromFile(); err != nil {
 			fmt.Println(err.Error())
