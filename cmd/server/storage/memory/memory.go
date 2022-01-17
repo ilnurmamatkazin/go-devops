@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"os"
 	"sync"
-	"time"
+	// "time"
 
 	"github.com/ilnurmamatkazin/go-devops/cmd/server/models"
 )
@@ -28,29 +28,29 @@ func NewMemoryRepository(cfg models.Config) *MemoryRepository {
 
 	fmt.Println("memoryRepository.fileName", memoryRepository.fileName)
 
-	if cfg.Restore {
-		if err := memoryRepository.loadFromFile(); err != nil {
-			fmt.Println(err.Error())
-		}
-	}
+	// if cfg.Restore {
+	// 	if err := memoryRepository.loadFromFile(); err != nil {
+	// 		fmt.Println(err.Error())
+	// 	}
+	// }
 
-	if cfg.StoreInterval == 0 {
-		memoryRepository.isSyncMode = true
-	} else {
-		go func(mr *MemoryRepository) {
-			var err error
-			ticker := time.NewTicker(time.Duration(cfg.StoreInterval) * time.Second)
+	// if cfg.StoreInterval == 0 {
+	// 	memoryRepository.isSyncMode = true
+	// } else {
+	// 	go func(mr *MemoryRepository) {
+	// 		var err error
+	// 		ticker := time.NewTicker(time.Duration(cfg.StoreInterval) * time.Second)
 
-			for {
-				<-ticker.C
+	// 		for {
+	// 			<-ticker.C
 
-				if err = mr.SaveToFile(); err != nil {
-					fmt.Println(err.Error())
-				}
-			}
+	// 			if err = mr.SaveToFile(); err != nil {
+	// 				fmt.Println(err.Error())
+	// 			}
+	// 		}
 
-		}(memoryRepository)
-	}
+	// 	}(memoryRepository)
+	// }
 
 	return memoryRepository
 }
@@ -96,9 +96,9 @@ func (mr *MemoryRepository) SetGauge(metric models.MetricGauge) (err error) {
 	mr.repository[metric.Name] = metric.Value
 	mr.Unlock()
 
-	if mr.isSyncMode {
-		err = mr.SaveToFile()
-	}
+	// if mr.isSyncMode {
+	// 	// err = mr.SaveToFile()
+	// }
 
 	return
 }
@@ -114,6 +114,10 @@ func (mr *MemoryRepository) SetCounter(metric models.MetricCounter) (err error) 
 	value := mr.repository[metric.Name]
 	mr.repository[metric.Name] = value + float64(metric.Value)
 	mr.Unlock()
+
+	// if mr.isSyncMode {
+	// 	// err = mr.SaveToFile()
+	// }
 
 	return
 }

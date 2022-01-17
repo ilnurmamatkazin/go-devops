@@ -52,7 +52,7 @@ func main() {
 
 	fmt.Println("@@@@@")
 
-	m.SaveToFile()
+	// m.SaveToFile()
 
 	// fmt.Println("Server shutdown")
 }

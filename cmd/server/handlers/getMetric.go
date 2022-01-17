@@ -21,10 +21,8 @@ func (h *Handler) getMetric(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Println(metric)
-
 	if err = h.service.GetMetric(&metric); err != nil {
-		fmt.Println("#####", metric)
+		fmt.Println("#####", metric, err.Error())
 
 		re, ok := err.(*models.RequestError)
 		if ok {
@@ -36,10 +34,14 @@ func (h *Handler) getMetric(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	fmt.Println("##1111###", metric, err.Error())
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 
 	if err = json.NewEncoder(w).Encode(metric); err != nil {
+		fmt.Println("##11222211###", err.Error())
+
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
