@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strconv"
+	"strings"
 	"sync"
-	// "time"
+	"time"
 
 	"github.com/ilnurmamatkazin/go-devops/cmd/server/models"
 )
@@ -24,33 +26,38 @@ func NewMemoryRepository(cfg models.Config) *MemoryRepository {
 		repository: make(map[string]float64),
 	}
 
-	memoryRepository.fileName = os.TempDir() + cfg.StoreFile
+	if cfg.StoreFile != "" {
 
-	fmt.Println("memoryRepository.fileName", memoryRepository.fileName)
+		memoryRepository.fileName = cfg.StoreFile
 
-	// if cfg.Restore {
-	// 	if err := memoryRepository.loadFromFile(); err != nil {
-	// 		fmt.Println(err.Error())
-	// 	}
-	// }
+		if cfg.Restore {
+			if err := memoryRepository.loadFromFile(); err != nil {
+				fmt.Println(err.Error())
+			}
+		}
 
-	// if cfg.StoreInterval == 0 {
-	// 	memoryRepository.isSyncMode = true
-	// } else {
-	// 	go func(mr *MemoryRepository) {
-	// 		var err error
-	// 		ticker := time.NewTicker(time.Duration(cfg.StoreInterval) * time.Second)
+		si, _ := strconv.Atoi(strings.Split(cfg.StoreInterval, "s")[0])
 
-	// 		for {
-	// 			<-ticker.C
+		if si == 0 {
+			memoryRepository.isSyncMode = true
+		} else {
+			go func(mr *MemoryRepository) {
+				var err error
+				ticker := time.NewTicker(time.Duration(si) * time.Second)
 
-	// 			if err = mr.SaveToFile(); err != nil {
-	// 				fmt.Println(err.Error())
-	// 			}
-	// 		}
+				for {
+					<-ticker.C
 
-	// 	}(memoryRepository)
-	// }
+					fmt.Println("$$$$$$")
+
+					if err = mr.SaveToFile(); err != nil {
+						fmt.Println(err.Error())
+					}
+				}
+
+			}(memoryRepository)
+		}
+	}
 
 	return memoryRepository
 }
@@ -96,9 +103,9 @@ func (mr *MemoryRepository) SetGauge(metric models.MetricGauge) (err error) {
 	mr.repository[metric.Name] = metric.Value
 	mr.Unlock()
 
-	// if mr.isSyncMode {
-	// 	// err = mr.SaveToFile()
-	// }
+	if mr.isSyncMode {
+		err = mr.SaveToFile()
+	}
 
 	return
 }
@@ -115,9 +122,9 @@ func (mr *MemoryRepository) SetCounter(metric models.MetricCounter) (err error) 
 	mr.repository[metric.Name] = value + float64(metric.Value)
 	mr.Unlock()
 
-	// if mr.isSyncMode {
-	// 	// err = mr.SaveToFile()
-	// }
+	if mr.isSyncMode {
+		err = mr.SaveToFile()
+	}
 
 	return
 }

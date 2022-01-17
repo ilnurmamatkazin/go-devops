@@ -18,7 +18,7 @@ import (
 const (
 	ADDRESS       = "localhost:8080"
 	STOREINTERVAL = "300s"
-	STOREFILE     = "devops-metrics-db.json"
+	STOREFILE     = "/tmp/devops-metrics-db.json"
 	RESTORE       = true
 )
 
@@ -45,17 +45,13 @@ func main() {
 	h := handlers.New(s)
 	r := h.NewRouter()
 
-	fmt.Println("Address ", cfg.Address, ":"+strings.Split(cfg.Address, ":")[1])
-
 	go http.ListenAndServe(":"+strings.Split(cfg.Address, ":")[1], r)
 
 	// fmt.Println("Server started...")
 
 	<-quit
 
-	fmt.Println("@@@@@")
-
-	// m.SaveToFile()
+	m.SaveToFile()
 
 	// fmt.Println("Server shutdown")
 }
