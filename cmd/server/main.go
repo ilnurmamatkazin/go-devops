@@ -17,7 +17,7 @@ import (
 
 const (
 	ADDRESS       = "localhost:8080"
-	STOREINTERVAL = 300
+	STOREINTERVAL = "300s"
 	STOREFILE     = "devops-metrics-db.json"
 	RESTORE       = true
 )

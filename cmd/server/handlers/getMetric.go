@@ -15,7 +15,7 @@ func (h *Handler) getMetric(w http.ResponseWriter, r *http.Request) {
 	)
 
 	if err = json.NewDecoder(r.Body).Decode(&metric); err != nil {
-		fmt.Println("getMetric", r.URL.Path, metric, err)
+		fmt.Println("getMetric NewDecoder", r.URL.Path, metric, err)
 
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -36,6 +36,8 @@ func (h *Handler) getMetric(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 
 	if err = json.NewEncoder(w).Encode(metric); err != nil {
+		fmt.Println("getMetric NewEncoder", r.URL.Path, metric, err)
+
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

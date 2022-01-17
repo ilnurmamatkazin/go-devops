@@ -14,7 +14,7 @@ func (h *Handler) parseMetric(w http.ResponseWriter, r *http.Request) {
 		err    error
 	)
 	if err = json.NewDecoder(r.Body).Decode(&metric); err != nil {
-		fmt.Println("parseMetric", r.URL.Path, metric, err)
+		fmt.Println("parseMetric NewDecoder", r.URL.Path, metric, err)
 
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -33,4 +33,11 @@ func (h *Handler) parseMetric(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
+
+	if err = json.NewEncoder(w).Encode(metric); err != nil {
+		fmt.Println("parseMetric NewEncoder", r.URL.Path, metric, err)
+
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }
