@@ -16,10 +16,10 @@ import (
 )
 
 const (
-	ADDRESS        = "localhost:8080"
-	STORE_INTERVAL = 300
-	STORE_FILE     = "./tmp/devops-metrics-db.json"
-	RESTORE        = true
+	ADDRESS       = "localhost:8080"
+	STOREINTERVAL = 300
+	STOREFILE     = "./tmp/devops-metrics-db.json"
+	RESTORE       = true
 )
 
 func testRequest(t *testing.T, ts *httptest.Server, method, path string) (*http.Response, string) {
@@ -40,8 +40,8 @@ func testRequest(t *testing.T, ts *httptest.Server, method, path string) (*http.
 func TestNewRouter(t *testing.T) {
 	cfg := models.Config{
 		Address:       ADDRESS,
-		StoreInterval: STORE_INTERVAL,
-		StoreFile:     STORE_FILE,
+		StoreInterval: STOREINTERVAL,
+		StoreFile:     STOREFILE,
 		Restore:       RESTORE,
 	}
 

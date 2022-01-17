@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/caarlos0/env/v6"
+	"github.com/ilnurmamatkazin/go-devops/cmd/agent/models"
 )
 
 func Test_sendMetric(t *testing.T) {
@@ -25,10 +26,10 @@ func Test_sendMetric(t *testing.T) {
 		// TODO: Add test cases.
 	}
 
-	cfg := Config{
+	cfg := models.Config{
 		Address:        ADDRESS,
-		ReportInterval: REPORT_INTERVAL,
-		PollInterval:   POLL_INTERVAL,
+		ReportInterval: REPORTINTERVAL,
+		PollInterval:   POLLINTERVAL,
 	}
 
 	if err := env.Parse(&cfg); err != nil {

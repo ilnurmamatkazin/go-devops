@@ -23,29 +23,23 @@ import (
 )
 
 const (
-	ADDRESS         = "localhost:8080"
-	POLL_INTERVAL   = "2s"
-	REPORT_INTERVAL = "10s"
+	ADDRESS        = "127.0.0.1:8080"
+	POLLINTERVAL   = "2s"
+	REPORTINTERVAL = "10s"
 )
-
-type Config struct {
-	Address        string `env:"ADDRESS"`
-	ReportInterval string `env:"REPORT_INTERVAL"`
-	PollInterval   string `env:"POLL_INTERVAL"`
-}
 
 func main() {
 	var (
 		mutex     sync.Mutex
 		rtm       runtime.MemStats
 		pollCount int64
-		cfg       Config
+		cfg       models.Config
 	)
 
-	cfg = Config{
+	cfg = models.Config{
 		Address:        ADDRESS,
-		ReportInterval: REPORT_INTERVAL,
-		PollInterval:   POLL_INTERVAL,
+		ReportInterval: REPORTINTERVAL,
+		PollInterval:   POLLINTERVAL,
 	}
 
 	if err := env.Parse(&cfg); err != nil {
@@ -144,7 +138,7 @@ func main() {
 
 }
 
-func sendMetric(ctxBase context.Context, client *http.Client, typeMetric, nameMetric string, value interface{}, cfg Config) (err error) {
+func sendMetric(ctxBase context.Context, client *http.Client, typeMetric, nameMetric string, value interface{}, cfg models.Config) (err error) {
 	ctx, cancel := context.WithTimeout(ctxBase, 1*time.Second)
 	defer cancel()
 
@@ -189,7 +183,7 @@ func sendMetric(ctxBase context.Context, client *http.Client, typeMetric, nameMe
 // 	return
 // }
 
-func sendMetricJSON(ctx context.Context, client *http.Client, typeMetric, nameMetric string, value interface{}, cfg Config) (err error) {
+func sendMetricJSON(ctx context.Context, client *http.Client, typeMetric, nameMetric string, value interface{}, cfg models.Config) (err error) {
 	var metric models.Metric
 
 	endpoint := fmt.Sprintf("http://%s/update", cfg.Address)
@@ -257,7 +251,7 @@ func sendMetricJSON(ctx context.Context, client *http.Client, typeMetric, nameMe
 		return
 	}
 	// печатаем код ответа
-	// fmt.Println("Статус-код ", response.Status)
+	fmt.Println("Статус-код ", response.Status)
 	defer response.Body.Close()
 	// читаем поток из тела ответа
 	// body, err := ioutil.ReadAll(response.Body)

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
@@ -15,17 +16,17 @@ import (
 )
 
 const (
-	ADDRESS        = "localhost:8080"
-	STORE_INTERVAL = 300
-	STORE_FILE     = "./tmp/devops-metrics-db.json"
-	RESTORE        = true
+	ADDRESS       = "localhost:8080"
+	STOREINTERVAL = 300
+	STOREFILE     = "./tmp/devops-metrics-db.json"
+	RESTORE       = true
 )
 
 func main() {
 	cfg := models.Config{
 		Address:       ADDRESS,
-		StoreInterval: STORE_INTERVAL,
-		StoreFile:     STORE_FILE,
+		StoreInterval: STOREINTERVAL,
+		StoreFile:     STOREFILE,
 		Restore:       RESTORE,
 	}
 
@@ -40,6 +41,8 @@ func main() {
 	s := service.NewService(m)
 	h := handlers.New(s)
 	r := h.NewRouter()
+
+	fmt.Println("Address ", cfg.Address, ":"+strings.Split(cfg.Address, ":")[1])
 
 	go http.ListenAndServe(":"+strings.Split(cfg.Address, ":")[1], r)
 
