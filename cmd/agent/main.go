@@ -6,6 +6,7 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"errors"
+	"flag"
 	"fmt"
 	"math/rand"
 	"net/http"
@@ -13,7 +14,6 @@ import (
 	"os/signal"
 	"runtime"
 	"strconv"
-	"strings"
 	"sync"
 	"syscall"
 	"time"
@@ -34,17 +34,16 @@ func main() {
 		rtm       runtime.MemStats
 		pollCount int64
 		cfg       models.Config
+		err       error
 	)
 
-	cfg = models.Config{
-		Address:        ADDRESS,
-		ReportInterval: REPORTINTERVAL,
-		PollInterval:   POLLINTERVAL,
-	}
-
-	if err := env.Parse(&cfg); err != nil {
+	cfg, err = parseConfig()
+	if err != nil {
+		fmt.Println("env.Parse", err.Error())
 		os.Exit(2)
 	}
+
+	fmt.Println(cfg)
 
 	// конструируем HTTP-клиент
 	client := &http.Client{}
@@ -63,11 +62,43 @@ func main() {
 
 	ctx := context.Background()
 
-	pi, _ := strconv.Atoi(strings.Split(cfg.PollInterval, "s")[0])
-	ri, _ := strconv.Atoi(strings.Split(cfg.ReportInterval, "s")[0])
+	strDurPi := cfg.PollInterval[len(cfg.PollInterval)-1:]
+	strPi := cfg.PollInterval[0 : len(cfg.PollInterval)-1]
 
-	tickerPoll := time.NewTicker(time.Duration(pi) * time.Second)
-	tickerReport := time.NewTicker(time.Duration(ri) * time.Second)
+	strDurRi := cfg.ReportInterval[len(cfg.ReportInterval)-1:]
+	strRi := cfg.ReportInterval[0 : len(cfg.ReportInterval)-1]
+
+	pi, _ := strconv.Atoi(strPi)
+	ri, _ := strconv.Atoi(strRi)
+
+	var durPi, durRi time.Duration
+
+	switch strDurPi {
+	case "s":
+		durPi = time.Second
+	case "m":
+		durPi = time.Minute
+	case "h":
+		durPi = time.Hour
+	default:
+		fmt.Println("Неверный временной интервал")
+		return
+	}
+
+	switch strDurRi {
+	case "s":
+		durRi = time.Second
+	case "m":
+		durRi = time.Minute
+	case "h":
+		durRi = time.Hour
+	default:
+		fmt.Println("Неверный временной интервал")
+		return
+	}
+
+	tickerPoll := time.NewTicker(time.Duration(pi) * durPi)
+	tickerReport := time.NewTicker(time.Duration(ri) * durRi)
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
@@ -205,6 +236,22 @@ func sendMetric(ctxBase context.Context, client *http.Client, typeMetric, nameMe
 	// печатаем код ответа
 	// fmt.Println("Статус-код ", response.Status)
 	defer response.Body.Close()
+
+	return
+}
+
+func parseConfig() (cfg models.Config, err error) {
+	address := flag.String("a", ADDRESS, "a address")
+	reportInterval := flag.String("r", REPORTINTERVAL, "a report_interval")
+	pollInterval := flag.String("p", POLLINTERVAL, "a poll_interval")
+
+	flag.Parse()
+
+	cfg.Address = *address
+	cfg.ReportInterval = *reportInterval
+	cfg.PollInterval = *pollInterval
+
+	err = env.Parse(&cfg)
 
 	return
 }

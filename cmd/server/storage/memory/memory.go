@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"os"
 	"strconv"
-	"strings"
 	"sync"
 	"time"
 
@@ -36,19 +35,34 @@ func NewMemoryRepository(cfg models.Config) *MemoryRepository {
 			}
 		}
 
-		si, _ := strconv.Atoi(strings.Split(cfg.StoreInterval, "s")[0])
+		strDurSi := cfg.StoreInterval[len(cfg.StoreInterval)-1:]
+		strSi := cfg.StoreInterval[0 : len(cfg.StoreInterval)-1]
+
+		si, _ := strconv.Atoi(strSi)
+
+		var durSi time.Duration
+
+		switch strDurSi {
+		case "s":
+			durSi = time.Second
+		case "m":
+			durSi = time.Minute
+		case "h":
+			durSi = time.Hour
+		default:
+			fmt.Println("Неверный временной интервал")
+			return memoryRepository
+		}
 
 		if si == 0 {
 			memoryRepository.isSyncMode = true
 		} else {
 			go func(mr *MemoryRepository) {
 				var err error
-				ticker := time.NewTicker(time.Duration(si) * time.Second)
+				ticker := time.NewTicker(time.Duration(si) * durSi)
 
 				for {
 					<-ticker.C
-
-					fmt.Println("$$$$$$")
 
 					if err = mr.SaveToFile(); err != nil {
 						fmt.Println(err.Error())

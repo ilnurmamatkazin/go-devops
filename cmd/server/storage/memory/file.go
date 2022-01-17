@@ -7,7 +7,6 @@ import (
 )
 
 func (mr *MemoryRepository) SaveToFile() (err error) {
-	fmt.Println("mr.fileName", mr.fileName)
 	mr.file, err = os.OpenFile(mr.fileName, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0777)
 	if err != nil {
 		fmt.Println(err.Error())
@@ -33,8 +32,6 @@ func (mr *MemoryRepository) SaveToFile() (err error) {
 }
 
 func (mr *MemoryRepository) loadFromFile() (err error) {
-	fmt.Println("loadFromFile mr.fileName", mr.fileName)
-
 	mr.file, err = os.OpenFile(mr.fileName, os.O_RDONLY|os.O_CREATE, 0777)
 	if err != nil {
 		fmt.Println(err.Error())
@@ -55,8 +52,6 @@ func (mr *MemoryRepository) loadFromFile() (err error) {
 
 		return
 	}
-
-	fmt.Println(mr.repository)
 
 	mr.Unlock()
 
