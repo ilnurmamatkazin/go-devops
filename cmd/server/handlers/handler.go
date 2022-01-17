@@ -27,11 +27,6 @@ func (h *Handler) NewRouter() *chi.Mux {
 	r.Use(middleware.RealIP)
 	// r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
-	// r.Use(middleware.AllowContentType("application/json"))
-
-	// r.Route("/", func(r chi.Router) {
-	// 	r.Get("/", h.getInfo)
-	// })
 
 	r.Route("/update", func(r chi.Router) {
 		r.Post("/counter/{nameMetric}/{valueMetric}", h.parseCounterMetric)

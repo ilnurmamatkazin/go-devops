@@ -79,11 +79,7 @@ func main() {
 		for {
 			select {
 			case <-quit:
-				// fmt.Println("Shutdown Agent ...")
-				// t := time.NewTicker(5 * time.Second)
-				// <-t.C
 				done <- true
-
 				break loop
 
 			case <-tickerPoll.C:
@@ -134,56 +130,12 @@ func main() {
 
 	<-done
 
-	// fmt.Println("Agent exiting")
-
 }
 
 func sendMetric(ctxBase context.Context, client *http.Client, typeMetric, nameMetric string, value interface{}, cfg models.Config) (err error) {
 	ctx, cancel := context.WithTimeout(ctxBase, 1*time.Second)
 	defer cancel()
 
-	// err = sendMetricText(ctx, client, typeMetric, nameMetric, value)
-	err = sendMetricJSON(ctx, client, typeMetric, nameMetric, value, cfg)
-
-	return
-}
-
-// func sendMetricText(ctx context.Context, client *http.Client, typeMetric, nameMetric string, value interface{}) (err error) {
-// 	endpoint := fmt.Sprintf("http://%s/update/%s/%s/%v", cfg., port, typeMetric, nameMetric, value)
-
-// 	buf := new(bytes.Buffer)
-// 	err = binary.Write(buf, binary.LittleEndian, value)
-
-// 	request, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, buf)
-// 	if err != nil {
-// 		//fmt.Println(err)
-// 		return
-// 	}
-
-// 	request.Header.Set("Content-Type", "text/plain; charset=utf-8")
-
-// 	// отправляем запрос и получаем ответ
-// 	response, err := client.Do(request)
-// 	if err != nil {
-// 		//fmt.Println(err)
-// 		return
-// 	}
-// 	// печатаем код ответа
-// 	fmt.Println("Статус-код ", response.Status)
-// 	defer response.Body.Close()
-// 	// читаем поток из тела ответа
-// 	body, err := ioutil.ReadAll(response.Body)
-// 	if err != nil {
-// 		fmt.Println(err)
-// 		return
-// 	}
-// 	// и печатаем его
-// 	fmt.Println(string(body))
-
-// 	return
-// }
-
-func sendMetricJSON(ctx context.Context, client *http.Client, typeMetric, nameMetric string, value interface{}, cfg models.Config) (err error) {
 	var metric models.Metric
 
 	endpoint := fmt.Sprintf("http://%s/update", cfg.Address)
@@ -228,7 +180,7 @@ func sendMetricJSON(ctx context.Context, client *http.Client, typeMetric, nameMe
 
 	b, err := json.Marshal(metric)
 	if err != nil {
-		//fmt.Println(err)
+		fmt.Println(err)
 		return
 	}
 
@@ -237,7 +189,7 @@ func sendMetricJSON(ctx context.Context, client *http.Client, typeMetric, nameMe
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, buf)
 	if err != nil {
-		//fmt.Println(err)
+		fmt.Println(err)
 		return
 	}
 
@@ -247,20 +199,12 @@ func sendMetricJSON(ctx context.Context, client *http.Client, typeMetric, nameMe
 	// отправляем запрос и получаем ответ
 	response, err := client.Do(request)
 	if err != nil {
-		//fmt.Println(err)
+		fmt.Println(err)
 		return
 	}
 	// печатаем код ответа
 	// fmt.Println("Статус-код ", response.Status)
 	defer response.Body.Close()
-	// читаем поток из тела ответа
-	// body, err := ioutil.ReadAll(response.Body)
-	// if err != nil {
-	// 	fmt.Println(err)
-	// 	return
-	// }
-	// // и печатаем его
-	// fmt.Println(string(body))
 
 	return
 }
