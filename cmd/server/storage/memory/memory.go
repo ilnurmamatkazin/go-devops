@@ -40,11 +40,10 @@ func NewMemoryRepository(cfg models.Config) *MemoryRepository {
 			ticker := time.NewTicker(time.Duration(cfg.StoreInterval) * time.Second)
 
 			for {
-				select {
-				case <-ticker.C:
-					if err = mr.SaveToFile(); err != nil {
-						fmt.Println(err.Error())
-					}
+				<-ticker.C
+
+				if err = mr.SaveToFile(); err != nil {
+					fmt.Println(err.Error())
 				}
 			}
 
