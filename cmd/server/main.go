@@ -18,7 +18,7 @@ import (
 const (
 	ADDRESS       = "localhost:8080"
 	STOREINTERVAL = 300
-	STOREFILE     = "./tmp/devops-metrics-db.json"
+	STOREFILE     = "devops-metrics-db.json"
 	RESTORE       = true
 )
 
@@ -49,6 +49,8 @@ func main() {
 	// fmt.Println("Server started...")
 
 	<-quit
+
+	fmt.Println("@@@@@")
 
 	m.SaveToFile()
 

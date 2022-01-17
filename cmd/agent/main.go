@@ -251,7 +251,7 @@ func sendMetricJSON(ctx context.Context, client *http.Client, typeMetric, nameMe
 		return
 	}
 	// печатаем код ответа
-	fmt.Println("Статус-код ", response.Status)
+	// fmt.Println("Статус-код ", response.Status)
 	defer response.Body.Close()
 	// читаем поток из тела ответа
 	// body, err := ioutil.ReadAll(response.Body)

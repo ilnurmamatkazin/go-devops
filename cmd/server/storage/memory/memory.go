@@ -24,7 +24,7 @@ func NewMemoryRepository(cfg models.Config) *MemoryRepository {
 		repository: make(map[string]float64),
 	}
 
-	memoryRepository.fileName = cfg.StoreFile
+	memoryRepository.fileName = os.TempDir() + cfg.StoreFile
 
 	if cfg.Restore {
 		if err := memoryRepository.loadFromFile(); err != nil {
@@ -117,11 +117,8 @@ func (mr *MemoryRepository) SetCounter(metric models.MetricCounter) (err error) 
 }
 
 func (mr *MemoryRepository) Info() (html string) {
-	// mr.Lock()
-	// valueInt := mr.counter["PollCount"]
-	// mr.Unlock()
+	mr.Lock()
 
-	mr.Mutex.Lock()
 	html = fmt.Sprintf(`
 	<html>
 		<head>
@@ -192,7 +189,7 @@ func (mr *MemoryRepository) Info() (html string) {
 		int64(mr.repository["PollCount"]),
 	)
 
-	mr.Mutex.Unlock()
+	mr.Unlock()
 
 	return
 }
