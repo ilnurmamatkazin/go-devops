@@ -10,11 +10,11 @@ import (
 func (s *Service) SetMetric(metric models.Metric) (err error) {
 	switch metric.MType {
 	case "gauge":
-		m := models.MetricGauge{Name: metric.ID, Value: *metric.Value}
-		err = s.repository.SetGauge(m)
+		metricGauge := models.MetricGauge{Name: metric.ID, Value: *metric.Value}
+		err = s.repository.SetGauge(metricGauge)
 	case "counter":
-		m := models.MetricCounter{Name: metric.ID, Value: *metric.Delta}
-		err = s.repository.SetCounter(m)
+		metricCounter := models.MetricCounter{Name: metric.ID, Value: *metric.Delta}
+		err = s.repository.SetCounter(metricCounter)
 	default:
 		err = &models.RequestError{
 			StatusCode: http.StatusNotImplemented,

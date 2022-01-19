@@ -3,13 +3,14 @@ package memory
 import (
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
-	"strconv"
 	"sync"
 	"time"
 
 	"github.com/ilnurmamatkazin/go-devops/cmd/server/models"
+	"github.com/ilnurmamatkazin/go-devops/internal/utils"
 )
 
 type MemoryRepository struct {
@@ -31,41 +32,46 @@ func NewMemoryRepository(cfg models.Config) *MemoryRepository {
 
 		if cfg.Restore {
 			if err := memoryRepository.loadFromFile(); err != nil {
-				fmt.Println(err.Error())
+				log.Println(err.Error())
 			}
 		}
 
-		strDurSi := cfg.StoreInterval[len(cfg.StoreInterval)-1:]
-		strSi := cfg.StoreInterval[0 : len(cfg.StoreInterval)-1]
-
-		si, _ := strconv.Atoi(strSi)
-
-		var durSi time.Duration
-
-		switch strDurSi {
-		case "s":
-			durSi = time.Second
-		case "m":
-			durSi = time.Minute
-		case "h":
-			durSi = time.Hour
-		default:
-			fmt.Println("Неверный временной интервал")
-			return memoryRepository
+		interval, duration, err := utils.GetDataForTicker(cfg.StoreInterval)
+		if err == nil {
+			log.Fatalf("Ошибка создания тикера")
 		}
 
-		if si == 0 {
+		// strDurationStoreInterval := cfg.StoreInterval[len(cfg.StoreInterval)-1:]
+		// strStoreInterval := cfg.StoreInterval[0 : len(cfg.StoreInterval)-1]
+
+		// storeInterval, _ := strconv.Atoi(strStoreInterval)
+
+		// var durationStoreInterval time.Duration
+
+		// switch strDurationStoreInterval {
+		// case "s":
+		// 	durationStoreInterval = time.Second
+		// case "m":
+		// 	durationStoreInterval = time.Minute
+		// case "h":
+		// 	durationStoreInterval = time.Hour
+		// default:
+		// 	log.Println("Неверный временной интервал")
+		// 	return memoryRepository
+		// }
+
+		if interval == 0 {
 			memoryRepository.isSyncMode = true
 		} else {
 			go func(mr *MemoryRepository) {
 				var err error
-				ticker := time.NewTicker(time.Duration(si) * durSi)
+				ticker := time.NewTicker(time.Duration(interval) * duration)
 
 				for {
 					<-ticker.C
 
 					if err = mr.SaveToFile(); err != nil {
-						fmt.Println(err.Error())
+						log.Println(err.Error())
 					}
 				}
 

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"log"
 	"net/http"
 	"os"
 	"testing"
@@ -27,12 +28,13 @@ func Test_sendMetric(t *testing.T) {
 	}
 
 	cfg := models.Config{
-		Address:        ADDRESS,
-		ReportInterval: REPORTINTERVAL,
-		PollInterval:   POLLINTERVAL,
+		Address:        Address,
+		ReportInterval: ReportInterval,
+		PollInterval:   PollInterval,
 	}
 
 	if err := env.Parse(&cfg); err != nil {
+		log.Println("Ошибка чтения конфигурации")
 		os.Exit(2)
 	}
 	for _, tt := range tests {

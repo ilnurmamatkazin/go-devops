@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"io/ioutil"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -13,13 +14,6 @@ import (
 	"github.com/ilnurmamatkazin/go-devops/cmd/server/storage/memory"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-)
-
-const (
-	ADDRESS       = "localhost:8080"
-	STOREINTERVAL = "300s"
-	STOREFILE     = "/tmp/devops-metrics-db.json"
-	RESTORE       = true
 )
 
 func testRequest(t *testing.T, ts *httptest.Server, method, path string) (*http.Response, string) {
@@ -39,22 +33,23 @@ func testRequest(t *testing.T, ts *httptest.Server, method, path string) (*http.
 
 func TestNewRouter(t *testing.T) {
 	cfg := models.Config{
-		Address:       ADDRESS,
-		StoreInterval: STOREINTERVAL,
-		StoreFile:     STOREFILE,
-		Restore:       RESTORE,
+		Address:       models.Address,
+		StoreInterval: models.StoreInterval,
+		StoreFile:     models.StoreFile,
+		Restore:       models.Restore,
 	}
 
 	if err := env.Parse(&cfg); err != nil {
+		log.Println("Ошибка чтения конфигурации")
 		os.Exit(2)
 	}
 
-	m := memory.NewMemoryRepository(cfg)
-	s := service.NewService(m)
-	h := New(s)
-	r := h.NewRouter()
+	repository := memory.NewMemoryRepository(cfg)
+	service := service.NewService(repository)
+	hendler := New(service)
+	router := hendler.NewRouter()
 
-	ts := httptest.NewServer(r)
+	ts := httptest.NewServer(router)
 	defer ts.Close()
 
 	resp, _ := testRequest(t, ts, "POST", "/update/counter/testCounter/100")

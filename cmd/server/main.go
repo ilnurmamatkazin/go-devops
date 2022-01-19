@@ -2,7 +2,7 @@ package main
 
 import (
 	"flag"
-	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -16,42 +16,33 @@ import (
 	"github.com/ilnurmamatkazin/go-devops/cmd/server/storage/memory"
 )
 
-const (
-	ADDRESS       = "localhost:8080"
-	STOREINTERVAL = "300s"
-	STOREFILE     = "/tmp/devops-metrics-db.json"
-	RESTORE       = true
-)
-
 func main() {
 	cfg, err := parseConfig()
 	if err != nil {
-		fmt.Println("env.Parse", err.Error())
+		log.Println("env.Parse", err.Error())
 		os.Exit(2)
 	}
-
-	fmt.Println(cfg)
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
 
-	m := memory.NewMemoryRepository(cfg)
-	s := service.NewService(m)
-	h := handlers.New(s)
-	r := h.NewRouter()
+	repository := memory.NewMemoryRepository(cfg)
+	service := service.NewService(repository)
+	hendler := handlers.New(service)
+	router := hendler.NewRouter()
 
-	go http.ListenAndServe(":"+strings.Split(cfg.Address, ":")[1], r)
+	go http.ListenAndServe(":"+strings.Split(cfg.Address, ":")[1], router)
 
 	<-quit
 
-	m.SaveToFile()
+	repository.SaveToFile()
 }
 
 func parseConfig() (cfg models.Config, err error) {
-	address := flag.String("a", ADDRESS, "a address")
-	restore := flag.Bool("r", RESTORE, "a restore")
-	storeInterval := flag.String("i", STOREINTERVAL, "a store_interval")
-	storeFile := flag.String("f", STOREFILE, "a store_file")
+	address := flag.String("a", models.Address, "a address")
+	restore := flag.Bool("r", models.Restore, "a restore")
+	storeInterval := flag.String("i", models.StoreInterval, "a store_interval")
+	storeFile := flag.String("f", models.StoreFile, "a store_file")
 
 	flag.Parse()
 
