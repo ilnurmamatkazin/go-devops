@@ -39,7 +39,6 @@ func main() {
 		mutex     sync.Mutex
 		rtm       runtime.MemStats
 		pollCount int64
-		cfg       models.Config
 		err       error
 	)
 
@@ -49,15 +48,15 @@ func main() {
 		ctx:    context.Background(),
 	}
 
-	interval, duration, err := utils.GetDataForTicker(cfg.PollInterval)
-	if err == nil {
+	interval, duration, err := utils.GetDataForTicker(metricSender.cfg.PollInterval)
+	if err != nil {
 		log.Fatalf("Ошибка создания тикера")
 	}
 
 	tickerPoll := time.NewTicker(time.Duration(interval) * duration)
 
-	interval, duration, err = utils.GetDataForTicker(cfg.ReportInterval)
-	if err == nil {
+	interval, duration, err = utils.GetDataForTicker(metricSender.cfg.ReportInterval)
+	if err != nil {
 		log.Fatalf("Ошибка создания тикера")
 	}
 
@@ -135,8 +134,9 @@ func (ms MetricSender) sendMetric(typeMetric, nameMetric string, value interface
 	endpoint := fmt.Sprintf("http://%s/update", ms.cfg.Address)
 
 	metric.ID = nameMetric
-	metric.MType = typeMetric
+	metric.MetricType = typeMetric
 
+	fmt.Println("$$$$", metric.ID, metric.MetricType, value)
 	f := value.(float64)
 	i := value.(int64)
 
@@ -221,6 +221,8 @@ func parseConfig() (cfg models.Config) {
 	if err := env.Parse(&cfg); err != nil {
 		log.Fatalf("env.Parse error: %s", err.Error())
 	}
+
+	fmt.Println("^^^^^", cfg)
 
 	return
 }
