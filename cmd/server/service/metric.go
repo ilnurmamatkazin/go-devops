@@ -8,7 +8,7 @@ import (
 )
 
 func (s *Service) SetMetric(metric models.Metric) (err error) {
-	switch metric.MType {
+	switch metric.MetricType {
 	case "gauge":
 		metricGauge := models.MetricGauge{Name: metric.ID, Value: *metric.Value}
 		err = s.repository.SetGauge(metricGauge)
@@ -26,7 +26,7 @@ func (s *Service) SetMetric(metric models.Metric) (err error) {
 }
 
 func (s *Service) GetMetric(metric *models.Metric) (err error) {
-	switch metric.MType {
+	switch metric.MetricType {
 	case "gauge":
 		var f float64
 		f, err = s.repository.ReadGauge(metric.ID)

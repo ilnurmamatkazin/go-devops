@@ -26,57 +26,58 @@ func NewMemoryRepository(cfg models.Config) *MemoryRepository {
 		repository: make(map[string]float64),
 	}
 
-	if cfg.StoreFile != "" {
+	if cfg.StoreFile == "" {
+		return nil
+	}
 
-		memoryRepository.fileName = cfg.StoreFile
+	memoryRepository.fileName = cfg.StoreFile
 
-		if cfg.Restore {
-			if err := memoryRepository.loadFromFile(); err != nil {
-				log.Println(err.Error())
-			}
+	if cfg.Restore {
+		if err := memoryRepository.loadFromFile(); err != nil {
+			log.Println(err.Error())
 		}
+	}
 
-		interval, duration, err := utils.GetDataForTicker(cfg.StoreInterval)
-		if err == nil {
-			log.Fatalf("Ошибка создания тикера")
-		}
+	interval, duration, err := utils.GetDataForTicker(cfg.StoreInterval)
+	if err == nil {
+		log.Fatalf("Ошибка создания тикера")
+	}
 
-		// strDurationStoreInterval := cfg.StoreInterval[len(cfg.StoreInterval)-1:]
-		// strStoreInterval := cfg.StoreInterval[0 : len(cfg.StoreInterval)-1]
+	// strDurationStoreInterval := cfg.StoreInterval[len(cfg.StoreInterval)-1:]
+	// strStoreInterval := cfg.StoreInterval[0 : len(cfg.StoreInterval)-1]
 
-		// storeInterval, _ := strconv.Atoi(strStoreInterval)
+	// storeInterval, _ := strconv.Atoi(strStoreInterval)
 
-		// var durationStoreInterval time.Duration
+	// var durationStoreInterval time.Duration
 
-		// switch strDurationStoreInterval {
-		// case "s":
-		// 	durationStoreInterval = time.Second
-		// case "m":
-		// 	durationStoreInterval = time.Minute
-		// case "h":
-		// 	durationStoreInterval = time.Hour
-		// default:
-		// 	log.Println("Неверный временной интервал")
-		// 	return memoryRepository
-		// }
+	// switch strDurationStoreInterval {
+	// case "s":
+	// 	durationStoreInterval = time.Second
+	// case "m":
+	// 	durationStoreInterval = time.Minute
+	// case "h":
+	// 	durationStoreInterval = time.Hour
+	// default:
+	// 	log.Println("Неверный временной интервал")
+	// 	return memoryRepository
+	// }
 
-		if interval == 0 {
-			memoryRepository.isSyncMode = true
-		} else {
-			go func(mr *MemoryRepository) {
-				var err error
-				ticker := time.NewTicker(time.Duration(interval) * duration)
+	if interval == 0 {
+		memoryRepository.isSyncMode = true
+	} else {
+		go func(mr *MemoryRepository) {
+			var err error
+			ticker := time.NewTicker(time.Duration(interval) * duration)
 
-				for {
-					<-ticker.C
+			for {
+				<-ticker.C
 
-					if err = mr.SaveToFile(); err != nil {
-						log.Println(err.Error())
-					}
+				if err = mr.SaveToFile(); err != nil {
+					log.Println(err.Error())
 				}
+			}
 
-			}(memoryRepository)
-		}
+		}(memoryRepository)
 	}
 
 	return memoryRepository
