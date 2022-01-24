@@ -137,50 +137,6 @@ func (ms MetricSender) sendMetric(typeMetric, nameMetric string, value interface
 	metric.MetricType = typeMetric
 
 	convertValue(value, &metric)
-	fmt.Println("###", metric, value)
-	// fmt.Println("###", metric.ID, metric.MetricType, value, *metric.Delta, *metric.Value)
-
-	// f, _ := value.(float64)
-	// fmt.Println("###", metric.ID, metric.MetricType, value, f)
-
-	// i, _ := value.(int64)
-	// fmt.Println("@@@", metric.ID, metric.MetricType, value, i)
-
-	// switch typeMetric {
-	// case "counter":
-	// 	var i int64
-	// 	i = value.(int64)
-	// 	metric.Delta = &i
-	// case "gauge":
-	// 	var f float64
-
-	// 	switch value := value.(type) {
-	// 	case float64:
-	// 		f = value
-	// 	case uint64:
-	// 		f = float64(value)
-	// 	case uint32:
-	// 		f = float64(value)
-
-	// 	default:
-	// 	}
-
-	// if (nameMetric == "GCCPUFraction") && (f == 0) {
-	// 	f = rand.Float64()
-	// } else if (nameMetric == "LastGC") && (f == 0) ||
-	// 	(nameMetric == "Lookups") && (f == 0) ||
-	// 	(nameMetric == "NumForcedGC") && (f == 0) ||
-	// 	(nameMetric == "NumGC") && (f == 0) ||
-	// 	(nameMetric == "PauseTotalNs") && (f == 0) {
-	// 	f = float64(rand.Intn(100))
-	// }
-
-	// metric.Value = &f
-	// metric.Delta = &i
-	// default:
-	// 	err = errors.New("недопустимый тип")
-	// 	return
-	// }
 
 	b, err := json.Marshal(metric)
 	if err != nil {
@@ -281,63 +237,5 @@ func convertValue(value interface{}, metric *models.Metric) {
 		f = float64(rand.Intn(100))
 	}
 
-	fmt.Println("$$$", f)
 	metric.Value = &f
 }
-
-//cfg = parseConfig()
-
-// конструируем HTTP-клиент
-// client := &http.Client{}
-// client.Timeout = time.Second * 2
-
-// client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
-// 	if len(via) >= 2 {
-// 		log.Fatalf("Количество редиректов %d больше 2", len(via))
-// 	}
-// 	return nil
-// }
-
-// transport := &http.Transport{}
-// transport.MaxIdleConns = 20
-// client.Transport = transport
-
-// ctx := context.Background()
-
-// strDurationPollInterval := cfg.PollInterval[len(cfg.PollInterval)-1:]
-// strPollInterval := cfg.PollInterval[0 : len(cfg.PollInterval)-1]
-
-// strDurationReportInterval := cfg.ReportInterval[len(cfg.ReportInterval)-1:]
-// strReportInterval := cfg.ReportInterval[0 : len(cfg.ReportInterval)-1]
-
-// pollInterval, _ := strconv.Atoi(strPollInterval)
-// reportInterval, _ := strconv.Atoi(strReportInterval)
-
-// var durationPollInterval, durationReportInterval time.Duration
-
-// switch strDurationPollInterval {
-// case "s":
-// 	durationPollInterval = time.Second
-// case "m":
-// 	durationPollInterval = time.Minute
-// case "h":
-// 	durationPollInterval = time.Hour
-// default:
-// 	log.Println("Неверный временной интервал")
-// 	return
-// }
-
-// switch strDurationReportInterval {
-// case "s":
-// 	durationReportInterval = time.Second
-// case "m":
-// 	durationReportInterval = time.Minute
-// case "h":
-// 	durationReportInterval = time.Hour
-// default:
-// 	log.Println("Неверный временной интервал")
-// 	return
-// }
-
-// tickerPoll := time.NewTicker(time.Duration(pollInterval) * durationPollInterval)
-// tickerReport := time.NewTicker(time.Duration(reportInterval) * durationReportInterval)

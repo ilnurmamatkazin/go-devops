@@ -22,7 +22,7 @@ func GetDataForTicker(value string) (interval int, duration time.Duration, err e
 	case "h":
 		duration = time.Hour
 	default:
-		err = errors.New("Ошибка создания тикера")
+		err = errors.New("ошибка создания тикера")
 	}
 
 	return

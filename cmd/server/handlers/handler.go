@@ -30,19 +30,12 @@ func (h *Handler) NewRouter() *chi.Mux {
 
 	r.Route("/update", func(r chi.Router) {
 		r.Post("/{typeMetric}/{nameMetric}/{valueMetric}", h.parseOldMetric)
-		// r.Post("/gauge/{nameMetric}/{valueMetric}", h.parseGaugeMetric)
-		// r.Post("/{unknown}/{nameMetric}/{valueMetric}", func(w http.ResponseWriter, r *http.Request) {
-		// 	w.WriteHeader(http.StatusNotImplemented)
-		// })
-
 		r.With(middleware.AllowContentType("application/json")).Post("/", h.parseMetric)
 	})
 
 	r.Route("/", func(r chi.Router) {
 		r.Get("/", h.getInfo)
 		r.Get("/value/{typeMetric}/{nameMetric}", h.getOldMetric)
-		// r.Get("/value/counter/{nameMetric}", h.getOldMetric)
-
 		r.With(middleware.AllowContentType("application/json")).Post("/value/", h.getMetric)
 	})
 
