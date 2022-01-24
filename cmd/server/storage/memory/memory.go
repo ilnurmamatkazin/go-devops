@@ -39,7 +39,7 @@ func NewMemoryRepository(cfg models.Config) *MemoryRepository {
 	}
 
 	interval, duration, err := utils.GetDataForTicker(cfg.StoreInterval)
-	if err == nil {
+	if err != nil {
 		log.Fatalf("Ошибка создания тикера")
 	}
 

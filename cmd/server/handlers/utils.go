@@ -16,7 +16,7 @@ func getMetricFromRequest(r *http.Request) (metric models.Metric) {
 }
 
 func checkMetricType(metricType string) (err error) {
-	if (metricType != "counter") || (metricType != "gauge") {
+	if (metricType != "counter") && (metricType != "gauge") {
 		err = &models.RequestError{
 			StatusCode: http.StatusNotImplemented,
 			Err:        errors.New(http.StatusText(http.StatusNotImplemented)),

@@ -29,7 +29,7 @@ func (h *Handler) getMetric(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sendMetricJsonData(w, metric)
+	sendMetricJSONData(w, metric)
 }
 
 func (h *Handler) parseMetric(w http.ResponseWriter, r *http.Request) {
@@ -53,10 +53,10 @@ func (h *Handler) parseMetric(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sendMetricJsonData(w, metric)
+	sendMetricJSONData(w, metric)
 }
 
-func sendMetricJsonData(w http.ResponseWriter, metric models.Metric) {
+func sendMetricJSONData(w http.ResponseWriter, metric models.Metric) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 

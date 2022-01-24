@@ -136,9 +136,15 @@ func (ms MetricSender) sendMetric(typeMetric, nameMetric string, value interface
 	metric.ID = nameMetric
 	metric.MetricType = typeMetric
 
-	fmt.Println("$$$$", metric.ID, metric.MetricType, value)
-	f := value.(float64)
-	i := value.(int64)
+	convertValue(value, &metric)
+	fmt.Println("###", metric, value)
+	// fmt.Println("###", metric.ID, metric.MetricType, value, *metric.Delta, *metric.Value)
+
+	// f, _ := value.(float64)
+	// fmt.Println("###", metric.ID, metric.MetricType, value, f)
+
+	// i, _ := value.(int64)
+	// fmt.Println("@@@", metric.ID, metric.MetricType, value, i)
 
 	// switch typeMetric {
 	// case "counter":
@@ -159,18 +165,18 @@ func (ms MetricSender) sendMetric(typeMetric, nameMetric string, value interface
 	// 	default:
 	// 	}
 
-	if (nameMetric == "GCCPUFraction") && (f == 0) {
-		f = rand.Float64()
-	} else if (nameMetric == "LastGC") && (f == 0) ||
-		(nameMetric == "Lookups") && (f == 0) ||
-		(nameMetric == "NumForcedGC") && (f == 0) ||
-		(nameMetric == "NumGC") && (f == 0) ||
-		(nameMetric == "PauseTotalNs") && (f == 0) {
-		f = float64(rand.Intn(100))
-	}
+	// if (nameMetric == "GCCPUFraction") && (f == 0) {
+	// 	f = rand.Float64()
+	// } else if (nameMetric == "LastGC") && (f == 0) ||
+	// 	(nameMetric == "Lookups") && (f == 0) ||
+	// 	(nameMetric == "NumForcedGC") && (f == 0) ||
+	// 	(nameMetric == "NumGC") && (f == 0) ||
+	// 	(nameMetric == "PauseTotalNs") && (f == 0) {
+	// 	f = float64(rand.Intn(100))
+	// }
 
-	metric.Value = &f
-	metric.Delta = &i
+	// metric.Value = &f
+	// metric.Delta = &i
 	// default:
 	// 	err = errors.New("недопустимый тип")
 	// 	return
@@ -222,8 +228,6 @@ func parseConfig() (cfg models.Config) {
 		log.Fatalf("env.Parse error: %s", err.Error())
 	}
 
-	fmt.Println("^^^^^", cfg)
-
 	return
 }
 
@@ -244,6 +248,41 @@ func createClient() *http.Client {
 	client.Transport = transport
 
 	return client
+}
+
+func convertValue(value interface{}, metric *models.Metric) {
+	var f float64
+
+	switch metric.MetricType {
+	case "counter":
+		i := value.(int64)
+		metric.Delta = &i
+	case "gauge":
+		switch value := value.(type) {
+		case float64:
+			f = value
+		case uint64:
+			f = float64(value)
+		case uint32:
+			f = float64(value)
+
+		default:
+		}
+
+	}
+
+	if (metric.ID == "GCCPUFraction") && (f == 0) {
+		f = rand.Float64()
+	} else if (metric.ID == "LastGC") && (f == 0) ||
+		(metric.ID == "Lookups") && (f == 0) ||
+		(metric.ID == "NumForcedGC") && (f == 0) ||
+		(metric.ID == "NumGC") && (f == 0) ||
+		(metric.ID == "PauseTotalNs") && (f == 0) {
+		f = float64(rand.Intn(100))
+	}
+
+	fmt.Println("$$$", f)
+	metric.Value = &f
 }
 
 //cfg = parseConfig()
