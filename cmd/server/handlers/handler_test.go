@@ -11,7 +11,7 @@ import (
 	"github.com/caarlos0/env/v6"
 	"github.com/ilnurmamatkazin/go-devops/cmd/server/models"
 	"github.com/ilnurmamatkazin/go-devops/cmd/server/service"
-	"github.com/ilnurmamatkazin/go-devops/cmd/server/storage/memory"
+	"github.com/ilnurmamatkazin/go-devops/cmd/server/storage"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -44,8 +44,8 @@ func TestNewRouter(t *testing.T) {
 		os.Exit(2)
 	}
 
-	repository := memory.NewMemoryRepository(cfg)
-	service := service.NewService(repository)
+	repository := storage.New(cfg)
+	service := service.New(cfg, repository)
 	hendler := New(service)
 	router := hendler.NewRouter()
 

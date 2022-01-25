@@ -2,7 +2,7 @@ package service
 
 import (
 	"github.com/ilnurmamatkazin/go-devops/cmd/server/models"
-	"github.com/ilnurmamatkazin/go-devops/cmd/server/storage/memory"
+	"github.com/ilnurmamatkazin/go-devops/cmd/server/storage"
 )
 
 type Metric interface {
@@ -12,11 +12,14 @@ type Metric interface {
 }
 
 type Service struct {
-	repository *memory.MemoryRepository
+	repository *storage.Storage
+	cfg        models.Config
+	Metric
 }
 
-func NewService(repository *memory.MemoryRepository) *Service {
+func New(cfg models.Config, repository *storage.Storage) *Service {
 	return &Service{
 		repository: repository,
+		cfg:        cfg,
 	}
 }

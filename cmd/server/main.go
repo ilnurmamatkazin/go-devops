@@ -13,7 +13,7 @@ import (
 	"github.com/ilnurmamatkazin/go-devops/cmd/server/handlers"
 	"github.com/ilnurmamatkazin/go-devops/cmd/server/models"
 	"github.com/ilnurmamatkazin/go-devops/cmd/server/service"
-	"github.com/ilnurmamatkazin/go-devops/cmd/server/storage/memory"
+	"github.com/ilnurmamatkazin/go-devops/cmd/server/storage"
 )
 
 func main() {
@@ -26,8 +26,8 @@ func main() {
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
 
-	repository := memory.NewMemoryRepository(cfg)
-	service := service.NewService(repository)
+	repository := storage.New(cfg)
+	service := service.New(cfg, repository)
 	hendler := handlers.New(service)
 	router := hendler.NewRouter()
 
@@ -35,7 +35,7 @@ func main() {
 
 	<-quit
 
-	repository.SaveToFile()
+	repository.Save()
 }
 
 func parseConfig() (cfg models.Config, err error) {
@@ -43,6 +43,8 @@ func parseConfig() (cfg models.Config, err error) {
 	restore := flag.Bool("r", models.Restore, "a restore")
 	storeInterval := flag.String("i", models.StoreInterval, "a store_interval")
 	storeFile := flag.String("f", models.StoreFile, "a store_file")
+	key := flag.String("k", models.Key, "a secret key")
+	database := flag.String("d", models.Database, "a database")
 
 	flag.Parse()
 
@@ -50,6 +52,8 @@ func parseConfig() (cfg models.Config, err error) {
 	cfg.Restore = *restore
 	cfg.StoreInterval = *storeInterval
 	cfg.StoreFile = *storeFile
+	cfg.Key = *key
+	cfg.Database = *database
 
 	err = env.Parse(&cfg)
 

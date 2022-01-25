@@ -3,7 +3,10 @@ package main
 import (
 	"bytes"
 	"context"
+	"crypto/hmac"
+	"crypto/sha256"
 	"encoding/binary"
+	"encoding/hex"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -26,6 +29,7 @@ const (
 	Address        = "127.0.0.1:8080"
 	PollInterval   = "2s"
 	ReportInterval = "10s"
+	Key            = ""
 )
 
 type MetricSender struct {
@@ -137,6 +141,7 @@ func (ms MetricSender) sendMetric(typeMetric, nameMetric string, value interface
 	metric.MetricType = typeMetric
 
 	convertValue(value, &metric)
+	setHesh(&metric, ms.cfg.Key)
 
 	b, err := json.Marshal(metric)
 	if err != nil {
@@ -173,12 +178,14 @@ func parseConfig() (cfg models.Config) {
 	address := flag.String("a", Address, "a address")
 	reportInterval := flag.String("r", ReportInterval, "a report_interval")
 	pollInterval := flag.String("p", PollInterval, "a poll_interval")
+	key := flag.String("k", Key, "a secret key")
 
 	flag.Parse()
 
 	cfg.Address = *address
 	cfg.ReportInterval = *reportInterval
 	cfg.PollInterval = *pollInterval
+	cfg.Key = *key
 
 	if err := env.Parse(&cfg); err != nil {
 		log.Fatalf("env.Parse error: %s", err.Error())
@@ -238,4 +245,23 @@ func convertValue(value interface{}, metric *models.Metric) {
 	}
 
 	metric.Value = &f
+}
+
+func setHesh(metric *models.Metric, key string) {
+	if key == "" {
+		return
+	}
+
+	var hash []byte
+
+	if metric.MetricType == "gauge" {
+		hash = []byte(fmt.Sprintf("%s:gauge:%f", metric.ID, *metric.Value))
+	} else {
+		hash = []byte(fmt.Sprintf("%s:counter:%d", metric.ID, *metric.Delta))
+	}
+
+	h := hmac.New(sha256.New, []byte(key))
+	h.Write(hash)
+
+	metric.Hash = hex.EncodeToString(h.Sum(nil))
 }
