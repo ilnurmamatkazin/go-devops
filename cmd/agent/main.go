@@ -154,7 +154,7 @@ func (ms MetricSender) sendMetric(typeMetric, nameMetric string, value interface
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, buf)
 	if err != nil {
-		log.Println(err)
+		// log.Println(err)
 		return
 	}
 

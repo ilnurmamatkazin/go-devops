@@ -13,15 +13,15 @@ import (
 	"github.com/ilnurmamatkazin/go-devops/internal/utils"
 )
 
-type Storage struct {
+type Storage1 struct {
 	repository map[string]float64
 	sync.Mutex
 	isSyncMode bool
 	cfg        models.Config
 }
 
-func New(cfg models.Config) *Storage {
-	mr := &Storage{
+func New(cfg models.Config) *Storage1 {
+	mr := &Storage1{
 		repository: make(map[string]float64),
 		cfg:        cfg,
 	}
@@ -40,13 +40,15 @@ func New(cfg models.Config) *Storage {
 	return mr
 }
 
-func (mr *Storage) initRepository() (err error) {
+func (mr *Storage1) initRepository() (err error) {
 	if mr.cfg.Database != "" {
 
 	} else {
 		if mr.cfg.StoreFile == "" {
 			return nil
 		}
+
+		fmt.Println("@@1@@", mr.cfg)
 
 		fileRepository := &file.FileRepository{
 			FileName: mr.cfg.StoreFile,
@@ -87,7 +89,7 @@ func (mr *Storage) initRepository() (err error) {
 	return
 }
 
-func (mr *Storage) ReadGauge(name string) (value float64, err error) {
+func (mr *Storage1) ReadGauge(name string) (value float64, err error) {
 	mr.Lock()
 	value = mr.repository[name]
 	mr.Unlock()
@@ -102,7 +104,7 @@ func (mr *Storage) ReadGauge(name string) (value float64, err error) {
 	return
 }
 
-func (mr *Storage) ReadCounter(name string) (value int64, err error) {
+func (mr *Storage1) ReadCounter(name string) (value int64, err error) {
 	mr.Lock()
 	value = int64(mr.repository[name])
 	mr.Unlock()
@@ -117,7 +119,7 @@ func (mr *Storage) ReadCounter(name string) (value int64, err error) {
 	return
 }
 
-func (mr *Storage) SetGauge(metric models.MetricGauge) (err error) {
+func (mr *Storage1) SetGauge(metric models.MetricGauge) (err error) {
 	if mr.repository == nil {
 		mr.Lock()
 		mr.repository = make(map[string]float64)
@@ -135,7 +137,7 @@ func (mr *Storage) SetGauge(metric models.MetricGauge) (err error) {
 	return
 }
 
-func (mr *Storage) SetCounter(metric models.MetricCounter) (err error) {
+func (mr *Storage1) SetCounter(metric models.MetricCounter) (err error) {
 	if mr.repository == nil {
 		mr.Lock()
 		mr.repository = make(map[string]float64)
@@ -154,7 +156,7 @@ func (mr *Storage) SetCounter(metric models.MetricCounter) (err error) {
 	return
 }
 
-func (mr *Storage) Info() (html string) {
+func (mr *Storage1) Info() (html string) {
 	ul := ""
 
 	mr.Lock()
@@ -176,7 +178,7 @@ func (mr *Storage) Info() (html string) {
 	return
 }
 
-func (mr *Storage) Save() (err error) {
+func (mr *Storage1) Save() (err error) {
 	if mr.cfg.Database != "" {
 
 	} else {
@@ -197,6 +199,6 @@ func (mr *Storage) Save() (err error) {
 	return
 }
 
-func (mr *Storage) Load() (err error) {
+func (mr *Storage1) Load() (err error) {
 	return
 }

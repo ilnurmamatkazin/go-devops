@@ -2,7 +2,6 @@ package pg
 
 import (
 	"context"
-	"sync"
 	"time"
 
 	"github.com/ilnurmamatkazin/go-devops/cmd/server/models"
@@ -10,16 +9,11 @@ import (
 )
 
 type PGRepository struct {
-	db         *pgx.Conn
-	isSyncMode bool
-	repository map[string]float64
-	sync.Mutex
+	db *pgx.Conn
 }
 
 func NewPGRepository(cfg models.Config) (pgRepository *PGRepository, err error) {
-	pgRepository = &PGRepository{
-		repository: make(map[string]float64),
-	}
+	pgRepository = &PGRepository{}
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(models.DatabaseTimeout)*time.Second)
 	defer cancel()

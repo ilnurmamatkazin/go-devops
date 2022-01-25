@@ -14,7 +14,7 @@ func TestNew(t *testing.T) {
 	tests := []struct {
 		name string
 		args args
-		want *Storage
+		want *Storage1
 	}{
 		// TODO: Add test cases.
 	}

@@ -5,18 +5,12 @@ import (
 	"github.com/ilnurmamatkazin/go-devops/cmd/server/storage"
 )
 
-type Metric interface {
-	SetMetric(metric models.Metric) error
-	GetMetric(metric *models.Metric) error
-	GetInfo() string
-}
-
 type Service struct {
-	repository *storage.Storage
+	repository *storage.Storage1
 	cfg        models.Config
 }
 
-func New(cfg models.Config, repository *storage.Storage) *Service {
+func New(cfg models.Config, repository *storage.Storage1) *Service {
 	return &Service{
 		repository: repository,
 		cfg:        cfg,
