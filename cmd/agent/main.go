@@ -4,9 +4,10 @@ import (
 	"bytes"
 	"context"
 	"encoding/binary"
-	"errors"
+	"encoding/json"
+	"flag"
 	"fmt"
-	"io/ioutil"
+	"log"
 	"math/rand"
 	"net/http"
 	"os"
@@ -15,41 +16,51 @@ import (
 	"sync"
 	"syscall"
 	"time"
+
+	"github.com/caarlos0/env/v6"
+	"github.com/ilnurmamatkazin/go-devops/cmd/agent/models"
+	"github.com/ilnurmamatkazin/go-devops/internal/utils"
 )
 
 const (
-	url            = "127.0.0.1"
-	port           = 8080
-	pollInterval   = 2
-	reportInterval = 10
+	Address        = "127.0.0.1:8080"
+	PollInterval   = "2s"
+	ReportInterval = "10s"
 )
+
+type MetricSender struct {
+	cfg    models.Config
+	client *http.Client
+	ctx    context.Context
+}
 
 func main() {
 	var (
 		mutex     sync.Mutex
 		rtm       runtime.MemStats
-		pollCount uint64
+		pollCount int64
+		err       error
 	)
 
-	// конструируем HTTP-клиент
-	client := &http.Client{}
-	client.Timeout = time.Second * 2
-
-	client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
-		if len(via) >= 2 {
-			return errors.New("остановлено после двух redirect")
-		}
-		return nil
+	metricSender := MetricSender{
+		cfg:    parseConfig(),
+		client: createClient(),
+		ctx:    context.Background(),
 	}
 
-	transport := &http.Transport{}
-	transport.MaxIdleConns = 20
-	client.Transport = transport
+	interval, duration, err := utils.GetDataForTicker(metricSender.cfg.PollInterval)
+	if err != nil {
+		log.Fatalf("Ошибка создания тикера")
+	}
 
-	ctx := context.Background()
+	tickerPoll := time.NewTicker(time.Duration(interval) * duration)
 
-	tickerPoll := time.NewTicker(pollInterval * time.Second)
-	tickerReport := time.NewTicker(reportInterval * time.Second)
+	interval, duration, err = utils.GetDataForTicker(metricSender.cfg.ReportInterval)
+	if err != nil {
+		log.Fatalf("Ошибка создания тикера")
+	}
+
+	tickerReport := time.NewTicker(time.Duration(interval) * duration)
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
@@ -61,11 +72,7 @@ func main() {
 		for {
 			select {
 			case <-quit:
-				fmt.Println("Shutdown Agent ...")
-				t := time.NewTicker(5 * time.Second)
-				<-t.C
 				done <- true
-
 				break loop
 
 			case <-tickerPoll.C:
@@ -78,34 +85,35 @@ func main() {
 			case <-tickerReport.C:
 				mutex.Lock()
 
-				sendMetric(ctx, client, "gauge", "Alloc", rtm.Alloc)
-				sendMetric(ctx, client, "gauge", "BuckHashSys", rtm.BuckHashSys)
-				sendMetric(ctx, client, "gauge", "Frees", rtm.Frees)
-				sendMetric(ctx, client, "gauge", "GCCPUFraction", rtm.GCCPUFraction)
-				sendMetric(ctx, client, "gauge", "GCSys", rtm.GCSys)
-				sendMetric(ctx, client, "gauge", "HeapAlloc", rtm.HeapAlloc)
-				sendMetric(ctx, client, "gauge", "HeapIdle", rtm.HeapIdle)
-				sendMetric(ctx, client, "gauge", "HeapInuse", rtm.HeapInuse)
-				sendMetric(ctx, client, "gauge", "HeapObjects", rtm.HeapObjects)
-				sendMetric(ctx, client, "gauge", "HeapReleased", rtm.HeapReleased)
-				sendMetric(ctx, client, "gauge", "HeapSys", rtm.HeapSys)
-				sendMetric(ctx, client, "gauge", "LastGC", rtm.LastGC)
-				sendMetric(ctx, client, "gauge", "Lookups", rtm.Lookups)
-				sendMetric(ctx, client, "gauge", "MCacheInuse", rtm.MCacheInuse)
-				sendMetric(ctx, client, "gauge", "MCacheSys", rtm.MCacheSys)
-				sendMetric(ctx, client, "gauge", "MSpanInuse", rtm.MSpanInuse)
-				sendMetric(ctx, client, "gauge", "MSpanSys", rtm.MSpanSys)
-				sendMetric(ctx, client, "gauge", "Mallocs", rtm.Mallocs)
-				sendMetric(ctx, client, "gauge", "NextGC", rtm.NextGC)
-				sendMetric(ctx, client, "gauge", "NumForcedGC", rtm.NumForcedGC)
-				sendMetric(ctx, client, "gauge", "NumGC", rtm.NumGC)
-				sendMetric(ctx, client, "gauge", "OtherSys", rtm.OtherSys)
-				sendMetric(ctx, client, "gauge", "PauseTotalNs", rtm.PauseTotalNs)
-				sendMetric(ctx, client, "gauge", "StackInuse", rtm.StackInuse)
-				sendMetric(ctx, client, "gauge", "StackSys", rtm.StackSys)
-				sendMetric(ctx, client, "gauge", "Sys", rtm.Sys)
-				sendMetric(ctx, client, "counter", "PollCount", pollCount)
-				sendMetric(ctx, client, "gauge", "RandomValue", rand.Float64())
+				metricSender.sendMetric("gauge", "Alloc", rtm.Alloc)
+				metricSender.sendMetric("gauge", "BuckHashSys", rtm.BuckHashSys)
+				metricSender.sendMetric("gauge", "Frees", rtm.Frees)
+				metricSender.sendMetric("gauge", "GCCPUFraction", rtm.GCCPUFraction)
+				metricSender.sendMetric("gauge", "GCSys", rtm.GCSys)
+				metricSender.sendMetric("gauge", "HeapAlloc", rtm.HeapAlloc)
+				metricSender.sendMetric("gauge", "HeapIdle", rtm.HeapIdle)
+				metricSender.sendMetric("gauge", "HeapInuse", rtm.HeapInuse)
+				metricSender.sendMetric("gauge", "HeapObjects", rtm.HeapObjects)
+				metricSender.sendMetric("gauge", "HeapReleased", rtm.HeapReleased)
+				metricSender.sendMetric("gauge", "HeapSys", rtm.HeapSys)
+				metricSender.sendMetric("gauge", "LastGC", rtm.LastGC)
+				metricSender.sendMetric("gauge", "Lookups", rtm.Lookups)
+				metricSender.sendMetric("gauge", "MCacheInuse", rtm.MCacheInuse)
+				metricSender.sendMetric("gauge", "MCacheSys", rtm.MCacheSys)
+				metricSender.sendMetric("gauge", "MSpanInuse", rtm.MSpanInuse)
+				metricSender.sendMetric("gauge", "MSpanSys", rtm.MSpanSys)
+				metricSender.sendMetric("gauge", "Mallocs", rtm.Mallocs)
+				metricSender.sendMetric("gauge", "NextGC", rtm.NextGC)
+				metricSender.sendMetric("gauge", "NumForcedGC", rtm.NumForcedGC)
+				metricSender.sendMetric("gauge", "NumGC", rtm.NumGC)
+				metricSender.sendMetric("gauge", "OtherSys", rtm.OtherSys)
+				metricSender.sendMetric("gauge", "PauseTotalNs", rtm.PauseTotalNs)
+				metricSender.sendMetric("gauge", "TotalAlloc", rtm.TotalAlloc)
+				metricSender.sendMetric("gauge", "StackInuse", rtm.StackInuse)
+				metricSender.sendMetric("gauge", "StackSys", rtm.StackSys)
+				metricSender.sendMetric("gauge", "Sys", rtm.Sys)
+				metricSender.sendMetric("counter", "PollCount", pollCount)
+				metricSender.sendMetric("gauge", "RandomValue", rand.Float64())
 
 				mutex.Unlock()
 			}
@@ -115,79 +123,119 @@ func main() {
 
 	<-done
 
-	fmt.Println("Agent exiting")
-
 }
 
-func sendMetric(ctxBase context.Context, client *http.Client, typeMetric, nameMetric string, value interface{}) (err error) {
-	ctx, cancel := context.WithTimeout(ctxBase, 1*time.Second)
+func (ms MetricSender) sendMetric(typeMetric, nameMetric string, value interface{}) (err error) {
+	ctx, cancel := context.WithTimeout(ms.ctx, 1*time.Second)
 	defer cancel()
 
-	endpoint := fmt.Sprintf("http://%s:%d/update/%s/%s/%v", url, port, typeMetric, nameMetric, value)
+	var metric models.Metric
+
+	endpoint := fmt.Sprintf("http://%s/update", ms.cfg.Address)
+
+	metric.ID = nameMetric
+	metric.MetricType = typeMetric
+
+	convertValue(value, &metric)
+
+	b, err := json.Marshal(metric)
+	if err != nil {
+		log.Println(err)
+		return
+	}
 
 	buf := new(bytes.Buffer)
-	err = binary.Write(buf, binary.LittleEndian, value)
+	err = binary.Write(buf, binary.LittleEndian, b)
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, buf)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return
 	}
 
 	// в заголовках запроса сообщаем, что данные кодированы стандартной URL-схемой
-	request.Header.Set("Content-Type", "text/plain; charset=utf-8")
+	request.Header.Set("Content-Type", "application/json")
 
 	// отправляем запрос и получаем ответ
-	response, err := client.Do(request)
+	response, err := ms.client.Do(request)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return
 	}
 	// печатаем код ответа
-	fmt.Println("Статус-код ", response.Status)
+	// fmt.Println("Статус-код ", response.Status)
 	defer response.Body.Close()
-	// читаем поток из тела ответа
-	body, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	// и печатаем его
-	fmt.Println(string(body))
 
 	return
 }
 
-// func test(ctxBase context.Context, client *http.Client) {
-// 	ctx, cancel := context.WithTimeout(ctxBase, 1*time.Second)
-// 	defer cancel()
+func parseConfig() (cfg models.Config) {
+	address := flag.String("a", Address, "a address")
+	reportInterval := flag.String("r", ReportInterval, "a report_interval")
+	pollInterval := flag.String("p", PollInterval, "a poll_interval")
 
-// 	endpoint := "http://localhost:8080/update/unknown/testCounter/100"
+	flag.Parse()
 
-// 	request, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, nil)
-// 	if err != nil {
-// 		fmt.Println(err)
-// 		return
-// 	}
+	cfg.Address = *address
+	cfg.ReportInterval = *reportInterval
+	cfg.PollInterval = *pollInterval
 
-// 	// в заголовках запроса сообщаем, что данные кодированы стандартной URL-схемой
-// 	request.Header.Set("Content-Type", "text/plain; charset=UTF-8")
+	if err := env.Parse(&cfg); err != nil {
+		log.Fatalf("env.Parse error: %s", err.Error())
+	}
 
-// 	// отправляем запрос и получаем ответ
-// 	response, err := client.Do(request)
-// 	if err != nil {
-// 		fmt.Println(err)
-// 		return
-// 	}
-// 	// печатаем код ответа
-// 	fmt.Println("Статус-код ", response.Status)
-// 	defer response.Body.Close()
-// 	// читаем поток из тела ответа
-// 	body, err := io.ReadAll(response.Body)
-// 	if err != nil {
-// 		fmt.Println(err)
-// 		return
-// 	}
-// 	// и печатаем его
-// 	fmt.Println(string(body))
-// }
+	return
+}
+
+func createClient() *http.Client {
+	// конструируем HTTP-клиент
+	client := &http.Client{}
+	client.Timeout = time.Second * 2
+
+	client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+		if len(via) >= 2 {
+			log.Fatalf("Количество редиректов %d больше 2", len(via))
+		}
+		return nil
+	}
+
+	transport := &http.Transport{}
+	transport.MaxIdleConns = 20
+	client.Transport = transport
+
+	return client
+}
+
+func convertValue(value interface{}, metric *models.Metric) {
+	var f float64
+
+	switch metric.MetricType {
+	case "counter":
+		i := value.(int64)
+		metric.Delta = &i
+	case "gauge":
+		switch value := value.(type) {
+		case float64:
+			f = value
+		case uint64:
+			f = float64(value)
+		case uint32:
+			f = float64(value)
+
+		default:
+		}
+
+	}
+
+	if (metric.ID == "GCCPUFraction") && (f == 0) {
+		f = rand.Float64()
+	} else if (metric.ID == "LastGC") && (f == 0) ||
+		(metric.ID == "Lookups") && (f == 0) ||
+		(metric.ID == "NumForcedGC") && (f == 0) ||
+		(metric.ID == "NumGC") && (f == 0) ||
+		(metric.ID == "PauseTotalNs") && (f == 0) {
+		f = float64(rand.Intn(100))
+	}
+
+	metric.Value = &f
+}

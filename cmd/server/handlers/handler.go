@@ -5,22 +5,17 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	// "github.com/ilnurmamatkazin/go-devops/cmd/server/models"
-	"github.com/ilnurmamatkazin/go-devops/cmd/server/storage/memory"
+	"github.com/ilnurmamatkazin/go-devops/cmd/server/service"
 )
 
-// var (
-// 	mutexCounter, mutexGauge sync.Mutex
-// 	storageCounter           map[string]int
-// 	storageGauge             map[string]float64
-// )
-
 type Handler struct {
-	repository *memory.MemoryRepository
+	service *service.Service
 }
 
-func New() *Handler {
-	return &Handler{repository: memory.NewMemoryRepository()}
+func New(service *service.Service) *Handler {
+	return &Handler{
+		service: service,
+	}
 }
 
 func (h *Handler) NewRouter() *chi.Mux {
@@ -33,24 +28,15 @@ func (h *Handler) NewRouter() *chi.Mux {
 	// r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 
+	r.Route("/update", func(r chi.Router) {
+		r.Post("/{typeMetric}/{nameMetric}/{valueMetric}", h.parseOldMetric)
+		r.With(middleware.AllowContentType("application/json")).Post("/", h.parseMetric)
+	})
+
 	r.Route("/", func(r chi.Router) {
 		r.Get("/", h.getInfo)
-	})
-
-	r.Route("/update", func(r chi.Router) {
-		r.Post("/counter/{nameMetric}/{valueMetric}", h.parseCounterMetric)
-		r.Post("/gauge/{nameMetric}/{valueMetric}", h.parseGaugeMetric)
-		r.Post("/{unknown}/{nameMetric}/{valueMetric}", func(w http.ResponseWriter, r *http.Request) {
-			w.WriteHeader(http.StatusNotImplemented)
-		})
-	})
-
-	r.Route("/value/gauge", func(r chi.Router) {
-		r.Get("/{nameMetric}", h.getGauge)
-	})
-
-	r.Route("/value/counter", func(r chi.Router) {
-		r.Get("/{nameMetric}", h.getCounter)
+		r.Get("/value/{typeMetric}/{nameMetric}", h.getOldMetric)
+		r.With(middleware.AllowContentType("application/json")).Post("/value/", h.getMetric)
 	})
 
 	r.NotFound(func(w http.ResponseWriter, r *http.Request) {

@@ -2,36 +2,19 @@ package handlers
 
 import (
 	"io/ioutil"
+	"log"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 
+	"github.com/caarlos0/env/v6"
+	"github.com/ilnurmamatkazin/go-devops/cmd/server/models"
+	"github.com/ilnurmamatkazin/go-devops/cmd/server/service"
+	"github.com/ilnurmamatkazin/go-devops/cmd/server/storage/memory"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
-
-// import (
-// 	"reflect"
-// 	"testing"
-
-// 	"github.com/go-chi/chi/v5"
-// )
-
-// func TestNewRouter(t *testing.T) {
-// 	tests := []struct {
-// 		name string
-// 		want *chi.Mux
-// 	}{
-// 		// TODO: Add test cases.
-// 	}
-// 	for _, tt := range tests {
-// 		t.Run(tt.name, func(t *testing.T) {
-// 			if got := NewRouter(); !reflect.DeepEqual(got, tt.want) {
-// 				t.Errorf("NewRouter() = %v, want %v", got, tt.want)
-// 			}
-// 		})
-// 	}
-// }
 
 func testRequest(t *testing.T, ts *httptest.Server, method, path string) (*http.Response, string) {
 	req, err := http.NewRequest(method, ts.URL+path, nil)
@@ -49,9 +32,24 @@ func testRequest(t *testing.T, ts *httptest.Server, method, path string) (*http.
 }
 
 func TestNewRouter(t *testing.T) {
-	h := New()
-	r := h.NewRouter()
-	ts := httptest.NewServer(r)
+	cfg := models.Config{
+		Address:       models.Address,
+		StoreInterval: models.StoreInterval,
+		StoreFile:     models.StoreFile,
+		Restore:       models.Restore,
+	}
+
+	if err := env.Parse(&cfg); err != nil {
+		log.Println("Ошибка чтения конфигурации")
+		os.Exit(2)
+	}
+
+	repository := memory.NewMemoryRepository(cfg)
+	service := service.NewService(repository)
+	hendler := New(service)
+	router := hendler.NewRouter()
+
+	ts := httptest.NewServer(router)
 	defer ts.Close()
 
 	resp, _ := testRequest(t, ts, "POST", "/update/counter/testCounter/100")
