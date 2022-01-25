@@ -28,7 +28,14 @@ func main() {
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
 
 	fmt.Println("@@@@", cfg)
-	repository := storage.New(cfg)
+	repository, err := storage.New(cfg)
+	defer repository.Close()
+
+	if err != nil {
+		log.Println("ошибка подключения к бд: ", err.Error())
+		os.Exit(2)
+	}
+
 	service := service.New(cfg, repository)
 	hendler := handlers.New(service)
 	router := hendler.NewRouter()

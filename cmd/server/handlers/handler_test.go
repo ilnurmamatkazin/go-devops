@@ -44,7 +44,7 @@ func TestNewRouter(t *testing.T) {
 		os.Exit(2)
 	}
 
-	repository := storage.New(cfg)
+	repository, _ := storage.New(cfg)
 	service := service.New(cfg, repository)
 	hendler := New(service)
 	router := hendler.NewRouter()

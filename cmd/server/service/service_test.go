@@ -11,7 +11,7 @@ import (
 func TestNew(t *testing.T) {
 	type args struct {
 		cfg        models.Config
-		repository *storage.Storage1
+		repository *storage.Storage
 	}
 	tests := []struct {
 		name string
