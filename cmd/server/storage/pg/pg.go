@@ -78,13 +78,21 @@ func (r *Repository) Load(mutex *sync.Mutex, metrics map[string]float64) (err er
 		return
 	}
 
+	mutex.Lock()
 	for rows.Next() {
-
-		err := rows.Scan(&id, &description)
+		err = rows.Scan(&id, &metricType, &delta, &value, &hash)
 		if err != nil {
-			return err
+			return
 		}
+
+		if metricType == "gauge" {
+			metrics[id] = value.Float64
+		} else {
+			metrics[id] = float64(delta.Int64)
+		}
+
 	}
+	mutex.Unlock()
 
 	return rows.Err()
 
@@ -94,7 +102,22 @@ func (r *Repository) Save(mutex *sync.Mutex, metrics map[string]float64) (err er
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(models.DatabaseTimeout)*time.Second)
 	defer cancel()
 
-	// Сделать сохранение
+	query := `
+	INSERT INTO public.metrics (id, type, delta, value, hash)
+	VALUES ($1, $2, $3, $4, $5)
+	ON CONFLICT (id)
+	DO UPDATE SET
+	delta=$3,
+	value=$4,
+	hash=$5
+	`
+	for key, value := range metrics {
+		// fmt.Println(key, "gauge", value, value, "qqq")
+
+		if _, err = r.conn.Exec(ctx, query, key, "gauge", value, value, ""); err != nil {
+			return
+		}
+	}
 
 	return
 
