@@ -14,7 +14,6 @@ type Metric interface {
 type Service struct {
 	repository *storage.Storage
 	cfg        models.Config
-	Metric
 }
 
 func New(cfg models.Config, repository *storage.Storage) *Service {

@@ -17,12 +17,13 @@ type Storage struct {
 	repository map[string]float64
 	sync.Mutex
 	isSyncMode bool
-	Metric
+	cfg        models.Config
 }
 
 func New(cfg models.Config) *Storage {
 	mr := &Storage{
 		repository: make(map[string]float64),
+		cfg:        cfg,
 	}
 
 	interval, _, err := utils.GetDataForTicker(cfg.StoreInterval)
@@ -34,24 +35,24 @@ func New(cfg models.Config) *Storage {
 		mr.isSyncMode = true
 	}
 
-	_ = mr.initRepository(cfg)
+	_ = mr.initRepository()
 
 	return mr
 }
 
-func (mr *Storage) initRepository(cfg models.Config) (err error) {
-	if cfg.Database != "" {
+func (mr *Storage) initRepository() (err error) {
+	if mr.cfg.Database != "" {
 
 	} else {
-		if cfg.StoreFile == "" {
+		if mr.cfg.StoreFile == "" {
 			return nil
 		}
 
 		fileRepository := &file.FileRepository{
-			FileName: cfg.StoreFile,
+			FileName: mr.cfg.StoreFile,
 		}
 
-		if cfg.Restore {
+		if mr.cfg.Restore {
 			if err := fileRepository.LoadFromFile(&mr.Mutex, mr.repository); err != nil {
 				log.Println(err.Error())
 			}
@@ -59,7 +60,7 @@ func (mr *Storage) initRepository(cfg models.Config) (err error) {
 			// defer fileRepository.CloseFile()
 		}
 
-		interval, duration, err := utils.GetDataForTicker(cfg.StoreInterval)
+		interval, duration, err := utils.GetDataForTicker(mr.cfg.StoreInterval)
 		if err != nil {
 			log.Fatalf("Ошибка получения параметров тикера: %s", err.Error())
 		}
@@ -176,6 +177,23 @@ func (mr *Storage) Info() (html string) {
 }
 
 func (mr *Storage) Save() (err error) {
+	if mr.cfg.Database != "" {
+
+	} else {
+		if mr.cfg.StoreFile == "" {
+			return nil
+		}
+
+		fileRepository := &file.FileRepository{
+			FileName: mr.cfg.StoreFile,
+		}
+
+		if err = fileRepository.SaveToFile(&mr.Mutex, mr.repository); err != nil {
+			log.Println(err.Error())
+		}
+
+	}
+
 	return
 }
 
