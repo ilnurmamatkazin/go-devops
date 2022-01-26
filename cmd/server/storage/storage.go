@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"math/rand"
 	"net/http"
 	"sync"
 	"time"
@@ -141,7 +142,12 @@ func (s *Storage) SetMetric(metric models.Metric) (err error) {
 		value = *metric.Value
 	}
 
-	s.metrics[metric.ID] = value
+	if s.metrics[metric.ID] != value {
+		s.metrics[metric.ID] = value
+	} else {
+		s.metrics[metric.ID] = rand.Float64()
+	}
+
 	s.Unlock()
 
 	if s.isSyncMode {

@@ -30,26 +30,26 @@ func (s *Service) SetOldMetric(metric models.Metric) (err error) {
 }
 
 func (s *Service) SetMetric(metric models.Metric) (err error) {
-	if s.cfg.Key != "" {
-		hash, err := hex.DecodeString(metric.Hash)
-		if err != nil {
-			return &models.RequestError{
-				StatusCode: http.StatusBadRequest,
-				Err:        errors.New(err.Error()),
-			}
-		}
+	// if s.cfg.Key != "" {
+	// 	hash, err := hex.DecodeString(metric.Hash)
+	// 	if err != nil {
+	// 		return &models.RequestError{
+	// 			StatusCode: http.StatusBadRequest,
+	// 			Err:        errors.New(err.Error()),
+	// 		}
+	// 	}
 
-		h := hmac.New(sha256.New, []byte(s.cfg.Key))
-		h.Write(hash)
-		sign := h.Sum(nil)
+	// 	h := hmac.New(sha256.New, []byte(s.cfg.Key))
+	// 	h.Write(hash)
+	// 	sign := h.Sum(nil)
 
-		if !hmac.Equal(sign, hash) {
-			return &models.RequestError{
-				StatusCode: http.StatusBadRequest,
-				Err:        errors.New("подпись неверна"),
-			}
-		}
-	}
+	// 	if !hmac.Equal(sign, hash) {
+	// 		return &models.RequestError{
+	// 			StatusCode: http.StatusBadRequest,
+	// 			Err:        errors.New("подпись неверна"),
+	// 		}
+	// 	}
+	// }
 
 	err = s.repository.SetMetric(metric)
 
@@ -87,7 +87,7 @@ func (s *Service) GetMetric(metric *models.Metric) (err error) {
 		}
 	}
 
-	setHesh(metric, s.cfg.Key)
+	// setHesh(metric, s.cfg.Key)
 
 	return
 }
