@@ -102,6 +102,8 @@ func (s *Storage) SetOldMetric(metric models.Metric) {
 		value = *metric.Value
 	}
 
+	fmt.Println("######", s.metrics[metric.ID], value)
+
 	if s.metrics[metric.ID] != value {
 		s.metrics[metric.ID] = value
 	} else {
