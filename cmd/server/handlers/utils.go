@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"errors"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -15,13 +14,6 @@ func getMetricFromRequest(r *http.Request) (metric models.Metric) {
 	return
 }
 
-func checkMetricType(metricType string) (err error) {
-	if (metricType != "counter") && (metricType != "gauge") {
-		err = &models.RequestError{
-			StatusCode: http.StatusNotImplemented,
-			Err:        errors.New(http.StatusText(http.StatusNotImplemented)),
-		}
-	}
-
-	return
+func checkMetricType(metricType string) bool {
+	return (metricType != "counter") && (metricType != "gauge")
 }

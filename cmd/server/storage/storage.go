@@ -68,12 +68,15 @@ func New(cfg models.Config) (storage *Storage, err error) {
 func (s *Storage) Close() {
 	s.db.Close()
 }
-func (s *Storage) ReadGauge(name string) (value float64, err error) {
+
+func (s *Storage) ReadMetric(name string) (value float64, err error) {
 	s.Lock()
 	value, ok := s.metrics[name]
 	s.Unlock()
 
 	if !ok {
+		fmt.Println("*****ReadOldMetric********", name)
+
 		err = &models.RequestError{
 			StatusCode: http.StatusNotFound,
 			Err:        errors.New("metric not found"),
@@ -85,51 +88,7 @@ func (s *Storage) ReadGauge(name string) (value float64, err error) {
 	return
 }
 
-func (s *Storage) ReadCounter(name string) (value int64, err error) {
-	s.Lock()
-	f, ok := s.metrics[name]
-	s.Unlock()
-
-	if !ok {
-		err = &models.RequestError{
-			StatusCode: http.StatusNotFound,
-			Err:        errors.New("metric not found"),
-		}
-
-		return
-	}
-
-	value = int64(f)
-
-	return
-}
-
-func (s *Storage) SetOldGauge(metric models.MetricGauge) (err error) {
-	s.Lock()
-	if s.metrics == nil {
-		s.metrics = make(map[string]float64)
-	}
-
-	s.metrics[metric.Name] = metric.Value
-	s.Unlock()
-
-	return
-}
-
-func (s *Storage) SetOldCounter(metric models.MetricCounter) (err error) {
-	s.Lock()
-	if s.metrics == nil {
-		s.metrics = make(map[string]float64)
-	}
-
-	value := s.metrics[metric.Name]
-	s.metrics[metric.Name] = value + float64(metric.Value)
-	s.Unlock()
-
-	return
-}
-
-func (s *Storage) SetMetric(metric models.Metric) (err error) {
+func (s *Storage) SetOldMetric(metric models.Metric) {
 	var value float64
 	s.Lock()
 	if s.metrics == nil {
@@ -149,6 +108,12 @@ func (s *Storage) SetMetric(metric models.Metric) (err error) {
 	}
 
 	s.Unlock()
+
+	return
+}
+
+func (s *Storage) SetMetric(metric models.Metric) (err error) {
+	s.SetOldMetric(metric)
 
 	if s.isSyncMode {
 		if err = s.db.Save(&s.Mutex, s.metrics); err != nil {

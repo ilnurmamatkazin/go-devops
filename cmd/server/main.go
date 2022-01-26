@@ -31,9 +31,10 @@ func main() {
 	repository, err := storage.New(cfg)
 	if err != nil {
 		log.Println("ошибка подключения к бд: ", err.Error())
-		os.Exit(2)
+		//os.Exit(2)
+	} else {
+		defer repository.Close()
 	}
-	defer repository.Close()
 
 	service := service.New(cfg, repository)
 	hendler := handlers.New(service)
