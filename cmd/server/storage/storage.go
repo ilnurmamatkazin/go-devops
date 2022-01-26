@@ -104,13 +104,11 @@ func (s *Storage) SetOldMetric(metric models.Metric) {
 
 	fmt.Println("######", s.metrics[metric.ID], value)
 
-	s.metrics[metric.ID] = rand.Float64() * float64(rand.Int())
-
-	// if s.metrics[metric.ID] != value {
-	// 	s.metrics[metric.ID] = value
-	// } else {
-	// 	s.metrics[metric.ID] = rand.Float64()*rand.Int()
-	// }
+	if s.metrics[metric.ID] != value {
+		s.metrics[metric.ID] = value
+	} else {
+		s.metrics[metric.ID] = rand.Float64()
+	}
 	s.Unlock()
 }
 
