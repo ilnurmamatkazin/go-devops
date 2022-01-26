@@ -22,7 +22,7 @@ func (h *Handler) parseOldMetric(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.service.SetMetric(metric); err != nil {
+	if err := h.service.SetOldMetric(metric); err != nil {
 		re, ok := err.(*models.RequestError)
 		if ok {
 			http.Error(w, re.Err.Error(), re.StatusCode)

@@ -29,12 +29,11 @@ func main() {
 
 	fmt.Println("@@@@", cfg)
 	repository, err := storage.New(cfg)
-	defer repository.Close()
-
 	if err != nil {
 		log.Println("ошибка подключения к бд: ", err.Error())
 		os.Exit(2)
 	}
+	defer repository.Close()
 
 	service := service.New(cfg, repository)
 	hendler := handlers.New(service)

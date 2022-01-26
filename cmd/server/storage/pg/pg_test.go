@@ -1,10 +1,10 @@
 package pg
 
 import (
-	"reflect"
 	"testing"
 
 	"github.com/ilnurmamatkazin/go-devops/cmd/server/models"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestNew(t *testing.T) {
@@ -26,9 +26,8 @@ func TestNew(t *testing.T) {
 				t.Errorf("New() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(gotRepository, tt.wantRepository) {
-				t.Errorf("New() = %v, want %v", gotRepository, tt.wantRepository)
-			}
+
+			assert.Equal(t, gotRepository, tt.wantRepository)
 		})
 	}
 }

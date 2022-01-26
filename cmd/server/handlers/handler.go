@@ -45,6 +45,7 @@ func (h *Handler) NewRouter() *chi.Mux {
 		r.Get("/", h.getInfo)
 		r.Get("/value/{typeMetric}/{nameMetric}", h.getOldMetric)
 		r.With(middleware.AllowContentType("application/json")).Post("/value/", h.getMetric)
+		r.With(middleware.AllowContentType("application/json")).Post("/update/", h.parseMetric)
 	})
 
 	r.NotFound(func(w http.ResponseWriter, r *http.Request) {

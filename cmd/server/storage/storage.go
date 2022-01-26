@@ -23,7 +23,7 @@ type Storage struct {
 
 func New(cfg models.Config) (storage *Storage, err error) {
 	// storage = &Storage{cfg: cfg}
-	storage = &Storage{metrics: make(map[string]float64, 0)}
+	storage = &Storage{metrics: make(map[string]float64)}
 
 	if storage.db, err = pg.New(cfg); err != nil {
 		return
@@ -103,7 +103,7 @@ func (s *Storage) ReadCounter(name string) (value int64, err error) {
 	return
 }
 
-func (s *Storage) SetGauge(metric models.MetricGauge) (err error) {
+func (s *Storage) SetOldGauge(metric models.MetricGauge) (err error) {
 	s.Lock()
 	if s.metrics == nil {
 		s.metrics = make(map[string]float64)
@@ -112,17 +112,10 @@ func (s *Storage) SetGauge(metric models.MetricGauge) (err error) {
 	s.metrics[metric.Name] = metric.Value
 	s.Unlock()
 
-	if s.isSyncMode {
-		if err = s.db.Save(&s.Mutex, s.metrics); err != nil {
-			log.Println(err.Error())
-			return
-		}
-	}
-
 	return
 }
 
-func (s *Storage) SetCounter(metric models.MetricCounter) (err error) {
+func (s *Storage) SetOldCounter(metric models.MetricCounter) (err error) {
 	s.Lock()
 	if s.metrics == nil {
 		s.metrics = make(map[string]float64)
@@ -130,6 +123,25 @@ func (s *Storage) SetCounter(metric models.MetricCounter) (err error) {
 
 	value := s.metrics[metric.Name]
 	s.metrics[metric.Name] = value + float64(metric.Value)
+	s.Unlock()
+
+	return
+}
+
+func (s *Storage) SetMetric(metric models.Metric) (err error) {
+	var value float64
+	s.Lock()
+	if s.metrics == nil {
+		s.metrics = make(map[string]float64)
+	}
+
+	if metric.MetricType == "counter" {
+		value = s.metrics[metric.ID] + float64(*metric.Delta)
+	} else {
+		value = *metric.Value
+	}
+
+	s.metrics[metric.ID] = value
 	s.Unlock()
 
 	if s.isSyncMode {
@@ -171,4 +183,8 @@ func (s *Storage) Save() (err error) {
 	}
 
 	return
+}
+
+func (s *Storage) Ping() error {
+	return s.db.Ping()
 }

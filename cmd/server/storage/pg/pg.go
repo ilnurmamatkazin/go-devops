@@ -61,6 +61,13 @@ func (r *Repository) Close() {
 	r.conn.Close(ctx)
 }
 
+func (r *Repository) Ping() error {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(models.DatabaseTimeout)*time.Second)
+	defer cancel()
+
+	return r.conn.Ping(ctx)
+}
+
 func (r *Repository) Load(mutex *sync.Mutex, metrics map[string]float64) (err error) {
 	var (
 		id, metricType string

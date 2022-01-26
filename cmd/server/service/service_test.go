@@ -1,11 +1,11 @@
 package service
 
 import (
-	"reflect"
 	"testing"
 
 	"github.com/ilnurmamatkazin/go-devops/cmd/server/models"
 	"github.com/ilnurmamatkazin/go-devops/cmd/server/storage"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestNew(t *testing.T) {
@@ -22,9 +22,8 @@ func TestNew(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := New(tt.args.cfg, tt.args.repository); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("New() = %v, want %v", got, tt.want)
-			}
+			got := New(tt.args.cfg, tt.args.repository)
+			assert.Equal(t, got, tt.want)
 		})
 	}
 }

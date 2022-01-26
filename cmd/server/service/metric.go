@@ -11,6 +11,24 @@ import (
 	"github.com/ilnurmamatkazin/go-devops/cmd/server/models"
 )
 
+func (s *Service) SetOldMetric(metric models.Metric) (err error) {
+	switch metric.MetricType {
+	case "gauge":
+		metricGauge := models.MetricGauge{Name: metric.ID, Value: *metric.Value}
+		err = s.repository.SetOldGauge(metricGauge)
+	case "counter":
+		metricCounter := models.MetricCounter{Name: metric.ID, Value: *metric.Delta}
+		err = s.repository.SetOldCounter(metricCounter)
+	default:
+		err = &models.RequestError{
+			StatusCode: http.StatusNotImplemented,
+			Err:        errors.New(http.StatusText(http.StatusNotImplemented)),
+		}
+	}
+
+	return
+}
+
 func (s *Service) SetMetric(metric models.Metric) (err error) {
 	if s.cfg.Key != "" {
 		hash, err := hex.DecodeString(metric.Hash)
@@ -33,19 +51,21 @@ func (s *Service) SetMetric(metric models.Metric) (err error) {
 		}
 	}
 
-	switch metric.MetricType {
-	case "gauge":
-		metricGauge := models.MetricGauge{Name: metric.ID, Value: *metric.Value}
-		err = s.repository.SetGauge(metricGauge)
-	case "counter":
-		metricCounter := models.MetricCounter{Name: metric.ID, Value: *metric.Delta}
-		err = s.repository.SetCounter(metricCounter)
-	default:
-		err = &models.RequestError{
-			StatusCode: http.StatusNotImplemented,
-			Err:        errors.New(http.StatusText(http.StatusNotImplemented)),
-		}
-	}
+	err = s.repository.SetMetric(metric)
+
+	// switch metric.MetricType {
+	// case "gauge":
+	// 	metricGauge := models.MetricGauge{Name: metric.ID, Value: *metric.Value}
+	// 	err = s.repository.SetGauge(metricGauge)
+	// case "counter":
+	// 	metricCounter := models.MetricCounter{Name: metric.ID, Value: *metric.Delta}
+	// 	err = s.repository.SetCounter(metricCounter)
+	// default:
+	// 	err = &models.RequestError{
+	// 		StatusCode: http.StatusNotImplemented,
+	// 		Err:        errors.New(http.StatusText(http.StatusNotImplemented)),
+	// 	}
+	// }
 
 	return
 }
