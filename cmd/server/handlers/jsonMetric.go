@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"github.com/ilnurmamatkazin/go-devops/cmd/server/models"
@@ -45,7 +44,6 @@ func (h *Handler) parseMetric(w http.ResponseWriter, r *http.Request) {
 		err    error
 	)
 	if err = json.NewDecoder(r.Body).Decode(&metric); err != nil {
-		fmt.Println("!!!!!", metric)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}

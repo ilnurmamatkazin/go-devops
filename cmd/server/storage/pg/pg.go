@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"sync"
 	"time"
 
@@ -21,9 +22,11 @@ func New(cfg models.Config) (repository *Repository, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(models.DatabaseTimeout)*time.Second)
 	defer cancel()
 
+	fmt.Println("&&&&&&&")
 	if repository.conn, err = pgx.Connect(ctx, cfg.Database); err != nil {
 		return
 	}
+	fmt.Println("$$$$$$$", repository.conn)
 
 	if err = repository.Init(); err != nil {
 		return
