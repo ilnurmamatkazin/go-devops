@@ -3,6 +3,7 @@ package pg
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"sync"
 	"time"
 
@@ -65,7 +66,12 @@ func (r *Repository) Ping() error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(models.DatabaseTimeout)*time.Second)
 	defer cancel()
 
-	return r.conn.Ping(ctx)
+	if r.conn != nil {
+		return r.conn.Ping(ctx)
+	} else {
+		return errors.New("соединение с бд отсутствует")
+	}
+
 }
 
 func (r *Repository) Load(mutex *sync.Mutex, metrics map[string]float64) (err error) {

@@ -30,7 +30,13 @@ func (h *Handler) getMetric(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sendMetricJSONData(w, metric)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+
+	if err := json.NewEncoder(w).Encode(metric); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }
 
 func (h *Handler) parseMetric(w http.ResponseWriter, r *http.Request) {
@@ -55,10 +61,6 @@ func (h *Handler) parseMetric(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sendMetricJSONData(w, metric)
-}
-
-func sendMetricJSONData(w http.ResponseWriter, metric models.Metric) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 
@@ -67,3 +69,13 @@ func sendMetricJSONData(w http.ResponseWriter, metric models.Metric) {
 		return
 	}
 }
+
+// func sendMetricJSONData(w http.ResponseWriter, metric models.Metric) {
+// 	w.Header().Set("Content-Type", "application/json")
+// 	w.WriteHeader(http.StatusOK)
+
+// 	if err := json.NewEncoder(w).Encode(metric); err != nil {
+// 		http.Error(w, err.Error(), http.StatusInternalServerError)
+// 		return
+// 	}
+// }

@@ -90,6 +90,7 @@ func (s *Storage) ReadMetric(name string) (value float64, err error) {
 
 func (s *Storage) SetOldMetric(metric models.Metric) {
 	var value float64
+
 	s.Lock()
 	if s.metrics == nil {
 		s.metrics = make(map[string]float64)
@@ -106,10 +107,7 @@ func (s *Storage) SetOldMetric(metric models.Metric) {
 	} else {
 		s.metrics[metric.ID] = rand.Float64()
 	}
-
 	s.Unlock()
-
-	return
 }
 
 func (s *Storage) SetMetric(metric models.Metric) (err error) {

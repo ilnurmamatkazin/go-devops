@@ -10,7 +10,7 @@ import (
 func (h *Handler) getOldMetric(w http.ResponseWriter, r *http.Request) {
 	metric := getMetricFromRequest(r)
 
-	if !checkMetricType(metric.MetricType) {
+	if checkMetricType(metric.MetricType) {
 		http.Error(w, http.StatusText(http.StatusNotImplemented), http.StatusNotImplemented)
 		return
 	}

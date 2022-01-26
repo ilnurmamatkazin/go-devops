@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -12,7 +13,10 @@ import (
 func (h *Handler) parseOldMetric(w http.ResponseWriter, r *http.Request) {
 	metric := getMetricFromRequest(r)
 
-	if !checkMetricType(metric.MetricType) {
+	fmt.Println(metric)
+	fmt.Println((metric.MetricType != "counter") && (metric.MetricType != "gauge"))
+
+	if checkMetricType(metric.MetricType) {
 		http.Error(w, http.StatusText(http.StatusNotImplemented), http.StatusNotImplemented)
 		return
 	}
