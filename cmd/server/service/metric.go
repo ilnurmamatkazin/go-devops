@@ -22,7 +22,8 @@ func (s *Service) GetOldMetric(metric *models.Metric) (err error) {
 	case "gauge":
 		metric.Value = &f
 	case "counter":
-		*metric.Delta = int64(f)
+		i := int64(f)
+		metric.Delta = &i
 	default:
 		err = &models.RequestError{
 			StatusCode: http.StatusNotImplemented,
@@ -37,8 +38,9 @@ func (s *Service) SetMetric(metric models.Metric) (err error) {
 	if s.cfg.Key != "" {
 		hash, err := hex.DecodeString(metric.Hash)
 		if err != nil {
+			fmt.Println("&&&&&&&", s.cfg.Key, err.Error())
 			return &models.RequestError{
-				StatusCode: http.StatusBadRequest,
+				StatusCode: http.StatusConflict,
 				Err:        errors.New(err.Error()),
 			}
 		}
@@ -48,8 +50,10 @@ func (s *Service) SetMetric(metric models.Metric) (err error) {
 		sign := h.Sum(nil)
 
 		if !hmac.Equal(sign, hash) {
+			fmt.Println("&&&&444444&&&", s.cfg.Key, err.Error())
+
 			return &models.RequestError{
-				StatusCode: http.StatusBadRequest,
+				StatusCode: http.StatusBadGateway,
 				Err:        errors.New("подпись неверна"),
 			}
 		}
