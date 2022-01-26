@@ -50,7 +50,7 @@ func (s *Service) SetMetric(metric models.Metric) (err error) {
 		sign := h.Sum(nil)
 
 		if !hmac.Equal(sign, hash) {
-			fmt.Println("&&&&444444&&&", s.cfg.Key, err.Error())
+			fmt.Println("&&&&444444&&&", s.cfg.Key)
 
 			return &models.RequestError{
 				StatusCode: http.StatusBadGateway,
