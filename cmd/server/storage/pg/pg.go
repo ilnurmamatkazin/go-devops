@@ -99,24 +99,27 @@ func (r *Repository) Load(mutex *sync.Mutex, metrics map[string]models.Metric) (
 			return
 		}
 
-		fmt.Print("***load***", id, metricType)
+		fmt.Print("***load*** ", id, metricType)
 
 		metric := models.Metric{ID: id, MetricType: metricType}
 
 		if delta.Valid {
-			metric.Delta = &delta.Int64
-			fmt.Print("delta=", delta.Int64)
+			i := delta.Int64
+			metric.Delta = &i
+			fmt.Print(" delta=", i)
 		}
 
 		if value.Valid {
-			metric.Value = &value.Float64
-			fmt.Print("value=", value.Float64)
+			f := value.Float64
+			metric.Value = &f
+			fmt.Print(" value=", f)
 
 		}
 
 		if hash.Valid {
-			metric.Hash = &hash.String
-			fmt.Print("hash=", hash.String)
+			s := hash.String
+			metric.Hash = &s
+			fmt.Print(" hash=", s)
 
 		}
 
@@ -147,6 +150,7 @@ func (r *Repository) Save(mutex *sync.Mutex, metrics map[string]models.Metric) (
 		var (
 			i int64   = -100
 			f float64 = -100
+			h string  = ""
 		)
 
 		if value.Delta != nil {
@@ -157,7 +161,11 @@ func (r *Repository) Save(mutex *sync.Mutex, metrics map[string]models.Metric) (
 			f = *value.Value
 		}
 
-		fmt.Println(key, value.MetricType, i, f, value.Hash)
+		if value.Hash != nil {
+			h = *value.Hash
+		}
+
+		fmt.Println(key, value.MetricType, i, f, h)
 		if _, err = r.conn.Exec(ctx, query, key, value.MetricType, value.Delta, value.Value, value.Hash); err != nil {
 			return
 		}

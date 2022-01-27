@@ -98,7 +98,24 @@ func (s *Service) GetMetric(metric *models.Metric) (err error) {
 		return
 	}
 
+	var (
+		i int64   = -100
+		f float64 = -100
+	)
+
+	if metric.Delta != nil {
+		i = *metric.Delta
+	}
+
+	if metric.Value != nil {
+		f = *metric.Value
+	}
+
+	fmt.Println("&&&&increment6 GetMetric&&&", metric, i, f)
+
 	hash := utils.SetEncodeHesh(metric.ID, metric.MetricType, s.cfg.Key, metric.Delta, metric.Value)
+	fmt.Println("&&&&increment6 GetMetric&&&", metric, i, f, hash)
+
 	metric.Hash = &hash
 
 	return

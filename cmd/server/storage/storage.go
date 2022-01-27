@@ -67,6 +67,9 @@ func (s *Storage) Close() {
 }
 
 func (s *Storage) ReadMetric(metric *models.Metric) (err error) {
+	fmt.Println("#####", s.metrics)
+	fmt.Println("##444###", metric.ID)
+
 	s.Lock()
 	m, ok := s.metrics[metric.ID]
 	s.Unlock()
