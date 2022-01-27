@@ -32,11 +32,12 @@ func GetDataForTicker(value string) (interval int, duration time.Duration, err e
 	return
 }
 
-func SetHesh(id, metricType, key string, delta *int64, value *float64) (hash []byte) {
+func SetHesh(id, metricType, key string, delta *int64, value *float64) []byte {
 	if key == "" {
-		return
+		return nil
 	}
 
+	var hash []byte
 	if metricType == "gauge" {
 		hash = []byte(fmt.Sprintf("%s:gauge:%f", id, *value))
 	} else {
@@ -45,11 +46,10 @@ func SetHesh(id, metricType, key string, delta *int64, value *float64) (hash []b
 
 	h := hmac.New(sha256.New, []byte(key))
 	h.Write(hash)
+	return h.Sum(nil)
 
-	return
 }
 
 func SetEncodeHesh(id, metricType, key string, delta *int64, value *float64) string {
-	//base64.StdEncoding.EncodeToString
 	return hex.EncodeToString(SetHesh(id, metricType, key, delta, value))
 }
