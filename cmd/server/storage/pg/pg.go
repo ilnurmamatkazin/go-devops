@@ -179,3 +179,33 @@ func (r *Repository) Save(mutex *sync.Mutex, metrics map[string]models.Metric) (
 	return
 
 }
+
+func (r *Repository) SaveArray(metrics []models.Metric) (err error) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(models.DatabaseTimeout)*time.Second)
+	defer cancel()
+
+	query := `
+	INSERT INTO public.metrics (id, type, delta, value, hash)
+	VALUES ($1, $2, $3, $4, $5)
+	ON CONFLICT (id)
+	DO UPDATE SET
+	delta=$3,
+	value=$4,
+	hash=$5
+	`
+
+	tx, err := r.conn.Begin(ctx)
+	if err != nil {
+		return
+	}
+
+	defer tx.Rollback(ctx)
+
+	for _, metric := range metrics {
+		if _, err = r.conn.Exec(ctx, query, metric.ID, metric.MetricType, metric.Delta, metric.Value, metric.Hash); err != nil {
+			return
+		}
+	}
+
+	return tx.Commit(ctx)
+}

@@ -6,7 +6,7 @@ const (
 	StoreFile     = "/tmp/devops-metrics-db.json"
 	Restore       = true
 	Key           = ""
-	Database      = "postgres://postgres:1qaz@WSX@localhost:5432/postgres?sslmode=disable"
-	// Database        = "postgres://kot:KotQWE321@10.10.10.206:5432/city_plan?sslmode=disable"
+	// Database      = "postgres://postgres:1qaz@WSX@localhost:5432/postgres?sslmode=disable"
+	Database        = "postgres://postgres:12345@localhost:5434/postgres?sslmode=disable"
 	DatabaseTimeout = 30
 )

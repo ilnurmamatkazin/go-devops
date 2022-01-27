@@ -127,7 +127,9 @@ func (h *Handler) parseMetrics(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err = h.service.SetMetric(metric); err != nil {
+	fmt.Println("&&&&increment11 parseMetricssss&&&", metrics)
+
+	if err = h.service.SetArrayMetrics(metrics); err != nil {
 		re, ok := err.(*models.RequestError)
 		if ok {
 			http.Error(w, re.Err.Error(), re.StatusCode)
@@ -141,7 +143,7 @@ func (h *Handler) parseMetrics(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 
-	if err := json.NewEncoder(w).Encode(metric); err != nil {
+	if err := json.NewEncoder(w).Encode(metrics); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

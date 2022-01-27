@@ -169,3 +169,17 @@ func (s *Storage) Save() (err error) {
 func (s *Storage) Ping() error {
 	return s.db.Ping()
 }
+
+func (s *Storage) SetArrayMetrics(metrics []models.Metric) (err error) {
+	// if s.isSyncMode {
+	if err = s.db.SaveArray(metrics); err != nil {
+		log.Println(err.Error())
+		return
+	}
+	// }
+
+	for _, metric := range metrics {
+		s.SetOldMetric(metric)
+	}
+	return
+}
