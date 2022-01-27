@@ -116,7 +116,7 @@ func main() {
 				metricSender.sendMetric("counter", "PollCount", pollCount)
 				metricSender.sendMetric("gauge", "RandomValue", rand.Float64())
 
-				// metricSender.sendArrayMetric(rtm, pollCount)
+				metricSender.sendArrayMetric(rtm, pollCount)
 
 				mutex.Unlock()
 			}

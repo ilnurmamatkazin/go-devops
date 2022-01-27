@@ -181,6 +181,10 @@ func (r *Repository) Save(mutex *sync.Mutex, metrics map[string]models.Metric) (
 }
 
 func (r *Repository) SaveArray(metrics []models.Metric) (err error) {
+	if r.conn == nil {
+		return
+	}
+
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(models.DatabaseTimeout)*time.Second)
 	defer cancel()
 
