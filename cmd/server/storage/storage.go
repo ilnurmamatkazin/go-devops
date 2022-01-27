@@ -82,8 +82,13 @@ func (s *Storage) ReadMetric(metric *models.Metric) (err error) {
 		return
 	}
 
-	metric.Delta = m.Delta
-	metric.Value = m.Value
+	if m.Delta != nil {
+		metric.Delta = m.Delta
+	}
+
+	if m.Value != nil {
+		metric.Value = m.Value
+	}
 
 	return
 }
@@ -104,6 +109,9 @@ func (s *Storage) SetOldMetric(metric models.Metric) {
 		}
 
 		metric.Delta = &delta
+		metric.Value = nil
+	} else {
+		metric.Delta = nil
 	}
 
 	s.metrics[metric.ID] = metric

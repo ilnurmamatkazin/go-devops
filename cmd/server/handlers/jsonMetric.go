@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/ilnurmamatkazin/go-devops/cmd/server/models"
@@ -17,6 +18,8 @@ func (h *Handler) getMetric(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+
+	fmt.Println("&&&&&&&", metric)
 
 	if err = h.service.GetMetric(&metric); err != nil {
 		re, ok := err.(*models.RequestError)

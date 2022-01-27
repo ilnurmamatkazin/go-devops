@@ -44,7 +44,7 @@ func (r *Repository) Init() (err error) {
 		type text COLLATE pg_catalog."default" NOT NULL,
 		delta bigint,
 		value double precision,
-		hash text COLLATE pg_catalog."default" NOT NULL,
+		hash text COLLATE pg_catalog."default",
 		CONSTRAINT metrics_pkey PRIMARY KEY (id)
 	)
 	`
@@ -77,9 +77,10 @@ func (r *Repository) Ping() error {
 
 func (r *Repository) Load(mutex *sync.Mutex, metrics map[string]models.Metric) (err error) {
 	var (
-		id, metricType, hash string
-		delta                sql.NullInt64
-		value                sql.NullFloat64
+		id, metricType string
+		delta          sql.NullInt64
+		value          sql.NullFloat64
+		hash           sql.NullString
 	)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(models.DatabaseTimeout)*time.Second)
 	defer cancel()
@@ -98,7 +99,7 @@ func (r *Repository) Load(mutex *sync.Mutex, metrics map[string]models.Metric) (
 			return
 		}
 
-		metric := models.Metric{ID: id, MetricType: metricType, Hash: hash}
+		metric := models.Metric{ID: id, MetricType: metricType}
 
 		if delta.Valid {
 			metric.Delta = &delta.Int64
@@ -106,6 +107,10 @@ func (r *Repository) Load(mutex *sync.Mutex, metrics map[string]models.Metric) (
 
 		if value.Valid {
 			metric.Value = &value.Float64
+		}
+
+		if hash.Valid {
+			metric.Hash = &hash.String
 		}
 
 		metrics[id] = metric
