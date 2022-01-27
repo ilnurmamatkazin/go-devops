@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"math/rand"
 	"net/http"
 	"sync"
 	"time"
@@ -16,15 +15,13 @@ import (
 
 type Storage struct {
 	isSyncMode bool
-	// cfg        models.Config
-	db      *pg.Repository
-	metrics map[string]float64
+	db         *pg.Repository
+	metrics    map[string]models.Metric
 	sync.Mutex
 }
 
 func New(cfg models.Config) (storage *Storage, err error) {
-	// storage = &Storage{cfg: cfg}
-	storage = &Storage{metrics: make(map[string]float64)}
+	storage = &Storage{metrics: make(map[string]models.Metric)}
 
 	if storage.db, err = pg.New(cfg); err != nil {
 		return
@@ -69,13 +66,13 @@ func (s *Storage) Close() {
 	s.db.Close()
 }
 
-func (s *Storage) ReadMetric(name string) (value float64, err error) {
+func (s *Storage) ReadMetric(metric *models.Metric) (err error) {
 	s.Lock()
-	value, ok := s.metrics[name]
+	m, ok := s.metrics[metric.ID]
 	s.Unlock()
 
 	if !ok {
-		fmt.Println("*****ReadOldMetric********", name)
+		fmt.Println("*****ReadOldMetric********", metric.ID)
 
 		err = &models.RequestError{
 			StatusCode: http.StatusNotFound,
@@ -85,30 +82,38 @@ func (s *Storage) ReadMetric(name string) (value float64, err error) {
 		return
 	}
 
+	metric = &m
+
 	return
 }
 
 func (s *Storage) SetOldMetric(metric models.Metric) {
-	var value float64
-
 	s.Lock()
 	if s.metrics == nil {
-		s.metrics = make(map[string]float64)
+		s.metrics = make(map[string]models.Metric)
 	}
+
+	var delta int64
 
 	if metric.MetricType == "counter" {
-		value = s.metrics[metric.ID] + float64(*metric.Delta)
-	} else {
-		value = *metric.Value
+		if s.metrics[metric.ID].Delta == nil {
+			delta = *metric.Delta
+		} else {
+			delta = *s.metrics[metric.ID].Delta + *metric.Delta
+		}
+
+		metric.Delta = &delta
 	}
 
-	fmt.Println("######", s.metrics[metric.ID], value)
+	s.metrics[metric.ID] = metric
 
-	if s.metrics[metric.ID] != value {
-		s.metrics[metric.ID] = value
-	} else {
-		s.metrics[metric.ID] = rand.Float64()
-	}
+	// fmt.Println("######", s.metrics[metric.ID], value)
+
+	// if s.metrics[metric.ID] != value {
+	// 	s.metrics[metric.ID] = value
+	// } else {
+	// 	s.metrics[metric.ID] = rand.Float64()
+	// }
 	s.Unlock()
 }
 
@@ -130,7 +135,12 @@ func (s *Storage) Info() (html string) {
 
 	s.Lock()
 	for key, value := range s.metrics {
-		ul = ul + fmt.Sprintf("<li>%s: %f</li>", key, value)
+		if value.MetricType == "counter" {
+			ul = ul + fmt.Sprintf("<li>%s: %d</li>", key, *value.Delta)
+		} else {
+			ul = ul + fmt.Sprintf("<li>%s: %f</li>", key, *value.Value)
+		}
+
 	}
 	s.Unlock()
 

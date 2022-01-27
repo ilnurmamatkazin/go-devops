@@ -22,11 +22,9 @@ func New(cfg models.Config) (repository *Repository, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(models.DatabaseTimeout)*time.Second)
 	defer cancel()
 
-	fmt.Println("&&&&&&&")
 	if repository.conn, err = pgx.Connect(ctx, cfg.Database); err != nil {
 		return
 	}
-	fmt.Println("$$$$$$$", repository.conn)
 
 	if err = repository.Init(); err != nil {
 		return
@@ -46,7 +44,7 @@ func (r *Repository) Init() (err error) {
 		type text COLLATE pg_catalog."default" NOT NULL,
 		delta bigint,
 		value double precision,
-		hash text COLLATE pg_catalog."default",
+		hash text COLLATE pg_catalog."default" NOT NULL,
 		CONSTRAINT metrics_pkey PRIMARY KEY (id)
 	)
 	`
@@ -77,12 +75,11 @@ func (r *Repository) Ping() error {
 
 }
 
-func (r *Repository) Load(mutex *sync.Mutex, metrics map[string]float64) (err error) {
+func (r *Repository) Load(mutex *sync.Mutex, metrics map[string]models.Metric) (err error) {
 	var (
-		id, metricType string
-		delta          sql.NullInt64
-		value          sql.NullFloat64
-		hash           sql.NullString
+		id, metricType, hash string
+		delta                sql.NullInt64
+		value                sql.NullFloat64
 	)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(models.DatabaseTimeout)*time.Second)
 	defer cancel()
@@ -101,12 +98,17 @@ func (r *Repository) Load(mutex *sync.Mutex, metrics map[string]float64) (err er
 			return
 		}
 
-		if metricType == "gauge" {
-			metrics[id] = value.Float64
-		} else {
-			metrics[id] = float64(delta.Int64)
+		metric := models.Metric{ID: id, MetricType: metricType, Hash: hash}
+
+		if delta.Valid {
+			metric.Delta = &delta.Int64
 		}
 
+		if value.Valid {
+			metric.Value = &value.Float64
+		}
+
+		metrics[id] = metric
 	}
 	mutex.Unlock()
 
@@ -114,7 +116,7 @@ func (r *Repository) Load(mutex *sync.Mutex, metrics map[string]float64) (err er
 
 }
 
-func (r *Repository) Save(mutex *sync.Mutex, metrics map[string]float64) (err error) {
+func (r *Repository) Save(mutex *sync.Mutex, metrics map[string]models.Metric) (err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(models.DatabaseTimeout)*time.Second)
 	defer cancel()
 
@@ -128,9 +130,8 @@ func (r *Repository) Save(mutex *sync.Mutex, metrics map[string]float64) (err er
 	hash=$5
 	`
 	for key, value := range metrics {
-		// fmt.Println(key, "gauge", value, value, "qqq")
-
-		if _, err = r.conn.Exec(ctx, query, key, "gauge", value, value, ""); err != nil {
+		fmt.Println(key, value.MetricType, value.Delta, value.Value, value.Hash)
+		if _, err = r.conn.Exec(ctx, query, key, value.MetricType, value.Delta, value.Value, value.Hash); err != nil {
 			return
 		}
 	}

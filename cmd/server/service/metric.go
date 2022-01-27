@@ -16,20 +16,20 @@ func (s *Service) SetOldMetric(metric models.Metric) {
 }
 
 func (s *Service) GetOldMetric(metric *models.Metric) (err error) {
-	f, err := s.repository.ReadMetric(metric.ID)
+	err = s.repository.ReadMetric(metric)
 
-	switch metric.MetricType {
-	case "gauge":
-		metric.Value = &f
-	case "counter":
-		i := int64(f)
-		metric.Delta = &i
-	default:
-		err = &models.RequestError{
-			StatusCode: http.StatusNotImplemented,
-			Err:        errors.New(http.StatusText(http.StatusNotImplemented)),
-		}
-	}
+	// switch metric.MetricType {
+	// case "gauge":
+	// 	metric.Value = &f
+	// case "counter":
+	// 	i := int64(f)
+	// 	metric.Delta = &i
+	// default:
+	// 	err = &models.RequestError{
+	// 		StatusCode: http.StatusNotImplemented,
+	// 		Err:        errors.New(http.StatusText(http.StatusNotImplemented)),
+	// 	}
+	// }
 
 	return
 }
