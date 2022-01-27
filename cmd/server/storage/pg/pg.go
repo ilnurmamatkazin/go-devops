@@ -99,21 +99,30 @@ func (r *Repository) Load(mutex *sync.Mutex, metrics map[string]models.Metric) (
 			return
 		}
 
+		fmt.Print("***load***", id, metricType)
+
 		metric := models.Metric{ID: id, MetricType: metricType}
 
 		if delta.Valid {
 			metric.Delta = &delta.Int64
+			fmt.Print("delta=", delta.Int64)
 		}
 
 		if value.Valid {
 			metric.Value = &value.Float64
+			fmt.Print("value=", value.Float64)
+
 		}
 
 		if hash.Valid {
 			metric.Hash = &hash.String
+			fmt.Print("hash=", hash.String)
+
 		}
 
 		metrics[id] = metric
+
+		fmt.Println()
 	}
 	mutex.Unlock()
 
