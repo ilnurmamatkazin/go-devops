@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
@@ -119,6 +120,13 @@ func (s *Storage) SetOldMetric(metric models.Metric) {
 
 func (s *Storage) SetMetric(metric models.Metric) (err error) {
 	s.SetOldMetric(metric)
+
+	if strings.Contains(metric.ID, "PopulateCounter") {
+		if err = s.db.SaveCurentMetric(metric); err != nil {
+			log.Println(err.Error())
+			return
+		}
+	}
 
 	if s.isSyncMode {
 		if err = s.db.Save(&s.Mutex, s.metrics); err != nil {

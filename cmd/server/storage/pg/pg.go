@@ -209,3 +209,44 @@ func (r *Repository) SaveArray(metrics []models.Metric) (err error) {
 
 	return tx.Commit(ctx)
 }
+
+func (r *Repository) SaveCurentMetric(metric models.Metric) (err error) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(models.DatabaseTimeout)*time.Second)
+	defer cancel()
+
+	query := `
+	INSERT INTO public.metrics (id, type, delta, value, hash)
+	VALUES ($1, $2, $3, $4, $5)
+	ON CONFLICT (id)
+	DO UPDATE SET
+	delta=$3,
+	value=$4,
+	hash=$5
+	`
+
+	var (
+		i int64   = -100
+		f float64 = -100
+		h string
+	)
+
+	if metric.Delta != nil {
+		i = *metric.Delta
+	}
+
+	if metric.Value != nil {
+		f = *metric.Value
+	}
+
+	if metric.Hash != nil {
+		h = *metric.Hash
+	}
+
+	fmt.Println(metric.ID, metric.MetricType, i, f, h)
+	if _, err = r.conn.Exec(ctx, query, metric.ID, metric.MetricType, metric.Delta, metric.Value, metric.Hash); err != nil {
+		return
+	}
+
+	return
+
+}
