@@ -45,7 +45,7 @@ func (s *Service) SetMetric(metric models.Metric) (err error) {
 			}
 		}
 
-		sign := utils.SetHesh(metric.ID, metric.MetricType, s.cfg.Key, *metric.Delta, *metric.Value)
+		sign := utils.SetHesh(metric.ID, metric.MetricType, s.cfg.Key, metric.Delta, metric.Value)
 
 		if !hmac.Equal(sign, hash) {
 			fmt.Println("&&&&444444&&&", metric, s.cfg.Key, sign, hash)
@@ -81,7 +81,7 @@ func (s *Service) GetMetric(metric *models.Metric) (err error) {
 		return
 	}
 
-	metric.Hash = utils.SetEncodeHesh(metric.ID, metric.MetricType, s.cfg.Key, *metric.Delta, *metric.Value)
+	metric.Hash = utils.SetEncodeHesh(metric.ID, metric.MetricType, s.cfg.Key, metric.Delta, metric.Value)
 
 	return
 }

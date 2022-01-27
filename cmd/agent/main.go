@@ -138,7 +138,7 @@ func (ms MetricSender) sendMetric(typeMetric, nameMetric string, value interface
 	metric.MetricType = typeMetric
 
 	convertValue(value, &metric)
-	metric.Hash = utils.SetEncodeHesh(metric.ID, metric.MetricType, ms.cfg.Key, *metric.Delta, *metric.Value)
+	metric.Hash = utils.SetEncodeHesh(metric.ID, metric.MetricType, ms.cfg.Key, metric.Delta, metric.Value)
 
 	b, err := json.Marshal(metric)
 	if err != nil {
