@@ -82,7 +82,8 @@ func (s *Storage) ReadMetric(metric *models.Metric) (err error) {
 		return
 	}
 
-	metric = &m
+	metric.Delta = m.Delta
+	metric.Value = m.Value
 
 	return
 }

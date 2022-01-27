@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"fmt"
 	"net/http"
 	"strconv"
 
@@ -27,24 +26,22 @@ func (h *Handler) getOldMetric(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var (
-		i int64
-		f float64
-	)
+	// var (
+	// 	i int64
+	// 	f float64
+	// )
 
-	if metric.Value != nil {
-		f = *metric.Value
-	} else {
-		f = 0
-	}
+	// if metric.Value != nil {
+	// 	f = *metric.Value
+	// } else {
+	// 	f = 0
+	// }
 
-	if metric.Delta != nil {
-		i = *metric.Delta
-	} else {
-		i = 0
-	}
-
-	fmt.Println("^^^^SetOldMetric^^^^^", metric.ID, i, f)
+	// if metric.Delta != nil {
+	// 	i = *metric.Delta
+	// } else {
+	// 	i = 0
+	// }
 
 	var (
 		httpStatus int

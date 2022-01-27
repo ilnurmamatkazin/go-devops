@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"compress/gzip"
-	"fmt"
 	"io"
 	"net/http"
 	"strings"
@@ -79,7 +78,6 @@ func middlewareGzip(next http.Handler) http.Handler {
 		if !strings.Contains(r.Header.Get("Accept-Encoding"), "gzip") {
 			// если gzip не поддерживается, передаём управление
 			// дальше без изменений
-			fmt.Println("$$$$$$$$$$$$$$$$$$$$$", r.Header.Get("Accept-Encoding"))
 			next.ServeHTTP(w, r)
 			return
 		}

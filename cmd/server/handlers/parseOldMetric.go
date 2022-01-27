@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 	"strconv"
 
@@ -13,9 +12,6 @@ import (
 func (h *Handler) parseOldMetric(w http.ResponseWriter, r *http.Request) {
 	metric := getMetricFromRequest(r)
 
-	fmt.Println(metric)
-	fmt.Println((metric.MetricType != "counter") && (metric.MetricType != "gauge"))
-
 	if checkMetricType(metric.MetricType) {
 		http.Error(w, http.StatusText(http.StatusNotImplemented), http.StatusNotImplemented)
 		return
@@ -25,25 +21,6 @@ func (h *Handler) parseOldMetric(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.(*models.RequestError).Err.Error(), err.(*models.RequestError).StatusCode)
 		return
 	}
-
-	var (
-		i int64
-		f float64
-	)
-
-	if metric.Value != nil {
-		f = *metric.Value
-	} else {
-		f = 0
-	}
-
-	if metric.Delta != nil {
-		i = *metric.Delta
-	} else {
-		i = 0
-	}
-
-	fmt.Println("^^^^SetOldMetric^^^^^", metric.ID, i, f)
 
 	h.service.SetOldMetric(metric)
 
