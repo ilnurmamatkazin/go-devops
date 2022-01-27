@@ -3,10 +3,7 @@ package main
 import (
 	"bytes"
 	"context"
-	"crypto/hmac"
-	"crypto/sha256"
 	"encoding/binary"
-	"encoding/hex"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -141,7 +138,7 @@ func (ms MetricSender) sendMetric(typeMetric, nameMetric string, value interface
 	metric.MetricType = typeMetric
 
 	convertValue(value, &metric)
-	setHesh(&metric, ms.cfg.Key)
+	metric.Hash = utils.SetEncodeHesh(metric.ID, metric.MetricType, ms.cfg.Key, *metric.Delta, *metric.Value)
 
 	b, err := json.Marshal(metric)
 	if err != nil {
@@ -245,23 +242,4 @@ func convertValue(value interface{}, metric *models.Metric) {
 	}
 
 	metric.Value = &f
-}
-
-func setHesh(metric *models.Metric, key string) {
-	if key == "" {
-		return
-	}
-
-	var hash []byte
-
-	if metric.MetricType == "gauge" {
-		hash = []byte(fmt.Sprintf("%s:gauge:%f", metric.ID, *metric.Value))
-	} else {
-		hash = []byte(fmt.Sprintf("%s:counter:%d", metric.ID, *metric.Delta))
-	}
-
-	h := hmac.New(sha256.New, []byte(key))
-	h.Write(hash)
-
-	metric.Hash = hex.EncodeToString(h.Sum(nil))
 }

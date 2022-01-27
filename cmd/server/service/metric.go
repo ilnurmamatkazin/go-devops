@@ -2,13 +2,13 @@ package service
 
 import (
 	"crypto/hmac"
-	"crypto/sha256"
 	"encoding/hex"
 	"errors"
 	"fmt"
 	"net/http"
 
 	"github.com/ilnurmamatkazin/go-devops/cmd/server/models"
+	"github.com/ilnurmamatkazin/go-devops/internal/utils"
 )
 
 func (s *Service) SetOldMetric(metric models.Metric) {
@@ -45,9 +45,7 @@ func (s *Service) SetMetric(metric models.Metric) (err error) {
 			}
 		}
 
-		h := hmac.New(sha256.New, []byte(s.cfg.Key))
-		h.Write(hash)
-		sign := h.Sum(nil)
+		sign := utils.SetHesh(metric.ID, metric.MetricType, s.cfg.Key, *metric.Delta, *metric.Value)
 
 		if !hmac.Equal(sign, hash) {
 			fmt.Println("&&&&444444&&&", metric, s.cfg.Key, sign, hash)
@@ -83,30 +81,11 @@ func (s *Service) GetMetric(metric *models.Metric) (err error) {
 		return
 	}
 
-	setHesh(metric, s.cfg.Key)
+	metric.Hash = utils.SetEncodeHesh(metric.ID, metric.MetricType, s.cfg.Key, *metric.Delta, *metric.Value)
 
 	return
 }
 
 func (s *Service) GetInfo() string {
 	return s.repository.Info()
-}
-
-func setHesh(metric *models.Metric, key string) {
-	if key == "" {
-		return
-	}
-
-	var hash []byte
-
-	if metric.MetricType == "gauge" {
-		hash = []byte(fmt.Sprintf("%s:gauge:%f", metric.ID, *metric.Value))
-	} else {
-		hash = []byte(fmt.Sprintf("%s:counter:%d", metric.ID, *metric.Delta))
-	}
-
-	h := hmac.New(sha256.New, []byte(key))
-	h.Write(hash)
-
-	metric.Hash = hex.EncodeToString(h.Sum(nil))
 }
