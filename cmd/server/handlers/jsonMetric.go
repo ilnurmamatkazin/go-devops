@@ -14,6 +14,8 @@ func (h *Handler) getMetric(w http.ResponseWriter, r *http.Request) {
 		err    error
 	)
 
+	fmt.Println("&&&&increment11 getMetric&&&")
+
 	if err = json.NewDecoder(r.Body).Decode(&metric); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -43,7 +45,7 @@ func (h *Handler) getMetric(w http.ResponseWriter, r *http.Request) {
 		f = *metric.Value
 	}
 
-	fmt.Println("&&&&increment6 getMetric&&&", metric, i, f)
+	fmt.Println("&&&&increment11 getMetric&&&", metric, i, f)
 
 	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
@@ -59,6 +61,9 @@ func (h *Handler) parseMetric(w http.ResponseWriter, r *http.Request) {
 		metric models.Metric
 		err    error
 	)
+
+	fmt.Println("&&&&increment11 parseMetric&&&")
+
 	if err = json.NewDecoder(r.Body).Decode(&metric); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -88,7 +93,7 @@ func (h *Handler) parseMetric(w http.ResponseWriter, r *http.Request) {
 		f = *metric.Value
 	}
 
-	fmt.Println("&&&&increment6 parseMetric&&&", metric, i, f)
+	fmt.Println("&&&&increment11 parseMetric&&&", metric, i, f)
 
 	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
@@ -109,32 +114,35 @@ func (h *Handler) parseMetric(w http.ResponseWriter, r *http.Request) {
 // 	}
 // }
 
-// func (h *Handler) parseMetrics(w http.ResponseWriter, r *http.Request) {
-// 	var (
-// 		metric models.Metric
-// 		err    error
-// 	)
-// 	if err = json.NewDecoder(r.Body).Decode(&metric); err != nil {
-// 		http.Error(w, err.Error(), http.StatusBadRequest)
-// 		return
-// 	}
+func (h *Handler) parseMetrics(w http.ResponseWriter, r *http.Request) {
+	var (
+		metrics []models.Metric
+		err     error
+	)
 
-// 	if err = h.service.SetMetric(metric); err != nil {
-// 		re, ok := err.(*models.RequestError)
-// 		if ok {
-// 			http.Error(w, re.Err.Error(), re.StatusCode)
-// 		} else {
-// 			http.Error(w, err.Error(), http.StatusInternalServerError)
-// 		}
+	fmt.Println("&&&&increment11 parseMetricssss&&&")
 
-// 		return
-// 	}
+	if err = json.NewDecoder(r.Body).Decode(&metrics); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
 
-// 	w.Header().Add("Content-Type", "application/json")
-// 	w.WriteHeader(http.StatusOK)
+	if err = h.service.SetMetric(metric); err != nil {
+		re, ok := err.(*models.RequestError)
+		if ok {
+			http.Error(w, re.Err.Error(), re.StatusCode)
+		} else {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
 
-// 	if err := json.NewEncoder(w).Encode(metric); err != nil {
-// 		http.Error(w, err.Error(), http.StatusInternalServerError)
-// 		return
-// 	}
-// }
+		return
+	}
+
+	w.Header().Add("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+
+	if err := json.NewEncoder(w).Encode(metric); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}

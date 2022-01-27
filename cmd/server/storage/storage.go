@@ -67,16 +67,11 @@ func (s *Storage) Close() {
 }
 
 func (s *Storage) ReadMetric(metric *models.Metric) (err error) {
-	fmt.Println("#####", s.metrics)
-	fmt.Println("##444###", metric.ID)
-
 	s.Lock()
 	m, ok := s.metrics[metric.ID]
 	s.Unlock()
 
 	if !ok {
-		fmt.Println("*****ReadOldMetric********", metric.ID)
-
 		err = &models.RequestError{
 			StatusCode: http.StatusNotFound,
 			Err:        errors.New("metric not found"),
@@ -119,13 +114,6 @@ func (s *Storage) SetOldMetric(metric models.Metric) {
 
 	s.metrics[metric.ID] = metric
 
-	// fmt.Println("######", s.metrics[metric.ID], value)
-
-	// if s.metrics[metric.ID] != value {
-	// 	s.metrics[metric.ID] = value
-	// } else {
-	// 	s.metrics[metric.ID] = rand.Float64()
-	// }
 	s.Unlock()
 }
 

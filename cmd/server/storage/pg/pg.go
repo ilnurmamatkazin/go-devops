@@ -146,11 +146,13 @@ func (r *Repository) Save(mutex *sync.Mutex, metrics map[string]models.Metric) (
 	value=$4,
 	hash=$5
 	`
+
+	mutex.Lock()
 	for key, value := range metrics {
 		var (
 			i int64   = -100
 			f float64 = -100
-			h string  = ""
+			h string
 		)
 
 		if value.Delta != nil {
@@ -170,6 +172,9 @@ func (r *Repository) Save(mutex *sync.Mutex, metrics map[string]models.Metric) (
 			return
 		}
 	}
+	mutex.Unlock()
+
+	r.Load(mutex, metrics)
 
 	return
 
