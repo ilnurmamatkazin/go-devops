@@ -135,7 +135,20 @@ func (r *Repository) Save(mutex *sync.Mutex, metrics map[string]models.Metric) (
 	hash=$5
 	`
 	for key, value := range metrics {
-		fmt.Println(key, value.MetricType, value.Delta, value.Value, value.Hash)
+		var (
+			i int64   = -100
+			f float64 = -100
+		)
+
+		if value.Delta != nil {
+			i = *value.Delta
+		}
+
+		if value.Value != nil {
+			f = *value.Value
+		}
+
+		fmt.Println(key, value.MetricType, i, f, value.Hash)
 		if _, err = r.conn.Exec(ctx, query, key, value.MetricType, value.Delta, value.Value, value.Hash); err != nil {
 			return
 		}

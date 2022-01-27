@@ -19,8 +19,6 @@ func (h *Handler) getMetric(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Println("&&&&&&&", metric)
-
 	if err = h.service.GetMetric(&metric); err != nil {
 		re, ok := err.(*models.RequestError)
 		if ok {
@@ -31,6 +29,21 @@ func (h *Handler) getMetric(w http.ResponseWriter, r *http.Request) {
 
 		return
 	}
+
+	var (
+		i int64   = -100
+		f float64 = -100
+	)
+
+	if metric.Delta != nil {
+		i = *metric.Delta
+	}
+
+	if metric.Value != nil {
+		f = *metric.Value
+	}
+
+	fmt.Println("&&&&increment6 getMetric&&&", metric, i, f)
 
 	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
@@ -61,6 +74,21 @@ func (h *Handler) parseMetric(w http.ResponseWriter, r *http.Request) {
 
 		return
 	}
+
+	var (
+		i int64   = -100
+		f float64 = -100
+	)
+
+	if metric.Delta != nil {
+		i = *metric.Delta
+	}
+
+	if metric.Value != nil {
+		f = *metric.Value
+	}
+
+	fmt.Println("&&&&increment6 parseMetric&&&", metric, i, f)
 
 	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
