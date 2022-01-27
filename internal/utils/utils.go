@@ -50,5 +50,6 @@ func SetHesh(id, metricType, key string, delta *int64, value *float64) (hash []b
 }
 
 func SetEncodeHesh(id, metricType, key string, delta *int64, value *float64) string {
+	//base64.StdEncoding.EncodeToString
 	return hex.EncodeToString(SetHesh(id, metricType, key, delta, value))
 }

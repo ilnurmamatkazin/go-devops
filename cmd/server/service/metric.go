@@ -48,7 +48,24 @@ func (s *Service) SetMetric(metric models.Metric) (err error) {
 		sign := utils.SetHesh(metric.ID, metric.MetricType, s.cfg.Key, metric.Delta, metric.Value)
 
 		if !hmac.Equal(sign, hash) {
-			fmt.Println("&&&&444444&&&", metric, s.cfg.Key, sign, hash)
+			var (
+				i int64
+				f float64
+			)
+
+			if metric.Value != nil {
+				f = *metric.Value
+			} else {
+				f = 0
+			}
+
+			if metric.Delta != nil {
+				i = *metric.Delta
+			} else {
+				i = 0
+			}
+
+			fmt.Println("&&&&444444&&&", metric.ID, metric.MetricType, i, f, metric.Hash, s.cfg.Key, sign, hash)
 
 			return &models.RequestError{
 				StatusCode: http.StatusBadGateway,
