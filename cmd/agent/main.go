@@ -211,7 +211,7 @@ func (ms MetricSender) sendArrayMetric(rtm runtime.MemStats, pollCount int64) (e
 	metrics = append(metrics, ms.createMetric("gauge", "StackInuse", float64(rtm.StackInuse)))
 	metrics = append(metrics, ms.createMetric("gauge", "StackSys", float64(rtm.StackSys)))
 	metrics = append(metrics, ms.createMetric("gauge", "Sys", float64(rtm.Sys)))
-	metrics = append(metrics, ms.createMetric("gauge", "PollCount", float64(pollCount)))
+	metrics = append(metrics, ms.createMetric("counter", "PollCount", float64(pollCount)))
 	metrics = append(metrics, ms.createMetric("gauge", "RandomValue", rand.Float64()))
 
 	if err = ms.sendRequest(ctx, metrics, endpoint); err != nil {
