@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 
 	"github.com/ilnurmamatkazin/go-devops/cmd/server/models"
@@ -124,12 +125,19 @@ func (h *Handler) parseMetrics(w http.ResponseWriter, r *http.Request) {
 		err     error
 	)
 
-	fmt.Println("&&&&increment11 parseMetricssss&&&")
+	body, err := ioutil.ReadAll(r.Body)
+	// продолжаем работу
 
-	if err = json.NewDecoder(r.Body).Decode(&metrics); err != nil {
-		fmt.Println("&&&& increment11 parseMetricssss err &&&", err.Error())
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
+	fmt.Println("&&&&increment11 parseMetricssss body &&&", string(body), err)
+
+	// if err = json.NewDecoder(r.Body).Decode(&metrics); err != nil {
+	// 	fmt.Println("&&&& increment11 parseMetricssss err &&&", err.Error())
+	// 	http.Error(w, err.Error(), http.StatusBadRequest)
+	// 	return
+	// }
+
+	if err := json.Unmarshal([]byte(body), &metrics); err != nil {
+		panic(err)
 	}
 
 	fmt.Println("&&&&increment11 parseMetricssss&&&", metrics)
