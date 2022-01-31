@@ -15,15 +15,15 @@ func (h *Handler) getMetric(w http.ResponseWriter, r *http.Request) {
 		err    error
 	)
 
-	fmt.Println("&&&&increment11 getMetric&&&")
+	// fmt.Println("&&&&increment11 getMetric&&&")
 
 	if err = json.NewDecoder(r.Body).Decode(&metric); err != nil {
-		fmt.Println("&&&& increment11 getMetric err &&&", err.Error())
+		// fmt.Println("&&&& increment11 getMetric err &&&", err.Error())
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	fmt.Println("&&&&increment11 getMetric&&&", metric)
+	// fmt.Println("&&&&increment11 getMetric&&&", metric)
 
 	if err = h.service.GetMetric(&metric); err != nil {
 		re, ok := err.(*models.RequestError)
@@ -36,20 +36,20 @@ func (h *Handler) getMetric(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var (
-		i int64   = -100
-		f float64 = -100
-	)
+	// var (
+	// 	i int64   = -100
+	// 	f float64 = -100
+	// )
 
-	if metric.Delta != nil {
-		i = *metric.Delta
-	}
+	// if metric.Delta != nil {
+	// 	i = *metric.Delta
+	// }
 
-	if metric.Value != nil {
-		f = *metric.Value
-	}
+	// if metric.Value != nil {
+	// 	f = *metric.Value
+	// }
 
-	fmt.Println("&&&&increment11 getMetric&&&", metric, i, f)
+	// fmt.Println("&&&&increment11 getMetric&&&", metric, i, f)
 
 	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)

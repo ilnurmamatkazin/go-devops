@@ -4,7 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"fmt"
+	// "fmt"
 	"sync"
 	"time"
 
@@ -99,33 +99,33 @@ func (r *Repository) Load(mutex *sync.Mutex, metrics map[string]models.Metric) (
 			return
 		}
 
-		fmt.Print("***load*** ", id, metricType)
+		// fmt.Print("***load*** ", id, metricType)
 
 		metric := models.Metric{ID: id, MetricType: metricType}
 
 		if delta.Valid {
 			i := delta.Int64
 			metric.Delta = &i
-			fmt.Print(" delta=", i)
+			// fmt.Print(" delta=", i)
 		}
 
 		if value.Valid {
 			f := value.Float64
 			metric.Value = &f
-			fmt.Print(" value=", f)
+			// fmt.Print(" value=", f)
 
 		}
 
 		if hash.Valid {
 			s := hash.String
 			metric.Hash = &s
-			fmt.Print(" hash=", s)
+			// fmt.Print(" hash=", s)
 
 		}
 
 		metrics[id] = metric
 
-		fmt.Println()
+		// fmt.Println()
 	}
 	mutex.Unlock()
 
@@ -149,25 +149,25 @@ func (r *Repository) Save(mutex *sync.Mutex, metrics map[string]models.Metric) (
 
 	mutex.Lock()
 	for key, value := range metrics {
-		var (
-			i int64   = -100
-			f float64 = -100
-			h string
-		)
+		// var (
+		// 	i int64   = -100
+		// 	f float64 = -100
+		// 	h string
+		// )
 
-		if value.Delta != nil {
-			i = *value.Delta
-		}
+		// if value.Delta != nil {
+		// 	i = *value.Delta
+		// }
 
-		if value.Value != nil {
-			f = *value.Value
-		}
+		// if value.Value != nil {
+		// 	f = *value.Value
+		// }
 
-		if value.Hash != nil {
-			h = *value.Hash
-		}
+		// if value.Hash != nil {
+		// 	h = *value.Hash
+		// }
 
-		fmt.Println(key, value.MetricType, i, f, h)
+		// fmt.Println(key, value.MetricType, i, f, h)
 		if _, err = r.conn.Exec(ctx, query, key, value.MetricType, value.Delta, value.Value, value.Hash); err != nil {
 			return
 		}
@@ -228,25 +228,25 @@ func (r *Repository) SaveCurentMetric(metric models.Metric) (err error) {
 	hash=$5
 	`
 
-	var (
-		i int64   = -100
-		f float64 = -100
-		h string
-	)
+	// var (
+	// 	i int64   = -100
+	// 	f float64 = -100
+	// 	h string
+	// )
 
-	if metric.Delta != nil {
-		i = *metric.Delta
-	}
+	// if metric.Delta != nil {
+	// 	i = *metric.Delta
+	// }
 
-	if metric.Value != nil {
-		f = *metric.Value
-	}
+	// if metric.Value != nil {
+	// 	f = *metric.Value
+	// }
 
-	if metric.Hash != nil {
-		h = *metric.Hash
-	}
+	// if metric.Hash != nil {
+	// 	h = *metric.Hash
+	// }
 
-	fmt.Println(metric.ID, metric.MetricType, i, f, h)
+	// fmt.Println(metric.ID, metric.MetricType, i, f, h)
 	if _, err = r.conn.Exec(ctx, query, metric.ID, metric.MetricType, metric.Delta, metric.Value, metric.Hash); err != nil {
 		return
 	}
