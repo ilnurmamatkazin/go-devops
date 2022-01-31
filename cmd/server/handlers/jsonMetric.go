@@ -3,7 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	// "io/ioutil"
 	"net/http"
 
 	"github.com/ilnurmamatkazin/go-devops/cmd/server/models"
