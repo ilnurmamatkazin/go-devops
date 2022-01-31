@@ -21,6 +21,8 @@ func (h *Handler) getMetric(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	fmt.Println("&&&&increment11 getMetric&&&", metric)
+
 	if err = h.service.GetMetric(&metric); err != nil {
 		re, ok := err.(*models.RequestError)
 		if ok {

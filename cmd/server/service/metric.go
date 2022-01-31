@@ -81,7 +81,24 @@ func (s *Service) SetMetric(metric models.Metric) (err error) {
 
 func (s *Service) SetArrayMetrics(metrics []models.Metric) (err error) {
 	for _, metric := range metrics {
+		var (
+			i int64   = -100
+			f float64 = -100
+		)
+
+		if metric.Delta != nil {
+			i = *metric.Delta
+		}
+
+		if metric.Value != nil {
+			f = *metric.Value
+		}
+
+		fmt.Println("&&&&increment11 SetArrayMetrics&&&", metric, i, f)
+
 		if err = checkHash(s.cfg.Key, metric); err != nil {
+			fmt.Println("&&&&increment11 SetArrayMetrics checkHash&&&", err.Error())
+
 			return
 		}
 	}
