@@ -149,15 +149,13 @@ func (h *Handler) parseMetrics(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 
+	if err := json.NewEncoder(w).Encode(metrics); err != nil {
+		fmt.Println("increment11 parseMetrics Encode err: ", err.Error())
+
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	fmt.Println("increment11 parseMetrics http.StatusOK: ", http.StatusOK)
-
-	// if err := json.NewEncoder(w).Encode(metrics); err != nil {
-	// 	fmt.Println("&&&& increment11 parseMetricssss err 444&&&", err.Error())
-
-	// 	http.Error(w, err.Error(), http.StatusInternalServerError)
-	// 	return
-	// }
-
-	// fmt.Println("&&&& increment11 parseMetricssss end &&&")
 
 }
