@@ -81,7 +81,24 @@ func (s *Service) SetMetric(metric models.Metric) (err error) {
 
 func (s *Service) SetArrayMetrics(metrics []models.Metric) (err error) {
 	for _, metric := range metrics {
+		// var (
+		// 	i int64   = -100
+		// 	f float64 = -100
+		// )
+
+		// if metric.Delta != nil {
+		// 	i = *metric.Delta
+		// }
+
+		// if metric.Value != nil {
+		// 	f = *metric.Value
+		// }
+
+		// fmt.Println("&&&&increment11 SetArrayMetrics&&&", metric, i, f)
+
 		if err = checkHash(s.cfg.Key, metric); err != nil {
+			// fmt.Println("&&&&increment11 SetArrayMetrics checkHash&&&", err.Error())
+
 			return
 		}
 	}
@@ -96,23 +113,23 @@ func (s *Service) GetMetric(metric *models.Metric) (err error) {
 		return
 	}
 
-	var (
-		i int64   = -100
-		f float64 = -100
-	)
+	// var (
+	// 	i int64   = -100
+	// 	f float64 = -100
+	// )
 
-	if metric.Delta != nil {
-		i = *metric.Delta
-	}
+	// if metric.Delta != nil {
+	// 	i = *metric.Delta
+	// }
 
-	if metric.Value != nil {
-		f = *metric.Value
-	}
+	// if metric.Value != nil {
+	// 	f = *metric.Value
+	// }
 
-	fmt.Println("&&&&increment6 GetMetric&&&", metric, i, f)
+	// fmt.Println("&&&&increment6 GetMetric&&&", metric, i, f)
 
 	hash := utils.SetEncodeHesh(metric.ID, metric.MetricType, s.cfg.Key, metric.Delta, metric.Value)
-	fmt.Println("&&&&increment6 GetMetric&&&", metric, i, f, hash)
+	// fmt.Println("&&&&increment6 GetMetric&&&", metric, i, f, hash)
 
 	metric.Hash = &hash
 
