@@ -3,6 +3,8 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+
 	// "io/ioutil"
 	"net/http"
 
@@ -125,11 +127,21 @@ func (h *Handler) parseMetrics(w http.ResponseWriter, r *http.Request) {
 		err     error
 	)
 
-	if err = json.NewDecoder(r.Body).Decode(&metrics); err != nil {
-		fmt.Println("increment11 parseMetrics Decode err: ", err.Error())
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
+	body, err := ioutil.ReadAll(r.Body)
+
+	strBody := string(body)
+
+	fmt.Println("increment11 parseMetrics body: ", strBody, err)
+
+	if err := json.Unmarshal(body, &metrics); err != nil {
+		panic(err)
 	}
+
+	// if err = json.NewDecoder(r.Body).Decode(&metrics); err != nil {
+	// 	fmt.Println("increment11 parseMetrics Decode err: ", err.Error())
+	// 	http.Error(w, err.Error(), http.StatusBadRequest)
+	// 	return
+	// }
 
 	fmt.Println("increment11 parseMetrics metrics: ", metrics)
 
@@ -149,12 +161,24 @@ func (h *Handler) parseMetrics(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 
-	if err := json.NewEncoder(w).Encode(metrics); err != nil {
-		fmt.Println("increment11 parseMetrics Encode err: ", err.Error())
+	var b []byte
 
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+	if b, err = json.Marshal(&metrics); err != nil {
+		panic(err)
 	}
+
+	fmt.Println(strBody)
+	fmt.Println(string(b))
+	fmt.Println(strBody == string(b))
+
+	w.Write(b)
+
+	// if err := json.NewEncoder(w).Encode(metrics); err != nil {
+	// 	fmt.Println("increment11 parseMetrics Encode err: ", err.Error())
+
+	// 	http.Error(w, err.Error(), http.StatusInternalServerError)
+	// 	return
+	// }
 
 	fmt.Println("increment11 parseMetrics http.StatusOK: ", http.StatusOK)
 

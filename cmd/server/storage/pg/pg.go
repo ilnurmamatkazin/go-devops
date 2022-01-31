@@ -167,7 +167,7 @@ func (r *Repository) Save(mutex *sync.Mutex, metrics map[string]models.Metric) (
 		// 	h = *value.Hash
 		// }
 
-		// fmt.Println(key, value.MetricType, i, f, h)
+		// fmt.Println(key, value.MetricType, i, f, h, r.conn)
 		if _, err = r.conn.Exec(ctx, query, key, value.MetricType, value.Delta, value.Value, value.Hash); err != nil {
 			return
 		}
