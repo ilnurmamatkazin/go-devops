@@ -125,32 +125,21 @@ func (h *Handler) parseMetrics(w http.ResponseWriter, r *http.Request) {
 		err     error
 	)
 
-	body, err := ioutil.ReadAll(r.Body)
-	// продолжаем работу
-
-	fmt.Println("&&&&increment11 parseMetricssss body &&&", string(body), err)
-
-	// if err = json.NewDecoder(r.Body).Decode(&metrics); err != nil {
-	// 	fmt.Println("&&&& increment11 parseMetricssss err &&&", err.Error())
-	// 	http.Error(w, err.Error(), http.StatusBadRequest)
-	// 	return
-	// }
-
-	if err := json.Unmarshal([]byte(body), &metrics); err != nil {
-		panic(err)
+	if err = json.NewDecoder(r.Body).Decode(&metrics); err != nil {
+		fmt.Println("increment11 parseMetrics Decode err: ", err.Error())
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
 	}
 
-	fmt.Println("&&&&increment11 parseMetricssss&&&", metrics)
+	fmt.Println("increment11 parseMetrics metrics: ", metrics)
 
 	if err = h.service.SetArrayMetrics(metrics); err != nil {
+		fmt.Println("increment11 parseMetrics SetArrayMetrics err: ", err.Error())
+
 		re, ok := err.(*models.RequestError)
 		if ok {
-			fmt.Println("&&&& increment11 parseMetricssss err 222&&&", re.Err.Error())
-
 			http.Error(w, re.Err.Error(), re.StatusCode)
 		} else {
-			fmt.Println("&&&& increment11 parseMetricssss err 333&&&", err.Error())
-
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 
@@ -160,15 +149,15 @@ func (h *Handler) parseMetrics(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 
-	fmt.Println("&&&& increment11 parseMetricssss http.StatusOK &&&", http.StatusOK)
+	fmt.Println("increment11 parseMetrics http.StatusOK: ", http.StatusOK)
 
-	if err := json.NewEncoder(w).Encode(metrics); err != nil {
-		fmt.Println("&&&& increment11 parseMetricssss err 444&&&", err.Error())
+	// if err := json.NewEncoder(w).Encode(metrics); err != nil {
+	// 	fmt.Println("&&&& increment11 parseMetricssss err 444&&&", err.Error())
 
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	// 	http.Error(w, err.Error(), http.StatusInternalServerError)
+	// 	return
+	// }
 
-	fmt.Println("&&&& increment11 parseMetricssss end &&&")
+	// fmt.Println("&&&& increment11 parseMetricssss end &&&")
 
 }
