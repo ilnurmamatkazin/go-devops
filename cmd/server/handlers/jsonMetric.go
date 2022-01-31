@@ -17,6 +17,7 @@ func (h *Handler) getMetric(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("&&&&increment11 getMetric&&&")
 
 	if err = json.NewDecoder(r.Body).Decode(&metric); err != nil {
+		fmt.Println("&&&& increment11 getMetric err &&&", err.Error())
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -67,6 +68,7 @@ func (h *Handler) parseMetric(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("&&&&increment11 parseMetric&&&")
 
 	if err = json.NewDecoder(r.Body).Decode(&metric); err != nil {
+		fmt.Println("&&&& increment11 parseMetric err &&&", err.Error())
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -125,6 +127,7 @@ func (h *Handler) parseMetrics(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("&&&&increment11 parseMetricssss&&&")
 
 	if err = json.NewDecoder(r.Body).Decode(&metrics); err != nil {
+		fmt.Println("&&&& increment11 parseMetricssss err &&&", err.Error())
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
