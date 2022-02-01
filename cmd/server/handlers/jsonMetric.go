@@ -29,13 +29,7 @@ func (h *Handler) getMetric(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Add("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-
-	if err := json.NewEncoder(w).Encode(metric); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	sendOkJSONData(w, metric)
 }
 
 func (h *Handler) parseMetric(w http.ResponseWriter, r *http.Request) {
@@ -50,34 +44,12 @@ func (h *Handler) parseMetric(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err = h.service.SetMetric(metric); err != nil {
-		re, ok := err.(*models.RequestError)
-		if ok {
-			http.Error(w, re.Err.Error(), re.StatusCode)
-		} else {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-
+		sendError(w, err)
 		return
 	}
 
-	w.Header().Add("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-
-	if err := json.NewEncoder(w).Encode(metric); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	sendOkJSONData(w, metric)
 }
-
-// func sendMetricJSONData(w http.ResponseWriter, metric models.Metric) {
-// 	w.Header().Set("Content-Type", "application/json")
-// 	w.WriteHeader(http.StatusOK)
-
-// 	if err := json.NewEncoder(w).Encode(metric); err != nil {
-// 		http.Error(w, err.Error(), http.StatusInternalServerError)
-// 		return
-// 	}
-// }
 
 func (h *Handler) parseMetrics(w http.ResponseWriter, r *http.Request) {
 	var (
@@ -92,24 +64,30 @@ func (h *Handler) parseMetrics(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err = h.service.SetArrayMetrics(metrics); err != nil {
-		re, ok := err.(*models.RequestError)
-		if ok {
-			http.Error(w, re.Err.Error(), re.StatusCode)
-		} else {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-
+		sendError(w, err)
 		return
 	}
-
-	w.Header().Add("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
 
 	status.Status = http.StatusText(http.StatusOK)
 
-	if err := json.NewEncoder(w).Encode(status); err != nil {
+	sendOkJSONData(w, status)
+}
+
+func sendOkJSONData(w http.ResponseWriter, object interface{}) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+
+	if err := json.NewEncoder(w).Encode(object); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+}
 
+func sendError(w http.ResponseWriter, err error) {
+	re, ok := err.(*models.RequestError)
+	if ok {
+		http.Error(w, re.Err.Error(), re.StatusCode)
+	} else {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
 }
