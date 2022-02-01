@@ -146,33 +146,6 @@ func (ms MetricSender) sendMetric(typeMetric, nameMetric string, value interface
 		log.Println(err)
 		return
 	}
-	// b, err := json.Marshal(metric)
-	// if err != nil {
-	// 	log.Println(err)
-	// 	return
-	// }
-
-	// buf := new(bytes.Buffer)
-	// err = binary.Write(buf, binary.LittleEndian, b)
-
-	// request, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, buf)
-	// if err != nil {
-	// 	// log.Println(err)
-	// 	return
-	// }
-
-	// // в заголовках запроса сообщаем, что данные кодированы стандартной URL-схемой
-	// request.Header.Set("Content-Type", "application/json")
-
-	// // отправляем запрос и получаем ответ
-	// response, err := ms.client.Do(request)
-	// if err != nil {
-	// 	log.Println(err)
-	// 	return
-	// }
-	// // печатаем код ответа
-	// // fmt.Println("Статус-код ", response.Status)
-	// defer response.Body.Close()
 
 	return
 }

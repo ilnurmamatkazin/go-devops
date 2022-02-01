@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	// "fmt"
 	"log"
 	"net/http"
 	"os"
@@ -27,7 +26,6 @@ func main() {
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
 
-	// fmt.Println("@@@@", cfg)
 	repository, err := storage.New(cfg)
 	if err != nil {
 		log.Println("ошибка подключения к бд: ", err.Error())

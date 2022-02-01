@@ -26,23 +26,6 @@ func (h *Handler) getOldMetric(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// var (
-	// 	i int64
-	// 	f float64
-	// )
-
-	// if metric.Value != nil {
-	// 	f = *metric.Value
-	// } else {
-	// 	f = 0
-	// }
-
-	// if metric.Delta != nil {
-	// 	i = *metric.Delta
-	// } else {
-	// 	i = 0
-	// }
-
 	var (
 		httpStatus int
 		strValue   string
