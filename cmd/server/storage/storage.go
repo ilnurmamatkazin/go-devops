@@ -166,9 +166,11 @@ func (s *Storage) Info() (html string) {
 }
 
 func (s *Storage) Save() (err error) {
-	if err = s.db.Save(&s.Mutex, s.metrics); err != nil {
-		log.Println(err.Error())
-		return
+	if s.db != nil {
+		if err = s.db.Save(&s.Mutex, s.metrics); err != nil {
+			log.Println(err.Error())
+			return
+		}
 	}
 
 	return
