@@ -32,7 +32,7 @@ func GetDataForTicker(value string) (interval int, duration time.Duration, err e
 	return
 }
 
-func SetHesh(id, metricType, key string, delta *int64, value *float64) []byte {
+func SetHash(id, metricType, key string, delta *int64, value *float64) []byte {
 	if key == "" {
 		return nil
 	}
@@ -50,6 +50,6 @@ func SetHesh(id, metricType, key string, delta *int64, value *float64) []byte {
 
 }
 
-func SetEncodeHesh(id, metricType, key string, delta *int64, value *float64) string {
-	return hex.EncodeToString(SetHesh(id, metricType, key, delta, value))
+func SetEncodeHash(id, metricType, key string, delta *int64, value *float64) string {
+	return hex.EncodeToString(SetHash(id, metricType, key, delta, value))
 }

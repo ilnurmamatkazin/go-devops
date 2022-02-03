@@ -28,7 +28,7 @@ func (s *Service) SetMetric(metric models.Metric) (err error) {
 			}
 		}
 
-		sign := utils.SetHesh(metric.ID, metric.MetricType, s.cfg.Key, metric.Delta, metric.Value)
+		sign := utils.SetHash(metric.ID, metric.MetricType, s.cfg.Key, metric.Delta, metric.Value)
 
 		if !hmac.Equal(sign, hash) {
 			return &models.RequestError{
@@ -58,7 +58,7 @@ func (s *Service) GetMetric(metric *models.Metric) (err error) {
 		return
 	}
 
-	hash := utils.SetEncodeHesh(metric.ID, metric.MetricType, s.cfg.Key, metric.Delta, metric.Value)
+	hash := utils.SetEncodeHash(metric.ID, metric.MetricType, s.cfg.Key, metric.Delta, metric.Value)
 	metric.Hash = &hash
 
 	return
@@ -78,7 +78,7 @@ func checkHash(key string, metric models.Metric) (err error) {
 			}
 		}
 
-		sign := utils.SetHesh(metric.ID, metric.MetricType, key, metric.Delta, metric.Value)
+		sign := utils.SetHash(metric.ID, metric.MetricType, key, metric.Delta, metric.Value)
 
 		if !hmac.Equal(sign, hash) {
 			return &models.RequestError{

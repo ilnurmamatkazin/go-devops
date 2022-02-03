@@ -140,7 +140,7 @@ func (ms MetricSender) sendMetric(typeMetric, nameMetric string, value interface
 	metric.MetricType = typeMetric
 
 	convertValue(value, &metric)
-	metric.Hash = utils.SetEncodeHesh(metric.ID, metric.MetricType, ms.cfg.Key, metric.Delta, metric.Value)
+	metric.Hash = utils.SetEncodeHash(metric.ID, metric.MetricType, ms.cfg.Key, metric.Delta, metric.Value)
 
 	if err = ms.sendRequest(ctx, metric, endpoint); err != nil {
 		log.Println(err)
@@ -206,7 +206,7 @@ func (ms MetricSender) createMetric(metricType, id string, value float64) (metri
 		metric.Value = &value
 	}
 
-	metric.Hash = utils.SetEncodeHesh(metric.ID, metric.MetricType, ms.cfg.Key, metric.Delta, metric.Value)
+	metric.Hash = utils.SetEncodeHash(metric.ID, metric.MetricType, ms.cfg.Key, metric.Delta, metric.Value)
 
 	return
 }

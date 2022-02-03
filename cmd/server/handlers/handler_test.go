@@ -37,6 +37,8 @@ func TestNewRouter(t *testing.T) {
 		StoreInterval: models.StoreInterval,
 		StoreFile:     models.StoreFile,
 		Restore:       models.Restore,
+		Key:           models.Key,
+		Database:      models.Database,
 	}
 
 	if err := env.Parse(&cfg); err != nil {
@@ -44,7 +46,14 @@ func TestNewRouter(t *testing.T) {
 		os.Exit(2)
 	}
 
-	repository, _ := storage.New(cfg)
+	repository, err := storage.New(cfg)
+	if err != nil {
+		log.Println("ошибка подключения к бд: ", err.Error())
+		os.Exit(2)
+	} else {
+		defer repository.Close()
+	}
+
 	service := service.New(cfg, repository)
 	hendler := New(service)
 	router := hendler.NewRouter()

@@ -29,7 +29,7 @@ func main() {
 	repository, err := storage.New(cfg)
 	if err != nil {
 		log.Println("ошибка подключения к бд: ", err.Error())
-		//os.Exit(2)
+		os.Exit(2)
 	} else {
 		defer repository.Close()
 	}
@@ -46,21 +46,23 @@ func main() {
 }
 
 func parseConfig() (cfg models.Config, err error) {
-	address := flag.String("a", models.Address, "a address")
-	restore := flag.Bool("r", models.Restore, "a restore")
-	storeInterval := flag.String("i", models.StoreInterval, "a store_interval")
-	storeFile := flag.String("f", models.StoreFile, "a store_file")
-	key := flag.String("k", models.Key, "a secret key")
-	database := flag.String("d", models.Database, "a database")
+	if !flag.Parsed() {
+		address := flag.String("a", models.Address, "a address")
+		restore := flag.Bool("r", models.Restore, "a restore")
+		storeInterval := flag.String("i", models.StoreInterval, "a store_interval")
+		storeFile := flag.String("f", models.StoreFile, "a store_file")
+		key := flag.String("k", models.Key, "a secret key")
+		database := flag.String("d", models.Database, "a database")
 
-	flag.Parse()
+		flag.Parse()
 
-	cfg.Address = *address
-	cfg.Restore = *restore
-	cfg.StoreInterval = *storeInterval
-	cfg.StoreFile = *storeFile
-	cfg.Key = *key
-	cfg.Database = *database
+		cfg.Address = *address
+		cfg.Restore = *restore
+		cfg.StoreInterval = *storeInterval
+		cfg.StoreFile = *storeFile
+		cfg.Key = *key
+		cfg.Database = *database
+	}
 
 	err = env.Parse(&cfg)
 
