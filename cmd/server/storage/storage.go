@@ -19,7 +19,7 @@ type Storage struct {
 	db         *pg.Repository
 	metrics    map[string]models.Metric
 	cfg        *models.Config
-	sync.Mutex
+	sync.RWMutex
 }
 
 func NewStorage(cfg *models.Config) *Storage {
@@ -41,7 +41,7 @@ func (s *Storage) ConnectPG() (err error) {
 	}
 
 	if s.cfg.Restore {
-		if err = s.db.Load(&s.Mutex, s.metrics); err != nil {
+		if err = s.db.Load(&s.RWMutex, s.metrics); err != nil {
 			log.Println(err.Error())
 			return
 		}
@@ -57,7 +57,7 @@ func (s *Storage) ConnectPG() (err error) {
 			for {
 				<-ticker.C
 
-				if err = s.db.Save(&s.Mutex, s.metrics); err != nil {
+				if err = s.db.Save(&s.RWMutex, s.metrics); err != nil {
 					log.Println(err.Error())
 				}
 			}
@@ -74,9 +74,9 @@ func (s *Storage) Close() {
 }
 
 func (s *Storage) ReadMetric(metric *models.Metric) (err error) {
-	s.Lock()
+	s.RLock()
 	m, ok := s.metrics[metric.ID]
-	s.Unlock()
+	s.RUnlock()
 
 	if !ok {
 		err = &models.RequestError{
@@ -135,7 +135,7 @@ func (s *Storage) SetMetric(metric models.Metric) (err error) {
 	}
 
 	if s.isSyncMode {
-		if err = s.db.Save(&s.Mutex, s.metrics); err != nil {
+		if err = s.db.Save(&s.RWMutex, s.metrics); err != nil {
 			log.Println(err.Error())
 			return
 		}
@@ -173,7 +173,7 @@ func (s *Storage) Info() (html string) {
 
 func (s *Storage) Save() (err error) {
 	if s.db != nil {
-		if err = s.db.Save(&s.Mutex, s.metrics); err != nil {
+		if err = s.db.Save(&s.RWMutex, s.metrics); err != nil {
 			log.Println(err.Error())
 			return
 		}

@@ -131,9 +131,11 @@ func TestService_GetMetric(t *testing.T) {
 			assert.Nil(t, err)
 
 			newHash, err := hex.DecodeString(*newMetric.Hash)
-			hash, err := hex.DecodeString(tt.metric.Hash)
-
 			assert.Nil(t, err)
+
+			hash, err := hex.DecodeString(tt.metric.Hash)
+			assert.Nil(t, err)
+
 			assert.Equal(t, !hmac.Equal(newHash, hash), tt.wantErr)
 		})
 	}

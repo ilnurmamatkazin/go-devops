@@ -74,7 +74,7 @@ func (r *Repository) Ping() error {
 
 }
 
-func (r *Repository) Load(mutex *sync.Mutex, metrics map[string]models.Metric) (err error) {
+func (r *Repository) Load(mutex *sync.RWMutex, metrics map[string]models.Metric) (err error) {
 	var (
 		id, metricType string
 		delta          sql.NullInt64
@@ -123,7 +123,7 @@ func (r *Repository) Load(mutex *sync.Mutex, metrics map[string]models.Metric) (
 
 }
 
-func (r *Repository) Save(mutex *sync.Mutex, metrics map[string]models.Metric) (err error) {
+func (r *Repository) Save(mutex *sync.RWMutex, metrics map[string]models.Metric) (err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(models.DatabaseTimeout)*time.Second)
 	defer cancel()
 
