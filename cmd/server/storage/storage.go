@@ -18,31 +18,37 @@ type Storage struct {
 	isSyncMode bool
 	db         *pg.Repository
 	metrics    map[string]models.Metric
+	cfg        *models.Config
 	sync.Mutex
 }
 
-func New(cfg models.Config) (storage *Storage, err error) {
-	storage = &Storage{metrics: make(map[string]models.Metric)}
+func NewStorage(cfg *models.Config) *Storage {
+	return &Storage{
+		metrics: make(map[string]models.Metric),
+		cfg:     cfg,
+	}
+}
 
-	if storage.db, err = pg.New(cfg); err != nil {
+func (s *Storage) ConnectPG() (err error) {
+	if s.db, err = pg.NewRepository(s.cfg); err != nil {
 		return
 	}
 
-	interval, duration, err := utils.GetDataForTicker(cfg.StoreInterval)
+	interval, duration, err := utils.GetDataForTicker(s.cfg.StoreInterval)
 	if err != nil {
 		log.Fatalf("Ошибка получения параметров тикера: %s", err.Error())
 		return
 	}
 
-	if cfg.Restore {
-		if err = storage.db.Load(&storage.Mutex, storage.metrics); err != nil {
+	if s.cfg.Restore {
+		if err = s.db.Load(&s.Mutex, s.metrics); err != nil {
 			log.Println(err.Error())
 			return
 		}
 	}
 
 	if interval == 0 {
-		storage.isSyncMode = true
+		s.isSyncMode = true
 	} else {
 		go func(s *Storage, i int, d time.Duration) {
 			var err error
@@ -51,12 +57,12 @@ func New(cfg models.Config) (storage *Storage, err error) {
 			for {
 				<-ticker.C
 
-				if err = s.db.Save(&storage.Mutex, storage.metrics); err != nil {
+				if err = s.db.Save(&s.Mutex, s.metrics); err != nil {
 					log.Println(err.Error())
 				}
 			}
 
-		}(storage, interval, duration)
+		}(s, interval, duration)
 
 	}
 

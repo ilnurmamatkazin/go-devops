@@ -7,27 +7,37 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestNew(t *testing.T) {
-	type args struct {
-		cfg models.Config
-	}
+func TestPing(t *testing.T) {
 	tests := []struct {
-		name           string
-		args           args
-		wantRepository *Repository
-		wantErr        bool
+		name     string
+		database string
+		wantErr  bool
 	}{
-		// TODO: Add test cases.
+		{
+			name:     "pisitive test",
+			database: "postgres://postgres:12345@localhost:5434/postgres?sslmode=disable",
+			wantErr:  false,
+		},
+		{
+			name:     "negative test",
+			database: "",
+			wantErr:  true,
+		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotRepository, err := New(tt.args.cfg)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("New() error = %v, wantErr %v", err, tt.wantErr)
-				return
+			cfg := models.Config{Database: tt.database}
+
+			db, err := NewRepository(&cfg)
+			if err != nil {
+				db = nil
 			}
 
-			assert.Equal(t, gotRepository, tt.wantRepository)
+			if db != nil {
+				err = db.Ping()
+				assert.Nil(t, err)
+			}
 		})
 	}
 }

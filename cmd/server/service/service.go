@@ -7,10 +7,10 @@ import (
 
 type Service struct {
 	repository *storage.Storage
-	cfg        models.Config
+	cfg        *models.Config
 }
 
-func New(cfg models.Config, repository *storage.Storage) *Service {
+func NewService(cfg *models.Config, repository *storage.Storage) *Service {
 	return &Service{
 		repository: repository,
 		cfg:        cfg,

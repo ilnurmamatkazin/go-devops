@@ -15,7 +15,7 @@ type Repository struct {
 	conn *pgx.Conn
 }
 
-func New(cfg models.Config) (repository *Repository, err error) {
+func NewRepository(cfg *models.Config) (repository *Repository, err error) {
 	repository = &Repository{}
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(models.DatabaseTimeout)*time.Second)

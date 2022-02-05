@@ -26,16 +26,17 @@ func main() {
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
 
-	repository, err := storage.New(cfg)
-	if err != nil {
+	repository := storage.NewStorage(&cfg)
+
+	if err = repository.ConnectPG(); err != nil {
 		log.Println("ошибка подключения к бд: ", err.Error())
 		// os.Exit(2)
 	} else {
 		defer repository.Close()
 	}
 
-	service := service.New(cfg, repository)
-	hendler := handlers.New(service)
+	service := service.NewService(&cfg, repository)
+	hendler := handlers.NewHandler(service)
 	router := hendler.NewRouter()
 
 	go http.ListenAndServe(":"+strings.Split(cfg.Address, ":")[1], router)
