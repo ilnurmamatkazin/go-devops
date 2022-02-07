@@ -1,7 +1,11 @@
 package utils
 
 import (
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
+	"fmt"
 	"strconv"
 	"time"
 )
@@ -22,8 +26,30 @@ func GetDataForTicker(value string) (interval int, duration time.Duration, err e
 	case "h":
 		duration = time.Hour
 	default:
-		err = errors.New("ошибка создания тикера")
+		err = errors.New("не определен тип duration")
 	}
 
 	return
+}
+
+func SetHash(id, metricType, key string, delta *int64, value *float64) []byte {
+	if key == "" {
+		return nil
+	}
+
+	var hash []byte
+	if metricType == "gauge" {
+		hash = []byte(fmt.Sprintf("%s:gauge:%f", id, *value))
+	} else {
+		hash = []byte(fmt.Sprintf("%s:counter:%d", id, *delta))
+	}
+
+	h := hmac.New(sha256.New, []byte(key))
+	h.Write(hash)
+	return h.Sum(nil)
+
+}
+
+func SetEncodeHash(id, metricType, key string, delta *int64, value *float64) string {
+	return hex.EncodeToString(SetHash(id, metricType, key, delta, value))
 }

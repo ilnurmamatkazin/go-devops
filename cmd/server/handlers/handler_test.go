@@ -11,7 +11,7 @@ import (
 	"github.com/caarlos0/env/v6"
 	"github.com/ilnurmamatkazin/go-devops/cmd/server/models"
 	"github.com/ilnurmamatkazin/go-devops/cmd/server/service"
-	"github.com/ilnurmamatkazin/go-devops/cmd/server/storage/memory"
+	"github.com/ilnurmamatkazin/go-devops/cmd/server/storage"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -37,6 +37,8 @@ func TestNewRouter(t *testing.T) {
 		StoreInterval: models.StoreInterval,
 		StoreFile:     models.StoreFile,
 		Restore:       models.Restore,
+		Key:           models.Key,
+		Database:      models.Database,
 	}
 
 	if err := env.Parse(&cfg); err != nil {
@@ -44,9 +46,17 @@ func TestNewRouter(t *testing.T) {
 		os.Exit(2)
 	}
 
-	repository := memory.NewMemoryRepository(cfg)
-	service := service.NewService(repository)
-	hendler := New(service)
+	repository := storage.NewStorage(&cfg)
+
+	if err := repository.ConnectPG(); err != nil {
+		log.Println("ошибка подключения к бд: ", err.Error())
+		// os.Exit(2)
+	} else {
+		defer repository.Close()
+	}
+
+	service := service.NewService(&cfg, repository)
+	hendler := NewHandler(service)
 	router := hendler.NewRouter()
 
 	ts := httptest.NewServer(router)

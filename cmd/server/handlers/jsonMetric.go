@@ -29,7 +29,7 @@ func (h *Handler) getMetric(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sendMetricJSONData(w, metric)
+	sendOkJSONData(w, metric)
 }
 
 func (h *Handler) parseMetric(w http.ResponseWriter, r *http.Request) {
@@ -37,31 +37,57 @@ func (h *Handler) parseMetric(w http.ResponseWriter, r *http.Request) {
 		metric models.Metric
 		err    error
 	)
+
 	if err = json.NewDecoder(r.Body).Decode(&metric); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	if err = h.service.SetMetric(metric); err != nil {
-		re, ok := err.(*models.RequestError)
-		if ok {
-			http.Error(w, re.Err.Error(), re.StatusCode)
-		} else {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-
+		sendError(w, err)
 		return
 	}
 
-	sendMetricJSONData(w, metric)
+	sendOkJSONData(w, metric)
 }
 
-func sendMetricJSONData(w http.ResponseWriter, metric models.Metric) {
+func (h *Handler) parseMetrics(w http.ResponseWriter, r *http.Request) {
+	var (
+		metrics []models.Metric
+		err     error
+		status  models.Status
+	)
+
+	if err = json.NewDecoder(r.Body).Decode(&metrics); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if err = h.service.SetArrayMetrics(metrics); err != nil {
+		sendError(w, err)
+		return
+	}
+
+	status.Status = http.StatusText(http.StatusOK)
+
+	sendOkJSONData(w, status)
+}
+
+func sendOkJSONData(w http.ResponseWriter, object interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 
-	if err := json.NewEncoder(w).Encode(metric); err != nil {
+	if err := json.NewEncoder(w).Encode(object); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
+	}
+}
+
+func sendError(w http.ResponseWriter, err error) {
+	re, ok := err.(*models.RequestError)
+	if ok {
+		http.Error(w, re.Err.Error(), re.StatusCode)
+	} else {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }

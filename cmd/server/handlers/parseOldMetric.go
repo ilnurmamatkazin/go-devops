@@ -12,8 +12,8 @@ import (
 func (h *Handler) parseOldMetric(w http.ResponseWriter, r *http.Request) {
 	metric := getMetricFromRequest(r)
 
-	if err := checkMetricType(metric.MetricType); err != nil {
-		http.Error(w, err.(*models.RequestError).Err.Error(), err.(*models.RequestError).StatusCode)
+	if checkMetricType(metric.MetricType) {
+		http.Error(w, http.StatusText(http.StatusNotImplemented), http.StatusNotImplemented)
 		return
 	}
 
@@ -22,16 +22,7 @@ func (h *Handler) parseOldMetric(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.service.SetMetric(metric); err != nil {
-		re, ok := err.(*models.RequestError)
-		if ok {
-			http.Error(w, re.Err.Error(), re.StatusCode)
-		} else {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-
-		return
-	}
+	h.service.SetOldMetric(metric)
 
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(http.StatusOK)

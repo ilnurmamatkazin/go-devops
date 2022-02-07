@@ -13,7 +13,7 @@ import (
 	"github.com/ilnurmamatkazin/go-devops/cmd/server/handlers"
 	"github.com/ilnurmamatkazin/go-devops/cmd/server/models"
 	"github.com/ilnurmamatkazin/go-devops/cmd/server/service"
-	"github.com/ilnurmamatkazin/go-devops/cmd/server/storage/memory"
+	"github.com/ilnurmamatkazin/go-devops/cmd/server/storage"
 )
 
 func main() {
@@ -26,30 +26,44 @@ func main() {
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
 
-	repository := memory.NewMemoryRepository(cfg)
-	service := service.NewService(repository)
-	hendler := handlers.New(service)
+	repository := storage.NewStorage(&cfg)
+
+	if err = repository.ConnectPG(); err != nil {
+		log.Println("ошибка подключения к бд: ", err.Error())
+		// os.Exit(2)
+	} else {
+		defer repository.Close()
+	}
+
+	service := service.NewService(&cfg, repository)
+	hendler := handlers.NewHandler(service)
 	router := hendler.NewRouter()
 
 	go http.ListenAndServe(":"+strings.Split(cfg.Address, ":")[1], router)
 
 	<-quit
 
-	repository.SaveToFile()
+	repository.Save()
 }
 
 func parseConfig() (cfg models.Config, err error) {
-	address := flag.String("a", models.Address, "a address")
-	restore := flag.Bool("r", models.Restore, "a restore")
-	storeInterval := flag.String("i", models.StoreInterval, "a store_interval")
-	storeFile := flag.String("f", models.StoreFile, "a store_file")
+	if !flag.Parsed() {
+		address := flag.String("a", models.Address, "a address")
+		restore := flag.Bool("r", models.Restore, "a restore")
+		storeInterval := flag.String("i", models.StoreInterval, "a store_interval")
+		storeFile := flag.String("f", models.StoreFile, "a store_file")
+		key := flag.String("k", models.Key, "a secret key")
+		database := flag.String("d", models.Database, "a database")
 
-	flag.Parse()
+		flag.Parse()
 
-	cfg.Address = *address
-	cfg.Restore = *restore
-	cfg.StoreInterval = *storeInterval
-	cfg.StoreFile = *storeFile
+		cfg.Address = *address
+		cfg.Restore = *restore
+		cfg.StoreInterval = *storeInterval
+		cfg.StoreFile = *storeFile
+		cfg.Key = *key
+		cfg.Database = *database
+	}
 
 	err = env.Parse(&cfg)
 

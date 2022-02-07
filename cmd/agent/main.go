@@ -26,6 +26,7 @@ const (
 	Address        = "127.0.0.1:8080"
 	PollInterval   = "2s"
 	ReportInterval = "10s"
+	Key            = ""
 )
 
 type MetricSender struct {
@@ -115,6 +116,8 @@ func main() {
 				metricSender.sendMetric("counter", "PollCount", pollCount)
 				metricSender.sendMetric("gauge", "RandomValue", rand.Float64())
 
+				metricSender.sendArrayMetric(rtm, pollCount)
+
 				mutex.Unlock()
 			}
 
@@ -137,8 +140,79 @@ func (ms MetricSender) sendMetric(typeMetric, nameMetric string, value interface
 	metric.MetricType = typeMetric
 
 	convertValue(value, &metric)
+	metric.Hash = utils.SetEncodeHash(metric.ID, metric.MetricType, ms.cfg.Key, metric.Delta, metric.Value)
 
-	b, err := json.Marshal(metric)
+	if err = ms.sendRequest(ctx, metric, endpoint); err != nil {
+		log.Println(err)
+		return
+	}
+
+	return
+}
+
+func (ms MetricSender) sendArrayMetric(rtm runtime.MemStats, pollCount int64) (err error) {
+	ctx, cancel := context.WithTimeout(ms.ctx, 3*time.Second)
+	defer cancel()
+
+	endpoint := fmt.Sprintf("http://%s/updates/", ms.cfg.Address)
+	metrics := make([]models.Metric, 0, 29)
+
+	metrics = append(metrics, ms.createMetric("gauge", "Alloc", float64(rtm.Alloc)))
+	metrics = append(metrics, ms.createMetric("gauge", "BuckHashSys", float64(rtm.BuckHashSys)))
+	metrics = append(metrics, ms.createMetric("gauge", "Frees", float64(rtm.Frees)))
+	metrics = append(metrics, ms.createMetric("gauge", "GCCPUFraction", rtm.GCCPUFraction))
+	metrics = append(metrics, ms.createMetric("gauge", "GCSys", float64(rtm.GCSys)))
+	metrics = append(metrics, ms.createMetric("gauge", "HeapAlloc", float64(rtm.HeapAlloc)))
+	metrics = append(metrics, ms.createMetric("gauge", "HeapIdle", float64(rtm.HeapIdle)))
+	metrics = append(metrics, ms.createMetric("gauge", "HeapInuse", float64(rtm.HeapInuse)))
+	metrics = append(metrics, ms.createMetric("gauge", "HeapObjects", float64(rtm.HeapObjects)))
+	metrics = append(metrics, ms.createMetric("gauge", "HeapReleased", float64(rtm.HeapReleased)))
+	metrics = append(metrics, ms.createMetric("gauge", "HeapSys", float64(rtm.HeapSys)))
+	metrics = append(metrics, ms.createMetric("gauge", "LastGC", float64(rtm.LastGC)))
+	metrics = append(metrics, ms.createMetric("gauge", "Lookups", float64(rtm.Lookups)))
+	metrics = append(metrics, ms.createMetric("gauge", "MCacheInuse", float64(rtm.MCacheInuse)))
+	metrics = append(metrics, ms.createMetric("gauge", "MCacheSys", float64(rtm.MCacheSys)))
+	metrics = append(metrics, ms.createMetric("gauge", "MSpanInuse", float64(rtm.MSpanInuse)))
+	metrics = append(metrics, ms.createMetric("gauge", "MSpanSys", float64(rtm.MSpanSys)))
+	metrics = append(metrics, ms.createMetric("gauge", "Mallocs", float64(rtm.Mallocs)))
+	metrics = append(metrics, ms.createMetric("gauge", "NextGC", float64(rtm.NextGC)))
+	metrics = append(metrics, ms.createMetric("gauge", "NumForcedGC", float64(rtm.NumForcedGC)))
+	metrics = append(metrics, ms.createMetric("gauge", "NumGC", float64(rtm.NumGC)))
+	metrics = append(metrics, ms.createMetric("gauge", "OtherSys", float64(rtm.OtherSys)))
+	metrics = append(metrics, ms.createMetric("gauge", "PauseTotalNs", float64(rtm.PauseTotalNs)))
+	metrics = append(metrics, ms.createMetric("gauge", "TotalAlloc", float64(rtm.TotalAlloc)))
+	metrics = append(metrics, ms.createMetric("gauge", "StackInuse", float64(rtm.StackInuse)))
+	metrics = append(metrics, ms.createMetric("gauge", "StackSys", float64(rtm.StackSys)))
+	metrics = append(metrics, ms.createMetric("gauge", "Sys", float64(rtm.Sys)))
+	metrics = append(metrics, ms.createMetric("counter", "PollCount", float64(pollCount)))
+	metrics = append(metrics, ms.createMetric("gauge", "RandomValue", rand.Float64()))
+
+	if err = ms.sendRequest(ctx, metrics, endpoint); err != nil {
+		log.Println(err)
+		return
+	}
+
+	return
+}
+
+func (ms MetricSender) createMetric(metricType, id string, value float64) (metric models.Metric) {
+	metric.ID = id
+	metric.MetricType = metricType
+
+	if metricType == "counter" {
+		i := int64(value)
+		metric.Delta = &i
+	} else {
+		metric.Value = &value
+	}
+
+	metric.Hash = utils.SetEncodeHash(metric.ID, metric.MetricType, ms.cfg.Key, metric.Delta, metric.Value)
+
+	return
+}
+
+func (ms MetricSender) sendRequest(ctx context.Context, data interface{}, endpoint string) (err error) {
+	b, err := json.Marshal(data)
 	if err != nil {
 		log.Println(err)
 		return
@@ -149,7 +223,7 @@ func (ms MetricSender) sendMetric(typeMetric, nameMetric string, value interface
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, buf)
 	if err != nil {
-		log.Println(err)
+		// log.Println(err)
 		return
 	}
 
@@ -173,12 +247,14 @@ func parseConfig() (cfg models.Config) {
 	address := flag.String("a", Address, "a address")
 	reportInterval := flag.String("r", ReportInterval, "a report_interval")
 	pollInterval := flag.String("p", PollInterval, "a poll_interval")
+	key := flag.String("k", Key, "a secret key")
 
 	flag.Parse()
 
 	cfg.Address = *address
 	cfg.ReportInterval = *reportInterval
 	cfg.PollInterval = *pollInterval
+	cfg.Key = *key
 
 	if err := env.Parse(&cfg); err != nil {
 		log.Fatalf("env.Parse error: %s", err.Error())

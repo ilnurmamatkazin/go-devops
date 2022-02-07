@@ -10,12 +10,12 @@ import (
 func (h *Handler) getOldMetric(w http.ResponseWriter, r *http.Request) {
 	metric := getMetricFromRequest(r)
 
-	if err := checkMetricType(metric.MetricType); err != nil {
-		http.Error(w, err.(*models.RequestError).Err.Error(), err.(*models.RequestError).StatusCode)
+	if checkMetricType(metric.MetricType) {
+		http.Error(w, http.StatusText(http.StatusNotImplemented), http.StatusNotImplemented)
 		return
 	}
 
-	if err := h.service.GetMetric(&metric); err != nil {
+	if err := h.service.GetOldMetric(&metric); err != nil {
 		re, ok := err.(*models.RequestError)
 		if ok {
 			http.Error(w, re.Err.Error(), re.StatusCode)
@@ -26,11 +26,6 @@ func (h *Handler) getOldMetric(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sendMetricTextData(w, metric)
-
-}
-
-func sendMetricTextData(w http.ResponseWriter, metric models.Metric) {
 	var (
 		httpStatus int
 		strValue   string
