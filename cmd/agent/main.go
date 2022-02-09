@@ -49,14 +49,16 @@ func main() {
 		ctx:    context.Background(),
 	}
 
-	interval, duration, err := utils.GetDataForTicker(metricSender.cfg.PollInterval)
-	if err != nil {
-		log.Fatalf("Ошибка создания тикера")
-	}
+	var wg sync.WaitGroup
 
-	tickerPoll := time.NewTicker(time.Duration(interval) * duration)
+	wg.Add(2)
 
-	interval, duration, err = utils.GetDataForTicker(metricSender.cfg.ReportInterval)
+	go func(poll string) {
+		collectMetrics(poll)
+		wg.Done()
+	}(metricSender.cfg.PollInterval)
+
+	interval, duration, err := utils.GetDataForTicker(metricSender.cfg.ReportInterval)
 	if err != nil {
 		log.Fatalf("Ошибка создания тикера")
 	}
@@ -125,6 +127,7 @@ func main() {
 	}()
 
 	<-done
+	wg.Wait()
 
 }
 
