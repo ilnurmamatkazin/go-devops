@@ -12,8 +12,7 @@ import (
 
 func (ms *MetricSender) collectMetrics(poll string, chMetrics chan []models.Metric) (err error) {
 	var (
-		rtm runtime.MemStats
-		// value     float64
+		rtm       runtime.MemStats
 		pollCount int64
 	)
 

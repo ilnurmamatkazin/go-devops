@@ -53,6 +53,10 @@ func (ms *MetricSender) sendMetrics(report string, chMetrics chan []models.Metri
 				return err
 			}
 
+			if err = ms.sendRequest(metricsGopsutil, "http://%s/updates/"); err != nil {
+				return err
+			}
+
 		}
 
 	}
@@ -106,7 +110,7 @@ func (ms *MetricSender) sendMetrics(report string, chMetrics chan []models.Metri
 // }
 
 func (ms MetricSender) sendRequest(data interface{}, layout string) (err error) {
-	ctx, cancel := context.WithTimeout(ms.ctx, 1*time.Second)
+	ctx, cancel := context.WithTimeout(ms.ctx, 5*time.Second)
 	defer cancel()
 
 	endpoint := fmt.Sprintf(layout, ms.cfg.Address)

@@ -39,6 +39,9 @@ func main() {
 		//ctx:    context.Background(),
 	}
 
+	chMetrics := make(chan []models.Metric)
+	chMetricsGopsutil := make(chan []models.Metric)
+
 	ctx, done := context.WithCancel(context.Background())
 	g, metricSender.ctx = errgroup.WithContext(ctx)
 
@@ -50,14 +53,13 @@ func main() {
 		case <-signalChannel:
 			done()
 		case <-metricSender.ctx.Done():
+			<-chMetricsGopsutil
+			<-chMetrics
 			return metricSender.ctx.Err()
 		}
 
 		return nil
 	})
-
-	chMetrics := make(chan []models.Metric)
-	chMetricsGopsutil := make(chan []models.Metric)
 
 	g.Go(func() error {
 		return metricSender.collectMetrics(metricSender.cfg.PollInterval, chMetrics)
