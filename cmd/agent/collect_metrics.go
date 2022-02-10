@@ -3,7 +3,6 @@ package main
 import (
 	"log"
 	"math/rand"
-	"os"
 	"runtime"
 	"time"
 
@@ -11,10 +10,10 @@ import (
 	"github.com/ilnurmamatkazin/go-devops/internal/utils"
 )
 
-func collectMetrics(poll string, quit chan os.Signal, chMetrics chan []models.Metric) {
+func (ms *MetricSender) collectMetrics(poll string, chMetrics chan []models.Metric) (err error) {
 	var (
-		rtm       runtime.MemStats
-		value     float64
+		rtm runtime.MemStats
+		// value     float64
 		pollCount int64
 	)
 
@@ -24,102 +23,52 @@ func collectMetrics(poll string, quit chan os.Signal, chMetrics chan []models.Me
 		return
 	}
 
-	metrics := make([]models.Metric, 0, 29)
-
 	tickerPoll := time.NewTicker(time.Duration(interval) * duration)
 
 	for {
 		select {
-		case <-quit:
-			return
+		case <-ms.ctx.Done():
+			return ms.ctx.Err()
 
 		case <-tickerPoll.C:
-			value = float64(rtm.Alloc)
-			metrics = append(metrics, models.Metric{MetricType: "gauge", ID: "Alloc", Value: &value})
+			runtime.ReadMemStats(&rtm)
 
-			value = float64(rtm.BuckHashSys)
-			metrics = append(metrics, models.Metric{MetricType: "gauge", ID: "BuckHashSys", Value: &value})
+			metrics := make([]models.Metric, 0, 29)
 
-			value = float64(rtm.Frees)
-			metrics = append(metrics, models.Metric{MetricType: "gauge", ID: "Frees", Value: &value})
-
-			metrics = append(metrics, models.Metric{MetricType: "gauge", ID: "GCCPUFraction", Value: &rtm.GCCPUFraction})
-
-			value = float64(rtm.GCSys)
-			metrics = append(metrics, models.Metric{MetricType: "gauge", ID: "GCSys", Value: &value})
-
-			value = float64(rtm.HeapAlloc)
-			metrics = append(metrics, models.Metric{MetricType: "gauge", ID: "HeapAlloc", Value: &value})
-
-			value = float64(rtm.HeapIdle)
-			metrics = append(metrics, models.Metric{MetricType: "gauge", ID: "HeapIdle", Value: &value})
-
-			value = float64(rtm.HeapInuse)
-			metrics = append(metrics, models.Metric{MetricType: "gauge", ID: "HeapInuse", Value: &value})
-
-			value = float64(rtm.HeapObjects)
-			metrics = append(metrics, models.Metric{MetricType: "gauge", ID: "HeapObjects", Value: &value})
-
-			value = float64(rtm.HeapReleased)
-			metrics = append(metrics, models.Metric{MetricType: "gauge", ID: "HeapReleased", Value: &value})
-
-			value = float64(rtm.HeapSys)
-			metrics = append(metrics, models.Metric{MetricType: "gauge", ID: "HeapSys", Value: &value})
-
-			value = float64(rtm.LastGC)
-			metrics = append(metrics, models.Metric{MetricType: "gauge", ID: "LastGC", Value: &value})
-
-			value = float64(rtm.Lookups)
-			metrics = append(metrics, models.Metric{MetricType: "gauge", ID: "Lookups", Value: &value})
-
-			value = float64(rtm.MCacheInuse)
-			metrics = append(metrics, models.Metric{MetricType: "gauge", ID: "MCacheInuse", Value: &value})
-
-			value = float64(rtm.MCacheSys)
-			metrics = append(metrics, models.Metric{MetricType: "gauge", ID: "MCacheSys", Value: &value})
-
-			value = float64(rtm.MSpanInuse)
-			metrics = append(metrics, models.Metric{MetricType: "gauge", ID: "MSpanInuse", Value: &value})
-
-			value = float64(rtm.MSpanSys)
-			metrics = append(metrics, models.Metric{MetricType: "gauge", ID: "MSpanSys", Value: &value})
-
-			value = float64(rtm.Mallocs)
-			metrics = append(metrics, models.Metric{MetricType: "gauge", ID: "Mallocs", Value: &value})
-
-			value = float64(rtm.NextGC)
-			metrics = append(metrics, models.Metric{MetricType: "gauge", ID: "NextGC", Value: &value})
-
-			value = float64(rtm.NumForcedGC)
-			metrics = append(metrics, models.Metric{MetricType: "gauge", ID: "NumForcedGC", Value: &value})
-
-			value = float64(rtm.NumGC)
-			metrics = append(metrics, models.Metric{MetricType: "gauge", ID: "NumGC", Value: &value})
-
-			value = float64(rtm.OtherSys)
-			metrics = append(metrics, models.Metric{MetricType: "gauge", ID: "OtherSys", Value: &value})
-
-			value = float64(rtm.PauseTotalNs)
-			metrics = append(metrics, models.Metric{MetricType: "gauge", ID: "PauseTotalNs", Value: &value})
-
-			value = float64(rtm.TotalAlloc)
-			metrics = append(metrics, models.Metric{MetricType: "gauge", ID: "TotalAlloc", Value: &value})
-
-			value = float64(rtm.StackInuse)
-			metrics = append(metrics, models.Metric{MetricType: "gauge", ID: "StackInuse", Value: &value})
-
-			value = float64(rtm.StackSys)
-			metrics = append(metrics, models.Metric{MetricType: "gauge", ID: "StackSys", Value: &value})
-
-			value = float64(rtm.Sys)
-			metrics = append(metrics, models.Metric{MetricType: "gauge", ID: "Sys", Value: &value})
+			metrics = append(metrics, ms.createMetric("gauge", "Alloc", float64(rtm.Alloc), 0))
+			metrics = append(metrics, ms.createMetric("gauge", "BuckHashSys", float64(rtm.BuckHashSys), 0))
+			metrics = append(metrics, ms.createMetric("gauge", "Frees", float64(rtm.Frees), 0))
+			metrics = append(metrics, ms.createMetric("gauge", "GCCPUFraction", rtm.GCCPUFraction, 0))
+			metrics = append(metrics, ms.createMetric("gauge", "GCSys", float64(rtm.GCSys), 0))
+			metrics = append(metrics, ms.createMetric("gauge", "HeapAlloc", float64(rtm.HeapAlloc), 0))
+			metrics = append(metrics, ms.createMetric("gauge", "HeapIdle", float64(rtm.HeapIdle), 0))
+			metrics = append(metrics, ms.createMetric("gauge", "HeapInuse", float64(rtm.HeapInuse), 0))
+			metrics = append(metrics, ms.createMetric("gauge", "HeapObjects", float64(rtm.HeapObjects), 0))
+			metrics = append(metrics, ms.createMetric("gauge", "HeapReleased", float64(rtm.HeapReleased), 0))
+			metrics = append(metrics, ms.createMetric("gauge", "HeapSys", float64(rtm.HeapSys), 0))
+			metrics = append(metrics, ms.createMetric("gauge", "LastGC", float64(rtm.LastGC), 0))
+			metrics = append(metrics, ms.createMetric("gauge", "Lookups", float64(rtm.Lookups), 0))
+			metrics = append(metrics, ms.createMetric("gauge", "MCacheInuse", float64(rtm.MCacheInuse), 0))
+			metrics = append(metrics, ms.createMetric("gauge", "MCacheSys", float64(rtm.MCacheSys), 0))
+			metrics = append(metrics, ms.createMetric("gauge", "MSpanInuse", float64(rtm.MSpanInuse), 0))
+			metrics = append(metrics, ms.createMetric("gauge", "MSpanSys", float64(rtm.MSpanSys), 0))
+			metrics = append(metrics, ms.createMetric("gauge", "Mallocs", float64(rtm.Mallocs), 0))
+			metrics = append(metrics, ms.createMetric("gauge", "NextGC", float64(rtm.NextGC), 0))
+			metrics = append(metrics, ms.createMetric("gauge", "NumForcedGC", float64(rtm.NumForcedGC), 0))
+			metrics = append(metrics, ms.createMetric("gauge", "NumGC", float64(rtm.NumGC), 0))
+			metrics = append(metrics, ms.createMetric("gauge", "OtherSys", float64(rtm.OtherSys), 0))
+			metrics = append(metrics, ms.createMetric("gauge", "PauseTotalNs", float64(rtm.PauseTotalNs), 0))
+			metrics = append(metrics, ms.createMetric("gauge", "TotalAlloc", float64(rtm.TotalAlloc), 0))
+			metrics = append(metrics, ms.createMetric("gauge", "StackInuse", float64(rtm.StackInuse), 0))
+			metrics = append(metrics, ms.createMetric("gauge", "StackSys", float64(rtm.StackSys), 0))
+			metrics = append(metrics, ms.createMetric("gauge", "Sys", float64(rtm.Sys), 0))
 
 			pollCount++
-			metrics = append(metrics, models.Metric{MetricType: "counter", ID: "PollCount", Delta: &pollCount})
+			metrics = append(metrics, ms.createMetric("counter", "PollCount", 0, pollCount))
+			metrics = append(metrics, ms.createMetric("gauge", "Alloc", float64(rtm.Alloc), 0))
+			metrics = append(metrics, ms.createMetric("gauge", "RandomValue", rand.Float64(), 0))
 
-			value = rand.Float64()
-			metrics = append(metrics, models.Metric{MetricType: "gauge", ID: "RandomValue", Value: &value})
-
+			chMetrics <- metrics
 		}
 	}
 }
