@@ -30,7 +30,6 @@ func main() {
 
 	if err = repository.ConnectPG(); err != nil {
 		log.Println("ошибка подключения к бд: ", err.Error())
-		// os.Exit(2)
 	} else {
 		defer repository.Close()
 	}

@@ -11,15 +11,9 @@ import (
 	"github.com/shirou/gopsutil/v3/mem"
 )
 
-//https://github.com/shirou/gopsutil/blob/master/cpu/cpu.go
-//https://www.socketloop.com/tutorials/golang-get-hardware-information-such-as-disk-memory-and-cpu-usage
-// https://developpaper.com/get-system-performance-data-with-go-language-gopsutil-library/
-// https://stackoverflow.com/questions/61201928/how-to-get-total-ram-from-golang-code-on-mac
-
 func (ms *MetricSender) collectMetricsGopsutil(poll string, chMetrics chan []models.Metric) (err error) {
 	var (
-		v *mem.VirtualMemoryStat
-		// c              []cpu.InfoStat
+		v              *mem.VirtualMemoryStat
 		percentage     []float64
 		cpuUtilization float64
 	)

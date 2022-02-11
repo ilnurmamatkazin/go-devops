@@ -36,7 +36,6 @@ func main() {
 	metricSender := MetricSender{
 		cfg:    parseConfig(),
 		client: createClient(),
-		//ctx:    context.Background(),
 	}
 
 	chMetrics := make(chan []models.Metric)
@@ -78,68 +77,6 @@ func main() {
 			log.Printf("received error: %v", err)
 		}
 	}
-
-	// done := make(chan bool, 1)
-
-	// go func() {
-	// loop:
-	// 	for {
-	// 		select {
-	// 		case <-quit:
-	// 			done <- true
-	// 			break loop
-
-	// 		case <-chMetrics:
-	// 			mutex.Lock()
-
-	// 			runtime.ReadMemStats(&rtm)
-	// 			pollCount++
-
-	// 			mutex.Unlock()
-	// 		case <-tickerReport.C:
-	// 			mutex.Lock()
-
-	// 			metricSender.sendMetric("gauge", "Alloc", rtm.Alloc)
-	// 			metricSender.sendMetric("gauge", "BuckHashSys", rtm.BuckHashSys)
-	// 			metricSender.sendMetric("gauge", "Frees", rtm.Frees)
-	// 			metricSender.sendMetric("gauge", "GCCPUFraction", rtm.GCCPUFraction)
-	// 			metricSender.sendMetric("gauge", "GCSys", rtm.GCSys)
-	// 			metricSender.sendMetric("gauge", "HeapAlloc", rtm.HeapAlloc)
-	// 			metricSender.sendMetric("gauge", "HeapIdle", rtm.HeapIdle)
-	// 			metricSender.sendMetric("gauge", "HeapInuse", rtm.HeapInuse)
-	// 			metricSender.sendMetric("gauge", "HeapObjects", rtm.HeapObjects)
-	// 			metricSender.sendMetric("gauge", "HeapReleased", rtm.HeapReleased)
-	// 			metricSender.sendMetric("gauge", "HeapSys", rtm.HeapSys)
-	// 			metricSender.sendMetric("gauge", "LastGC", rtm.LastGC)
-	// 			metricSender.sendMetric("gauge", "Lookups", rtm.Lookups)
-	// 			metricSender.sendMetric("gauge", "MCacheInuse", rtm.MCacheInuse)
-	// 			metricSender.sendMetric("gauge", "MCacheSys", rtm.MCacheSys)
-	// 			metricSender.sendMetric("gauge", "MSpanInuse", rtm.MSpanInuse)
-	// 			metricSender.sendMetric("gauge", "MSpanSys", rtm.MSpanSys)
-	// 			metricSender.sendMetric("gauge", "Mallocs", rtm.Mallocs)
-	// 			metricSender.sendMetric("gauge", "NextGC", rtm.NextGC)
-	// 			metricSender.sendMetric("gauge", "NumForcedGC", rtm.NumForcedGC)
-	// 			metricSender.sendMetric("gauge", "NumGC", rtm.NumGC)
-	// 			metricSender.sendMetric("gauge", "OtherSys", rtm.OtherSys)
-	// 			metricSender.sendMetric("gauge", "PauseTotalNs", rtm.PauseTotalNs)
-	// 			metricSender.sendMetric("gauge", "TotalAlloc", rtm.TotalAlloc)
-	// 			metricSender.sendMetric("gauge", "StackInuse", rtm.StackInuse)
-	// 			metricSender.sendMetric("gauge", "StackSys", rtm.StackSys)
-	// 			metricSender.sendMetric("gauge", "Sys", rtm.Sys)
-	// 			metricSender.sendMetric("counter", "PollCount", pollCount)
-	// 			metricSender.sendMetric("gauge", "RandomValue", rand.Float64())
-
-	// 			metricSender.sendArrayMetric(rtm, pollCount)
-
-	// 			mutex.Unlock()
-	// 		}
-
-	// 	}
-	// }()
-
-	// <-done
-	// wg.Wait()
-
 }
 
 func parseConfig() (cfg models.Config) {

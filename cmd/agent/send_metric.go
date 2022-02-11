@@ -62,53 +62,6 @@ func (ms *MetricSender) sendMetrics(report string, chMetrics chan []models.Metri
 	}
 }
 
-// func (ms *MetricSender) sendMetric(gctx context.Context, metric models.Metric) (err error) {
-// 	ctx, cancel := context.WithTimeout(gctx, 1*time.Second)
-// 	defer cancel()
-
-// 	endpoint := fmt.Sprintf("http://%s/update", ms.cfg.Address)
-
-// 	metric.Hash = utils.SetEncodeHash(metric.ID, metric.MetricType, ms.cfg.Key, metric.Delta, metric.Value)
-
-// 	if err = ms.sendRequest(ctx, metric, endpoint); err != nil {
-// 		log.Println(err)
-// 		return
-// 	}
-
-// 	return
-// }
-
-// func (ms MetricSender) sendArrayMetrics(rtm runtime.MemStats, pollCount int64) (err error) {
-// 	ctx, cancel := context.WithTimeout(ms.ctx, 3*time.Second)
-// 	defer cancel()
-
-// 	endpoint := fmt.Sprintf("http://%s/updates/", ms.cfg.Address)
-// 	metrics := make([]models.Metric, 0, 29)
-
-// 	if err = ms.sendRequest(ctx, metrics, endpoint); err != nil {
-// 		log.Println(err)
-// 		return
-// 	}
-
-// 	return
-// }
-
-// func (ms MetricSender) createMetric(metricType, id string, value float64) (metric models.Metric) {
-// 	metric.ID = id
-// 	metric.MetricType = metricType
-
-// 	if metricType == "counter" {
-// 		i := int64(value)
-// 		metric.Delta = &i
-// 	} else {
-// 		metric.Value = &value
-// 	}
-
-// 	metric.Hash = utils.SetEncodeHash(metric.ID, metric.MetricType, ms.cfg.Key, metric.Delta, metric.Value)
-
-// 	return
-// }
-
 func (ms MetricSender) sendRequest(data interface{}, layout string) (err error) {
 	ctx, cancel := context.WithTimeout(ms.ctx, 5*time.Second)
 	defer cancel()
@@ -130,7 +83,6 @@ func (ms MetricSender) sendRequest(data interface{}, layout string) (err error) 
 		return
 	}
 
-	// в заголовках запроса сообщаем, что данные кодированы стандартной URL-схемой
 	request.Header.Set("Content-Type", "application/json")
 
 	// отправляем запрос и получаем ответ
@@ -145,37 +97,3 @@ func (ms MetricSender) sendRequest(data interface{}, layout string) (err error) 
 
 	return
 }
-
-// func convertValue(value interface{}, metric *models.Metric) {
-// 	var f float64
-
-// 	switch metric.MetricType {
-// 	case "counter":
-// 		i := value.(int64)
-// 		metric.Delta = &i
-// 	case "gauge":
-// 		switch value := value.(type) {
-// 		case float64:
-// 			f = value
-// 		case uint64:
-// 			f = float64(value)
-// 		case uint32:
-// 			f = float64(value)
-
-// 		default:
-// 		}
-
-// 	}
-
-// 	if (metric.ID == "GCCPUFraction") && (f == 0) {
-// 		f = rand.Float64()
-// 	} else if (metric.ID == "LastGC") && (f == 0) ||
-// 		(metric.ID == "Lookups") && (f == 0) ||
-// 		(metric.ID == "NumForcedGC") && (f == 0) ||
-// 		(metric.ID == "NumGC") && (f == 0) ||
-// 		(metric.ID == "PauseTotalNs") && (f == 0) {
-// 		f = float64(rand.Intn(100))
-// 	}
-
-// 	metric.Value = &f
-// }

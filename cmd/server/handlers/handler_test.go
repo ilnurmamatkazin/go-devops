@@ -50,7 +50,6 @@ func TestNewRouter(t *testing.T) {
 
 	if err := repository.ConnectPG(); err != nil {
 		log.Println("ошибка подключения к бд: ", err.Error())
-		// os.Exit(2)
 	} else {
 		defer repository.Close()
 	}
@@ -64,7 +63,6 @@ func TestNewRouter(t *testing.T) {
 
 	resp, _ := testRequest(t, ts, "POST", "/update/counter/testCounter/100")
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
-	// assert.Equal(t, "brand:renault", body)
 	defer resp.Body.Close()
 
 	resp, _ = testRequest(t, ts, "POST", "/update/counter/testCounter/invalid_value")
