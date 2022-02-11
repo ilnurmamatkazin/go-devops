@@ -134,14 +134,14 @@ func (ms MetricSender) sendRequest(data interface{}, layout string) (err error) 
 	request.Header.Set("Content-Type", "application/json")
 
 	// отправляем запрос и получаем ответ
-	response, err := ms.client.Do(request)
-	if err != nil {
-		log.Println(err)
-		return
+	response, ok := ms.client.Do(request)
+	if ok != nil {
+		log.Println(ok)
+	} else {
+		// печатаем код ответа
+		// fmt.Println("Статус-код ", response.Status)
+		defer response.Body.Close()
 	}
-	// печатаем код ответа
-	// fmt.Println("Статус-код ", response.Status)
-	defer response.Body.Close()
 
 	return
 }
