@@ -70,7 +70,7 @@ func main() {
 	})
 
 	g.Go(func() error {
-		return metricSender.sendMetrics(metricSender.cfg.PollInterval, chMetrics, chMetricsGopsutil)
+		return metricSender.sendMetrics(metricSender.cfg.ReportInterval, chMetrics, chMetricsGopsutil)
 	})
 
 	if err := g.Wait(); err != nil && err != context.Canceled {
