@@ -11,22 +11,13 @@ import (
 	"time"
 
 	"github.com/ilnurmamatkazin/go-devops/cmd/agent/models"
-	"github.com/ilnurmamatkazin/go-devops/internal/utils"
 )
 
-func (ms *MetricSender) sendMetrics(report string, chMetrics chan []models.Metric, chMetricsGopsutil chan []models.Metric) error {
+func (ms *MetricSender) sendMetrics(tickerReport *time.Ticker, chMetrics chan []models.Metric, chMetricsGopsutil chan []models.Metric) (err error) {
 	var (
 		metrics         []models.Metric
 		metricsGopsutil []models.Metric
 	)
-
-	interval, duration, err := utils.GetDataForTicker(report)
-	if err != nil {
-		log.Fatalf("Ошибка создания тикера")
-		return err
-	}
-
-	tickerReport := time.NewTicker(time.Duration(interval) * duration)
 
 	for {
 		select {
@@ -39,22 +30,26 @@ func (ms *MetricSender) sendMetrics(report string, chMetrics chan []models.Metri
 		case <-tickerReport.C:
 			for _, metric := range metrics {
 				if err = ms.sendRequest(metric, "http://%s/update"); err != nil {
-					return err
+					return
 				}
 			}
 
 			for _, metric := range metricsGopsutil {
 				if err = ms.sendRequest(metric, "http://%s/update"); err != nil {
-					return err
+					return
 				}
 			}
 
-			if err = ms.sendRequest(metrics, "http://%s/updates/"); err != nil {
-				return err
+			if len(metrics) > 0 {
+				if err = ms.sendRequest(metrics, "http://%s/updates/"); err != nil {
+					return
+				}
 			}
 
-			if err = ms.sendRequest(metricsGopsutil, "http://%s/updates/"); err != nil {
-				return err
+			if len(metricsGopsutil) > 0 {
+				if err = ms.sendRequest(metricsGopsutil, "http://%s/updates/"); err != nil {
+					return
+				}
 			}
 
 		}

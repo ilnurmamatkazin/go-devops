@@ -1,28 +1,18 @@
 package main
 
 import (
-	"log"
 	"math/rand"
 	"runtime"
 	"time"
 
 	"github.com/ilnurmamatkazin/go-devops/cmd/agent/models"
-	"github.com/ilnurmamatkazin/go-devops/internal/utils"
 )
 
-func (ms *MetricSender) collectMetrics(poll string, chMetrics chan []models.Metric) (err error) {
+func (ms *MetricSender) collectMetrics(tickerPoll *time.Ticker, chMetrics chan []models.Metric) (err error) {
 	var (
 		rtm       runtime.MemStats
 		pollCount int64
 	)
-
-	interval, duration, err := utils.GetDataForTicker(poll)
-	if err != nil {
-		log.Fatalf("Ошибка создания тикера")
-		return
-	}
-
-	tickerPoll := time.NewTicker(time.Duration(interval) * duration)
 
 	for {
 		select {

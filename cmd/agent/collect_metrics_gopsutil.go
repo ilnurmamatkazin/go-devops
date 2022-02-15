@@ -5,26 +5,17 @@ import (
 	"time"
 
 	"github.com/ilnurmamatkazin/go-devops/cmd/agent/models"
-	"github.com/ilnurmamatkazin/go-devops/internal/utils"
 
 	"github.com/shirou/gopsutil/v3/cpu"
 	"github.com/shirou/gopsutil/v3/mem"
 )
 
-func (ms *MetricSender) collectMetricsGopsutil(poll string, chMetrics chan []models.Metric) (err error) {
+func (ms *MetricSender) collectMetricsGopsutil(tickerPoll *time.Ticker, chMetrics chan []models.Metric) (err error) {
 	var (
 		v              *mem.VirtualMemoryStat
 		percentage     []float64
 		cpuUtilization float64
 	)
-
-	interval, duration, err := utils.GetDataForTicker(poll)
-	if err != nil {
-		log.Fatalf("Ошибка создания тикера")
-		return
-	}
-
-	tickerPoll := time.NewTicker(time.Duration(interval) * duration)
 
 	for {
 		select {

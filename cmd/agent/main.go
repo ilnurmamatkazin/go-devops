@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"errors"
 	"flag"
 	"log"
 	"net/http"
@@ -44,6 +43,18 @@ func main() {
 	ctx, done := context.WithCancel(context.Background())
 	g, metricSender.ctx = errgroup.WithContext(ctx)
 
+	tickerPoll, err := getTicker(metricSender.cfg.PollInterval)
+	if err != nil {
+		log.Fatalf("Ошибка создания тикера")
+		return
+	}
+
+	tickerReport, err := getTicker(metricSender.cfg.ReportInterval)
+	if err != nil {
+		log.Fatalf("Ошибка создания тикера")
+		return
+	}
+
 	g.Go(func() error {
 		signalChannel := make(chan os.Signal, 1)
 		signal.Notify(signalChannel, os.Interrupt, syscall.SIGTERM)
@@ -52,8 +63,8 @@ func main() {
 		case <-signalChannel:
 			done()
 		case <-metricSender.ctx.Done():
-			<-chMetricsGopsutil
-			<-chMetrics
+			tickerPoll.Stop()
+			tickerReport.Stop()
 			return metricSender.ctx.Err()
 		}
 
@@ -61,22 +72,29 @@ func main() {
 	})
 
 	g.Go(func() error {
-		return metricSender.collectMetrics(metricSender.cfg.PollInterval, chMetrics)
+		err := metricSender.collectMetrics(tickerPoll, chMetrics)
+		close(chMetrics)
+
+		return err
 	})
 
 	g.Go(func() error {
-		return metricSender.collectMetricsGopsutil(metricSender.cfg.PollInterval, chMetricsGopsutil)
+		err := metricSender.collectMetricsGopsutil(tickerPoll, chMetricsGopsutil)
+		close(chMetricsGopsutil)
+
+		return err
 	})
 
 	g.Go(func() error {
-		return metricSender.sendMetrics(metricSender.cfg.ReportInterval, chMetrics, chMetricsGopsutil)
+		err := metricSender.sendMetrics(tickerReport, chMetrics, chMetricsGopsutil)
+		return err
 	})
 
-	if err := g.Wait(); err != nil && err != context.Canceled {
-		if errors.Is(err, context.Canceled) {
-			log.Printf("received error: %v", err)
-		}
+	if err := g.Wait(); err != nil {
+		log.Printf("received error: %v", err)
+
 	}
+
 }
 
 func parseConfig() (cfg models.Config) {
@@ -128,4 +146,13 @@ func (ms *MetricSender) createMetric(metricType, id string, value float64, delta
 	metric.Hash = utils.SetEncodeHash(metric.ID, metric.MetricType, ms.cfg.Key, metric.Delta, metric.Value)
 
 	return
+}
+
+func getTicker(strInterval string) (*time.Ticker, error) {
+	interval, duration, err := utils.GetDataForTicker(strInterval)
+	if err != nil {
+		return nil, err
+	}
+
+	return time.NewTicker(time.Duration(interval) * duration), nil
 }
