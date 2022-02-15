@@ -64,7 +64,6 @@ func (ms *MetricSender) collectMetrics(poll string, chMetrics chan []models.Metr
 
 			pollCount++
 			metrics = append(metrics, ms.createMetric("counter", "PollCount", 0, pollCount))
-			metrics = append(metrics, ms.createMetric("gauge", "Alloc", float64(rtm.Alloc), 0))
 			metrics = append(metrics, ms.createMetric("gauge", "RandomValue", rand.Float64(), 0))
 
 			chMetrics <- metrics
