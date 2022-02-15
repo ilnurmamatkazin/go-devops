@@ -48,7 +48,7 @@ func (ms *MetricSender) collectMetricsGopsutil(tickerPoll *time.Ticker, chMetric
 			metrics = append(metrics, ms.createMetric("gauge", "FreeMemory", float64(v.Free), 0))
 			metrics = append(metrics, ms.createMetric("gauge", "CPUutilization1", cpuUtilization, 0))
 
-			// chMetrics <- metrics
+			chMetrics <- metrics
 		}
 	}
 }
