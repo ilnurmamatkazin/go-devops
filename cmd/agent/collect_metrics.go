@@ -57,7 +57,7 @@ func (ms *MetricSender) collectMetrics(tickerPoll *time.Ticker, chMetrics chan [
 			metrics = append(metrics, ms.createMetric("gauge", "Alloc", float64(rtm.Alloc), 0))
 			metrics = append(metrics, ms.createMetric("gauge", "RandomValue", rand.Float64(), 0))
 
-			chMetrics <- metrics
+			// chMetrics <- metrics
 		}
 	}
 }
