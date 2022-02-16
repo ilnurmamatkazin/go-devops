@@ -1,70 +1,129 @@
 package main
 
 import (
-	// "context"
-	// "net/http"
-	// "strings"
+	"context"
+	"fmt"
+	"net/http"
+	"strings"
 	"testing"
-	// "github.com/stretchr/testify/assert"
-	// "golang.org/x/sync/errgroup"
-	// "github.com/ilnurmamatkazin/go-devops/cmd/agent/models"
+
+	"github.com/stretchr/testify/assert"
+	"golang.org/x/sync/errgroup"
+
+	"github.com/ilnurmamatkazin/go-devops/cmd/agent/models"
 )
 
 func TestMetricSender_collectMetricsGopsutil(t *testing.T) {
-	// type args struct {
-	// 	poll      string
-	// 	chMetrics chan []models.Metric
-	// }
-	// tests := []struct {
-	// 	name    string
-	// 	args    args
-	// 	metrics string
-	// 	wantErr bool
-	// }{
-	// 	{
-	// 		name:    "Positive test",
-	// 		args:    args{poll: "5s", chMetrics: make(chan []models.Metric)},
-	// 		metrics: "TotalMemory, FreeMemory, CPUutilization1",
-	// 		wantErr: false,
-	// 	},
-	// 	{
-	// 		name:    "Negative test",
-	// 		args:    args{poll: "5s", chMetrics: make(chan []models.Metric)},
-	// 		metrics: "Total1Memory",
-	// 		wantErr: true,
-	// 	},
-	// }
-	// ms := &MetricSender{
-	// 	cfg:    models.Config{},
-	// 	client: &http.Client{},
-	// 	ctx:    context.Background(),
-	// }
+	type args struct {
+		poll      string
+		chMetrics chan []models.Metric
+	}
+	tests := []struct {
+		name    string
+		args    args
+		metrics string
+		wantErr bool
+	}{
+		{
+			name:    "Positive test",
+			args:    args{poll: "5s", chMetrics: make(chan []models.Metric)},
+			metrics: "TotalMemory, FreeMemory, CPUutilization1",
+			wantErr: false,
+		},
+		{
+			name:    "Negative test",
+			args:    args{poll: "5s", chMetrics: make(chan []models.Metric)},
+			metrics: "Total1Memory",
+			wantErr: true,
+		},
+	}
+	ms := &MetricSender{
+		cfg:    models.Config{},
+		client: &http.Client{},
+		ctx:    context.Background(),
+	}
 
-	// for _, tt := range tests {
-	// 	t.Run(tt.name, func(t *testing.T) {
-	// 		var g *errgroup.Group
-	// 		var done context.CancelFunc
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var g *errgroup.Group
+			var done context.CancelFunc
 
-	// 		tickerPoll, _ := getTicker(tt.args.poll)
+			tickerPoll, _ := getTicker(tt.args.poll)
 
-	// 		ctx, done := context.WithCancel(context.Background())
-	// 		g, ms.ctx = errgroup.WithContext(ctx)
+			// ctx, done := context.WithTimeout(context.Background(), time.Duration(10)*time.Second)
+			ctx, done := context.WithCancel(context.Background())
+			g, ms.ctx = errgroup.WithContext(ctx)
 
-	// 		g.Go(func() error {
-	// 			return ms.collectMetricsGopsutil(tickerPoll, tt.args.chMetrics)
-	// 		})
+			// g.Go(func() error {
+			// 	select {
+			// 	case <-ms.ctx.Done():
+			// 		fmt.Println("$$$$", ms.ctx.Err())
+			// 		tickerPoll.Stop()
 
-	// 		metrics := <-tt.args.chMetrics
-	// 		tickerPoll.Stop()
+			// 		// <-chMetrics
+			// 		// <-chMetricsGopsutil
+			// 		for i := range tt.args.chMetrics {
+			// 			log.Println(i)
+			// 		}
 
-	// 		for _, item := range metrics {
-	// 			assert.Equal(t, strings.Contains(tt.metrics, item.ID), !tt.wantErr)
-	// 		}
+			// 		return ms.ctx.Err()
+			// 	}
 
-	// 		done()
-	// 		err := g.Wait()
-	// 		assert.Equal(t, err.Error(), "context canceled")
+			// })
 
-	// 	})
-	// }
+			g.Go(func() error {
+				fmt.Println("######")
+				err := ms.collectMetricsGopsutil(tickerPoll, tt.args.chMetrics)
+				fmt.Println("###1111###", err.Error())
+
+				return err
+			})
+
+			fmt.Println("###2###")
+
+			select {
+			case <-ms.ctx.Done():
+				fmt.Println("$$$$", ms.ctx.Err())
+				tickerPoll.Stop()
+
+				// <-chMetrics
+				// <-chMetricsGopsutil
+				// for i := range tt.args.chMetrics {
+				// 	log.Println(i)
+				// }
+
+			case metrics := <-tt.args.chMetrics:
+				fmt.Println("###3###")
+
+				for _, item := range metrics {
+					fmt.Println("###4###")
+
+					assert.Equal(t, strings.Contains(tt.metrics, item.ID), !tt.wantErr)
+				}
+				fmt.Println("###2244442222###")
+				done()
+			}
+
+			// for metrics := range tt.args.chMetrics {
+			// 	fmt.Println("####1##")
+			// 	// tickerPoll.Stop()
+			// 	fmt.Println("###3###")
+
+			// 	for _, item := range metrics {
+			// 		fmt.Println("###4###")
+
+			// 		assert.Equal(t, strings.Contains(tt.metrics, item.ID), !tt.wantErr)
+			// 	}
+
+			// }
+
+			fmt.Println("###222222###")
+
+			err := g.Wait()
+			fmt.Println("###22Wait2222###")
+
+			assert.Equal(t, err.Error(), "context canceled")
+
+		})
+	}
 }
