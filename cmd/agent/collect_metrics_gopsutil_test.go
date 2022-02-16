@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/sync/errgroup"
@@ -50,8 +51,8 @@ func TestMetricSender_collectMetricsGopsutil(t *testing.T) {
 
 			tickerPoll, _ := getTicker(tt.args.poll)
 
-			// ctx, done := context.WithTimeout(context.Background(), time.Duration(10)*time.Second)
-			ctx, done := context.WithCancel(context.Background())
+			ctx, done := context.WithTimeout(context.Background(), time.Duration(10)*time.Second)
+			// ctx, done := context.WithCancel(context.Background())
 			g, ms.ctx = errgroup.WithContext(ctx)
 
 			// g.Go(func() error {
@@ -77,6 +78,7 @@ func TestMetricSender_collectMetricsGopsutil(t *testing.T) {
 				fmt.Println("###1111###", err.Error())
 
 				return err
+				// return nil
 			})
 
 			fmt.Println("###2###")
@@ -85,12 +87,6 @@ func TestMetricSender_collectMetricsGopsutil(t *testing.T) {
 			case <-ms.ctx.Done():
 				fmt.Println("$$$$", ms.ctx.Err())
 				tickerPoll.Stop()
-
-				// <-chMetrics
-				// <-chMetricsGopsutil
-				// for i := range tt.args.chMetrics {
-				// 	log.Println(i)
-				// }
 
 			case metrics := <-tt.args.chMetrics:
 				fmt.Println("###3###")
@@ -106,26 +102,13 @@ func TestMetricSender_collectMetricsGopsutil(t *testing.T) {
 
 			done()
 
-			// for metrics := range tt.args.chMetrics {
-			// 	fmt.Println("####1##")
-			// 	// tickerPoll.Stop()
-			// 	fmt.Println("###3###")
-
-			// 	for _, item := range metrics {
-			// 		fmt.Println("###4###")
-
-			// 		assert.Equal(t, strings.Contains(tt.metrics, item.ID), !tt.wantErr)
-			// 	}
-
-			// }
-
 			fmt.Println("###222222###")
 
 			err := g.Wait()
-			fmt.Println("###22Wait2222###")
-
-			assert.Equal(t, err.Error(), "context canceled")
-
+			fmt.Println("###22Wait2222###", err)
+			if err != nil {
+				assert.Equal(t, err.Error(), "context canceled")
+			}
 		})
 	}
 }
