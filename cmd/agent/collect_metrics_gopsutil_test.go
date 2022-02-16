@@ -46,7 +46,7 @@ func TestMetricSender_collectMetricsGopsutil(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var g *errgroup.Group
-			var done context.CancelFunc
+			// var done context.CancelFunc
 
 			tickerPoll, _ := getTicker(tt.args.poll)
 
@@ -101,8 +101,10 @@ func TestMetricSender_collectMetricsGopsutil(t *testing.T) {
 					assert.Equal(t, strings.Contains(tt.metrics, item.ID), !tt.wantErr)
 				}
 				fmt.Println("###2244442222###")
-				done()
+
 			}
+
+			done()
 
 			// for metrics := range tt.args.chMetrics {
 			// 	fmt.Println("####1##")
