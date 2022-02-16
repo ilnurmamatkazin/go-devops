@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -63,8 +64,20 @@ func main() {
 		case <-signalChannel:
 			done()
 		case <-metricSender.ctx.Done():
+			fmt.Println("$$$$", metricSender.ctx.Err())
 			tickerPoll.Stop()
 			tickerReport.Stop()
+
+			// <-chMetrics
+			// <-chMetricsGopsutil
+			for i := range chMetrics {
+				log.Println(i)
+			}
+
+			for i := range chMetricsGopsutil {
+				log.Println(i)
+			}
+
 			return metricSender.ctx.Err()
 		}
 
@@ -87,6 +100,7 @@ func main() {
 
 	g.Go(func() error {
 		err := metricSender.sendMetrics(tickerReport, chMetrics, chMetricsGopsutil)
+		fmt.Println("####", err)
 		return err
 	})
 
