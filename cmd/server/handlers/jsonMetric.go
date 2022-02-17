@@ -12,6 +12,7 @@ func (h *Handler) getMetric(w http.ResponseWriter, r *http.Request) {
 		metric models.Metric
 		err    error
 	)
+	w.Header().Set("Content-Type", "application/json")
 
 	if err = json.NewDecoder(r.Body).Decode(&metric); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -37,6 +38,7 @@ func (h *Handler) parseMetric(w http.ResponseWriter, r *http.Request) {
 		metric models.Metric
 		err    error
 	)
+	w.Header().Set("Content-Type", "application/json")
 
 	if err = json.NewDecoder(r.Body).Decode(&metric); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -57,6 +59,7 @@ func (h *Handler) parseMetrics(w http.ResponseWriter, r *http.Request) {
 		err     error
 		status  models.Status
 	)
+	w.Header().Set("Content-Type", "application/json")
 
 	if err = json.NewDecoder(r.Body).Decode(&metrics); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -74,7 +77,6 @@ func (h *Handler) parseMetrics(w http.ResponseWriter, r *http.Request) {
 }
 
 func sendOkJSONData(w http.ResponseWriter, object interface{}) {
-	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 
 	if err := json.NewEncoder(w).Encode(object); err != nil {
