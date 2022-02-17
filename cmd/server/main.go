@@ -44,8 +44,6 @@ func main() {
 	go http.ListenAndServe(":"+strings.Split(cfg.Address, ":")[1], router)
 
 	<-quit
-
-	repository.Save()
 }
 
 func parseConfig() (cfg models.Config, err error) {
