@@ -31,7 +31,10 @@ func main() {
 	if err = repository.ConnectPG(); err != nil {
 		log.Println("ошибка подключения к бд: ", err.Error())
 	} else {
-		defer repository.Close()
+		defer func() {
+			repository.Save()
+			repository.Close()
+		}()
 	}
 
 	service := service.NewService(&cfg, repository)
