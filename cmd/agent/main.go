@@ -63,13 +63,17 @@ func main() {
 		select {
 		case <-signalChannel:
 			done()
+			for i := range chMetrics {
+				log.Println(i)
+			}
+
+			for i := range chMetricsGopsutil {
+				log.Println(i)
+			}
 		case <-metricSender.ctx.Done():
-			fmt.Println("$$$$", metricSender.ctx.Err())
 			tickerPoll.Stop()
 			tickerReport.Stop()
 
-			// <-chMetrics
-			// <-chMetricsGopsutil
 			for i := range chMetrics {
 				log.Println(i)
 			}
@@ -100,7 +104,7 @@ func main() {
 
 	g.Go(func() error {
 		err := metricSender.sendMetrics(tickerReport, chMetrics, chMetricsGopsutil)
-		fmt.Println("####", err)
+
 		return err
 	})
 
