@@ -30,9 +30,11 @@ func main() {
 
 	if err = repository.ConnectPG(); err != nil {
 		log.Println("ошибка подключения к бд: ", err.Error())
-		// os.Exit(2)
 	} else {
-		defer repository.Close()
+		defer func() {
+			repository.Save()
+			repository.Close()
+		}()
 	}
 
 	service := service.NewService(&cfg, repository)
@@ -42,8 +44,6 @@ func main() {
 	go http.ListenAndServe(":"+strings.Split(cfg.Address, ":")[1], router)
 
 	<-quit
-
-	repository.Save()
 }
 
 func parseConfig() (cfg models.Config, err error) {

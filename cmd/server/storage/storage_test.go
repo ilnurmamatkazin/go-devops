@@ -5,7 +5,6 @@ import (
 
 	"github.com/ilnurmamatkazin/go-devops/cmd/server/models"
 	"github.com/stretchr/testify/assert"
-	// "github.com/stretchr/testify/assert"
 )
 
 func TestSetOldMetric(t *testing.T) {
