@@ -81,3 +81,19 @@ func TestMetricSender_collectMetrics(t *testing.T) {
 		})
 	}
 }
+
+func BenchmarkCollectMetrics(b *testing.B) {
+	ms := &MetricSender{
+		cfg:    models.Config{},
+		client: &http.Client{},
+		ctx:    context.Background(),
+	}
+
+	tickerPoll := time.NewTicker(time.Duration(2) * time.Second)
+	chMetrics := make(chan []models.Metric)
+
+	for i := 0; i < b.N; i++ {
+		go ms.collectMetrics(tickerPoll, chMetrics)
+		<-chMetrics
+	}
+}
