@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"strings"
 	"testing"
@@ -89,11 +90,49 @@ func BenchmarkCollectMetrics(b *testing.B) {
 		ctx:    context.Background(),
 	}
 
-	tickerPoll := time.NewTicker(time.Duration(2) * time.Second)
+	tickerPoll := time.NewTicker(time.Duration(1) * time.Second)
+	tickerEnd := time.NewTicker(time.Duration(10) * time.Second)
 	chMetrics := make(chan []models.Metric)
 
 	for i := 0; i < b.N; i++ {
-		go ms.collectMetrics(tickerPoll, chMetrics)
-		<-chMetrics
+		var g *errgroup.Group
+
+		ctx, done := context.WithTimeout(context.Background(), time.Duration(30)*time.Second)
+		g, ms.ctx = errgroup.WithContext(ctx)
+
+		g.Go(func() error {
+			err := ms.collectMetrics(tickerPoll, chMetrics)
+			fmt.Println(err.Error())
+			return err
+		})
+	loop:
+		for {
+			select {
+			case <-ms.ctx.Done():
+				fmt.Println("$$$$$$$1")
+
+				tickerPoll.Stop()
+				<-chMetrics
+				break loop
+
+			case <-tickerEnd.C:
+				fmt.Println("$$$$$$$2")
+
+				tickerPoll.Stop()
+				<-chMetrics
+				break loop
+
+			case i := <-chMetrics:
+				fmt.Println(i)
+			}
+		}
+
+		fmt.Println("$$$$$$$3")
+		done()
+
+		err := g.Wait()
+		if err != nil {
+			fmt.Println(err.Error())
+		}
 	}
 }
