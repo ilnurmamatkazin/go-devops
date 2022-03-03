@@ -173,3 +173,17 @@ func getTicker(strInterval string) (*time.Ticker, error) {
 
 	return time.NewTicker(time.Duration(interval) * duration), nil
 }
+
+func (ms *MetricSender) fillMetric(metric *models.Metric, metricType, id string, value float64, delta int64) {
+	if metricType == "counter" {
+		metric.Delta = &delta
+	} else {
+		metric.Value = &value
+	}
+
+	metric.ID = id
+	metric.MetricType = metricType
+	metric.Hash = utils.SetEncodeHash(metric.ID, metric.MetricType, ms.cfg.Key, metric.Delta, metric.Value)
+
+	return
+}
