@@ -10,6 +10,8 @@ import (
 	"syscall"
 	"time"
 
+	_ "net/http/pprof"
+
 	"github.com/caarlos0/env/v6"
 	"github.com/ilnurmamatkazin/go-devops/cmd/agent/models"
 	"github.com/ilnurmamatkazin/go-devops/internal/utils"
@@ -30,6 +32,10 @@ type MetricSender struct {
 }
 
 func main() {
+	go http.ListenAndServe(":6060", nil)
+
+	time.Sleep(5 * time.Second)
+
 	var g *errgroup.Group
 
 	metricSender := MetricSender{
