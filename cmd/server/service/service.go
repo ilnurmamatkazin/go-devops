@@ -6,13 +6,13 @@ import (
 )
 
 type Service struct {
-	repository *storage.Storage
-	cfg        *models.Config
+	// repository *storage.Storage
+	// cfg        *models.Config
+	Metric
 }
 
 func NewService(cfg *models.Config, repository *storage.Storage) *Service {
 	return &Service{
-		repository: repository,
-		cfg:        cfg,
+		Metric: NewServiceMetric(cfg, repository),
 	}
 }

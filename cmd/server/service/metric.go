@@ -7,18 +7,31 @@ import (
 	"net/http"
 
 	"github.com/ilnurmamatkazin/go-devops/cmd/server/models"
+	"github.com/ilnurmamatkazin/go-devops/cmd/server/storage"
 	"github.com/ilnurmamatkazin/go-devops/internal/utils"
 )
 
-func (s *Service) SetOldMetric(metric models.Metric) {
+type ServiceMetric struct {
+	repository *storage.Storage
+	cfg        *models.Config
+}
+
+func NewServiceMetric(cfg *models.Config, repository *storage.Storage) *ServiceMetric {
+	return &ServiceMetric{
+		cfg:        cfg,
+		repository: repository,
+	}
+}
+
+func (s *ServiceMetric) SetOldMetric(metric models.Metric) {
 	s.repository.SetOldMetric(metric)
 }
 
-func (s *Service) GetOldMetric(metric *models.Metric) (err error) {
+func (s *ServiceMetric) GetOldMetric(metric *models.Metric) (err error) {
 	return s.repository.ReadMetric(metric)
 }
 
-func (s *Service) SetMetric(metric models.Metric) (err error) {
+func (s *ServiceMetric) SetMetric(metric models.Metric) (err error) {
 	if s.cfg.Key != "" && metric.Hash != nil {
 		hash, err := hex.DecodeString(*metric.Hash)
 		if err != nil {
@@ -43,7 +56,7 @@ func (s *Service) SetMetric(metric models.Metric) (err error) {
 	return
 }
 
-func (s *Service) SetArrayMetrics(metrics []models.Metric) (err error) {
+func (s *ServiceMetric) SetArrayMetrics(metrics []models.Metric) (err error) {
 	for _, metric := range metrics {
 		if err = checkHash(s.cfg.Key, metric); err != nil {
 			return
@@ -53,7 +66,7 @@ func (s *Service) SetArrayMetrics(metrics []models.Metric) (err error) {
 	return s.repository.SetArrayMetrics(metrics)
 }
 
-func (s *Service) GetMetric(metric *models.Metric) (err error) {
+func (s *ServiceMetric) GetMetric(metric *models.Metric) (err error) {
 	if err = s.GetOldMetric(metric); err != nil {
 		return
 	}
@@ -64,7 +77,7 @@ func (s *Service) GetMetric(metric *models.Metric) (err error) {
 	return
 }
 
-func (s *Service) GetInfo() string {
+func (s *ServiceMetric) GetInfo() string {
 	return s.repository.Info()
 }
 

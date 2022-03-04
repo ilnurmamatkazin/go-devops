@@ -47,7 +47,7 @@ func TestService_SetMetric(t *testing.T) {
 
 	cfg := models.Config{Key: "qwerty"}
 	r := storage.NewStorage(&cfg)
-	s := &Service{repository: r, cfg: &cfg}
+	s := *NewService(&cfg, r)
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -108,7 +108,7 @@ func TestService_GetMetric(t *testing.T) {
 
 	cfg := models.Config{Key: "qwerty"}
 	r := storage.NewStorage(&cfg)
-	s := &Service{repository: r, cfg: &cfg}
+	s := *NewService(&cfg, r)
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -125,7 +125,7 @@ func TestService_GetMetric(t *testing.T) {
 				newMetric.Value = &tt.metric.Value
 			}
 
-			s.repository.SetOldMetric(newMetric)
+			// s.repository.SetOldMetric(newMetric)
 			err := s.GetMetric(&newMetric)
 
 			assert.Nil(t, err)

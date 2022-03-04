@@ -1,5 +1,5 @@
 package service
 
-func (s *Service) Ping() (err error) {
+func (s *ServiceMetric) Ping() (err error) {
 	return s.repository.Ping()
 }
