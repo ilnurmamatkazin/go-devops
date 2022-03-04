@@ -8,6 +8,7 @@ import (
 	"github.com/ilnurmamatkazin/go-devops/cmd/agent/models"
 )
 
+// collectMetrics функция, реализующая сбор runtime метрик.
 func (ms *MetricSender) collectMetrics(tickerPoll *time.Ticker, chMetrics chan []models.Metric) (err error) {
 	var (
 		rtm       runtime.MemStats

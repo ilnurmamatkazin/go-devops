@@ -13,6 +13,7 @@ import (
 	"github.com/ilnurmamatkazin/go-devops/cmd/agent/models"
 )
 
+// TestMetricSender_collectMetricsGopsutil функция, тестирующая отправку gopsutil метрик.
 func TestMetricSender_collectMetricsGopsutil(t *testing.T) {
 	type args struct {
 		poll      string

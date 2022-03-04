@@ -10,6 +10,7 @@ import (
 	"github.com/shirou/gopsutil/v3/mem"
 )
 
+// collectMetricsGopsutil функция, реализуящая сбор gopsutil метрик.
 func (ms *MetricSender) collectMetricsGopsutil(tickerPoll *time.Ticker, chMetrics chan []models.Metric) (err error) {
 	var (
 		v              *mem.VirtualMemoryStat

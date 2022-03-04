@@ -1,3 +1,4 @@
+// Сервис сбора системных метрик и отправки их на сервер.
 package main
 
 import (
@@ -19,16 +20,17 @@ import (
 )
 
 const (
-	Address        = "127.0.0.1:8080"
-	PollInterval   = "100s"
-	ReportInterval = "1000s"
-	Key            = ""
+	Address        = "127.0.0.1:8080" // адрес принимающего сервера
+	PollInterval   = "100s"           // период отправки метрик
+	ReportInterval = "1000s"          // период сбора метрик
+	Key            = ""               // ключ для формирования подписи
 )
 
+// MetricSender вспомогательная структура, для проброса вспомогательных структур
 type MetricSender struct {
-	cfg    models.Config
-	client *http.Client
-	ctx    context.Context
+	cfg    models.Config   // поле с конфигурационными данными
+	client *http.Client    // поле с созданным http клиентом, для отправки данных на сервер
+	ctx    context.Context // поле с системны контекстом
 }
 
 func main() {
@@ -118,6 +120,8 @@ func main() {
 
 }
 
+// parseConfig парсит флаги командной строки и получает данные из env переменных.
+// ENV переменные имеют приоритет перед флагами.
 func parseConfig() (cfg models.Config) {
 	address := flag.String("a", Address, "a address")
 	reportInterval := flag.String("r", ReportInterval, "a report_interval")
@@ -138,8 +142,8 @@ func parseConfig() (cfg models.Config) {
 	return
 }
 
+// createClient конструируем HTTP-клиент.
 func createClient() *http.Client {
-	// конструируем HTTP-клиент
 	client := &http.Client{}
 	client.Timeout = time.Second * 2
 
@@ -157,6 +161,7 @@ func createClient() *http.Client {
 	return client
 }
 
+// createMetric внутренняя функция со созданию метрики
 func (ms *MetricSender) createMetric(metricType, id string, value float64, delta int64) (metric models.Metric) {
 	if metricType == "counter" {
 		metric = models.Metric{MetricType: metricType, ID: id, Delta: &delta}
@@ -169,6 +174,7 @@ func (ms *MetricSender) createMetric(metricType, id string, value float64, delta
 	return
 }
 
+// getTicker внутренняя функция по созданию тикера
 func getTicker(strInterval string) (*time.Ticker, error) {
 	interval, duration, err := utils.GetDataForTicker(strInterval)
 	if err != nil {

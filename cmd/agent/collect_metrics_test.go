@@ -12,6 +12,7 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
+// TestMetricSender_collectMetrics функция, тестирующая отправку runtime метрик.
 func TestMetricSender_collectMetrics(t *testing.T) {
 	type args struct {
 		poll      string

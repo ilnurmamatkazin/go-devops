@@ -13,6 +13,7 @@ import (
 	"github.com/ilnurmamatkazin/go-devops/cmd/agent/models"
 )
 
+// sendMetrics функция, реализующая отправку метрик на сервер.
 func (ms *MetricSender) sendMetrics(tickerReport *time.Ticker, chMetrics chan []models.Metric, chMetricsGopsutil chan []models.Metric) (err error) {
 	var (
 		metrics         []models.Metric
@@ -57,6 +58,7 @@ func (ms *MetricSender) sendMetrics(tickerReport *time.Ticker, chMetrics chan []
 	}
 }
 
+// sendRequest функция, реализующая создание запроса для отправки метрик на сервер.
 func (ms MetricSender) sendRequest(data interface{}, layout string) (err error) {
 	ctx, cancel := context.WithTimeout(ms.ctx, 5*time.Second)
 	defer cancel()
