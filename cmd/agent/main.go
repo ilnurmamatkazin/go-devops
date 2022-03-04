@@ -20,8 +20,8 @@ import (
 
 const (
 	Address        = "127.0.0.1:8080"
-	PollInterval   = "2s"
-	ReportInterval = "10s"
+	PollInterval   = "100s"
+	ReportInterval = "1000s"
 	Key            = ""
 )
 
@@ -33,8 +33,6 @@ type MetricSender struct {
 
 func main() {
 	go http.ListenAndServe(":6060", nil)
-
-	time.Sleep(5 * time.Second)
 
 	var g *errgroup.Group
 
@@ -177,5 +175,5 @@ func getTicker(strInterval string) (*time.Ticker, error) {
 		return nil, err
 	}
 
-	return time.NewTicker(time.Duration(interval) * duration), nil
+	return time.NewTicker(time.Duration(interval) * duration / 1000), nil
 }

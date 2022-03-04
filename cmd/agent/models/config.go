@@ -1,5 +1,6 @@
 package models
 
+//
 type Config struct {
 	Address        string `env:"ADDRESS"`
 	ReportInterval string `env:"REPORT_INTERVAL"`
