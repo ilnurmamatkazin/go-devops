@@ -14,6 +14,7 @@ import (
 	"github.com/ilnurmamatkazin/go-devops/internal/utils"
 )
 
+// StorageMetrick структура, описывающая слой взаимодействия с базой данных по работе с метрикой.
 type StorageMetrick struct {
 	isSyncMode bool
 	db         *pg.Repository
@@ -22,6 +23,7 @@ type StorageMetrick struct {
 	sync.RWMutex
 }
 
+// NewStorageMetric конструктор, создающий структуру слоя взаимодействия с базой данных по работе с метрикой.
 func NewStorageMetric(cfg *models.Config, db *pg.Repository) *StorageMetrick {
 	return &StorageMetrick{
 		metrics: make(map[string]models.Metric),
@@ -30,6 +32,7 @@ func NewStorageMetric(cfg *models.Config, db *pg.Repository) *StorageMetrick {
 	}
 }
 
+// ConnectPG внутренняя функция, реализующая загрузку в map ранее сохраненых данных.
 func (s *StorageMetrick) ConnectPG() (err error) {
 	interval, duration, err := utils.GetDataForTicker(s.cfg.StoreInterval)
 	if err != nil {
@@ -66,10 +69,12 @@ func (s *StorageMetrick) ConnectPG() (err error) {
 	return
 }
 
+// Ping функция проверки соединения с базой данных.
 func (s *StorageMetrick) Ping() error {
 	return s.db.Ping()
 }
 
+// ReadMetric функция получения значения метрики.
 func (s *StorageMetrick) ReadMetric(metric *models.Metric) (err error) {
 	s.RLock()
 	m, ok := s.metrics[metric.ID]
@@ -95,6 +100,7 @@ func (s *StorageMetrick) ReadMetric(metric *models.Metric) (err error) {
 	return
 }
 
+// SetOldMetric устаревшия функция сохранения метрики в системе
 func (s *StorageMetrick) SetOldMetric(metric models.Metric) {
 	s.Lock()
 	if s.metrics == nil {
@@ -121,6 +127,7 @@ func (s *StorageMetrick) SetOldMetric(metric models.Metric) {
 	s.Unlock()
 }
 
+// SetMetric функция сохранения метрики в базе данных.
 func (s *StorageMetrick) SetMetric(metric models.Metric) (err error) {
 	s.SetOldMetric(metric)
 
@@ -141,6 +148,7 @@ func (s *StorageMetrick) SetMetric(metric models.Metric) (err error) {
 	return
 }
 
+// Info функция формирования html страницы со списком метрик.
 func (s *StorageMetrick) Info() (html string) {
 	ul := ""
 
@@ -168,6 +176,7 @@ func (s *StorageMetrick) Info() (html string) {
 	return
 }
 
+// SetArrayMetrics функция сохранения списка метрик.
 func (s *StorageMetrick) SetArrayMetrics(metrics []models.Metric) (err error) {
 	if err = s.db.SaveArray(metrics); err != nil {
 		log.Println(err.Error())
@@ -180,6 +189,7 @@ func (s *StorageMetrick) SetArrayMetrics(metrics []models.Metric) (err error) {
 	return
 }
 
+// Save функция сохранения списка метрик из map.
 func (s *StorageMetrick) Save() (err error) {
 	return s.db.Save(&s.RWMutex, s.metrics)
 }

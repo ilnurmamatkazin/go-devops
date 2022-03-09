@@ -16,7 +16,7 @@ func (h *Handler) getOldMetric(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.service.GetOldMetric(&metric); err != nil {
+	if err := h.Service.GetOldMetric(&metric); err != nil {
 		re, ok := err.(*models.RequestError)
 		if ok {
 			http.Error(w, re.Err.Error(), re.StatusCode)

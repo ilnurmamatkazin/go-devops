@@ -74,7 +74,7 @@ func TestHandler_getMetric(t *testing.T) {
 
 			r := chi.NewRouter()
 			r.Route("/", func(r chi.Router) {
-				r.Post("/value/", handler.getMetric)
+				r.Post("/value/", handler.GetMetric)
 			})
 
 			w := httptest.NewRecorder()

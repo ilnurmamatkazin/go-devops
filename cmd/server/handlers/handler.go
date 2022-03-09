@@ -13,13 +13,13 @@ import (
 
 // Handler структура, формирующая слой работы с функциями, принимающими апи запросы.
 type Handler struct {
-	service *service.Service
+	Service *service.Service
 }
 
 // NewHandler конструктор для структуры Handler.
 func NewHandler(service *service.Service) *Handler {
 	return &Handler{
-		service: service,
+		Service: service,
 	}
 }
 
@@ -47,7 +47,7 @@ func (h *Handler) NewRouter() *chi.Mux {
 	r.Route("/", func(r chi.Router) {
 		r.Get("/", h.getInfo)
 		r.Get("/value/{typeMetric}/{nameMetric}", h.getOldMetric)
-		r.With(middleware.AllowContentType("application/json")).Post("/value/", h.getMetric)
+		r.With(middleware.AllowContentType("application/json")).Post("/value/", h.GetMetric)
 		r.With(middleware.AllowContentType("application/json")).Post("/update/", h.parseMetric)
 		r.With(middleware.AllowContentType("application/json")).Post("/updates/", h.parseMetrics)
 	})

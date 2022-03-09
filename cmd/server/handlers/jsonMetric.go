@@ -7,9 +7,9 @@ import (
 	"github.com/ilnurmamatkazin/go-devops/cmd/server/models"
 )
 
-// getMetric функция получения значения метрики по имени и типу метрики.
+// GetMetric функция получения значения метрики по имени и типу метрики.
 // Имя и тип метрики получают из теле http запроса.
-func (h *Handler) getMetric(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) GetMetric(w http.ResponseWriter, r *http.Request) {
 	var (
 		metric models.Metric
 		err    error
@@ -21,7 +21,7 @@ func (h *Handler) getMetric(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err = h.service.GetMetric(&metric); err != nil {
+	if err = h.Service.GetMetric(&metric); err != nil {
 		re, ok := err.(*models.RequestError)
 		if ok {
 			http.Error(w, re.Err.Error(), re.StatusCode)
@@ -49,7 +49,7 @@ func (h *Handler) parseMetric(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err = h.service.SetMetric(metric); err != nil {
+	if err = h.Service.SetMetric(metric); err != nil {
 		sendError(w, err)
 		return
 	}
@@ -72,7 +72,7 @@ func (h *Handler) parseMetrics(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err = h.service.SetArrayMetrics(metrics); err != nil {
+	if err = h.Service.SetArrayMetrics(metrics); err != nil {
 		sendError(w, err)
 		return
 	}

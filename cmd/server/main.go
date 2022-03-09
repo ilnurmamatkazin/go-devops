@@ -1,3 +1,4 @@
+// Сервис сохранения системных метрик в системе.
 package main
 
 import (
@@ -52,6 +53,7 @@ func main() {
 	repository.Metric.Save()
 }
 
+// parseConfig функция получения значений флагов и переменных среды.
 func parseConfig() (cfg models.Config, err error) {
 	if !flag.Parsed() {
 		address := flag.String("a", models.Address, "a address")

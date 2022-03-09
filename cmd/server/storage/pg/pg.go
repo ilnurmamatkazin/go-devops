@@ -12,6 +12,7 @@ import (
 	"github.com/jackc/pgx/v4"
 )
 
+// PgxIface интерфейс, необходим для абстагирования работы с драйвером СУБД.
 type PgxIface interface {
 	Begin(context.Context) (pgx.Tx, error)
 	Exec(context.Context, string, ...interface{}) (pgconn.CommandTag, error)
@@ -21,10 +22,12 @@ type PgxIface interface {
 	Close(context.Context) error
 }
 
+// Repository структура для работы с методами взаимодействия с базой данных.
 type Repository struct {
 	conn PgxIface
 }
 
+// NewRepository конструктор для создания экземпляра структуры Repository.
 func NewRepository(cfg *models.Config) (repository *Repository, err error) {
 	repository = &Repository{}
 
@@ -42,6 +45,7 @@ func NewRepository(cfg *models.Config) (repository *Repository, err error) {
 	return
 }
 
+// Init функция создания таблицы metrics в базе данных, в случае ее отсутсвия.
 func (r *Repository) Init() (err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(models.DatabaseTimeout)*time.Second)
 	defer cancel()
@@ -65,6 +69,7 @@ func (r *Repository) Init() (err error) {
 	return
 }
 
+// Close функция закрития соединения с базой данных.
 func (r *Repository) Close() {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(models.DatabaseTimeout)*time.Second)
 	defer cancel()
@@ -72,6 +77,7 @@ func (r *Repository) Close() {
 	r.conn.Close(ctx)
 }
 
+// Ping функция проверки соединения с базой данных.
 func (r *Repository) Ping() error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(models.DatabaseTimeout)*time.Second)
 	defer cancel()
@@ -84,6 +90,7 @@ func (r *Repository) Ping() error {
 
 }
 
+// Load функция проверки соединения с базой данных.
 func (r *Repository) Load(mutex *sync.RWMutex, metrics map[string]models.Metric) (err error) {
 	var (
 		id, metricType string
@@ -133,6 +140,7 @@ func (r *Repository) Load(mutex *sync.RWMutex, metrics map[string]models.Metric)
 
 }
 
+// Save функция сохранения списка метрик из map в базе данных.
 func (r *Repository) Save(mutex *sync.RWMutex, metrics map[string]models.Metric) (err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(models.DatabaseTimeout)*time.Second)
 	defer cancel()
@@ -153,6 +161,7 @@ func (r *Repository) Save(mutex *sync.RWMutex, metrics map[string]models.Metric)
 
 }
 
+// SaveArray функция сохранения массива метрик в базе данных.
 func (r *Repository) SaveArray(metrics []models.Metric) (err error) {
 	if r.conn == nil {
 		return
@@ -187,6 +196,7 @@ func (r *Repository) SaveArray(metrics []models.Metric) (err error) {
 	return tx.Commit(ctx)
 }
 
+// SaveCurentMetric функция сохранения метрики в базе данных.
 func (r *Repository) SaveCurentMetric(metric models.Metric) (err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(models.DatabaseTimeout)*time.Second)
 	defer cancel()
