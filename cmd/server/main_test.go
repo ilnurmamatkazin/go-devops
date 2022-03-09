@@ -5,6 +5,9 @@ import (
 	"os"
 	"testing"
 
+	"github.com/ilnurmamatkazin/go-devops/cmd/server/models"
+	"github.com/ilnurmamatkazin/go-devops/cmd/server/storage"
+	"github.com/ilnurmamatkazin/go-devops/cmd/server/storage/pg"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -44,4 +47,34 @@ func Test_parseConfig(t *testing.T) {
 			}
 		})
 	}
+}
+
+func Test_main(t *testing.T) {
+	t.Run("main", func(t *testing.T) {
+		cfg := models.Config{
+			Address:       models.Address,
+			Restore:       models.Restore,
+			StoreInterval: models.StoreInterval,
+			StoreFile:     models.StoreFile,
+			Key:           models.Key,
+			Database:      models.Database,
+		}
+
+		db, err := pg.NewRepository(&cfg)
+		defer func() {
+			db.Close()
+		}()
+		assert.NoError(t, err)
+
+		repository := storage.NewStorage(&cfg, db)
+
+		err = repository.Metric.ConnectPG()
+		assert.NoError(t, err)
+
+		// service := service.NewService(&cfg, repository)
+		// hendler := handlers.NewHandler(service)
+		// _ = hendler.NewRouter()
+
+	})
+
 }

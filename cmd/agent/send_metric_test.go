@@ -2,18 +2,18 @@ package main
 
 import (
 	"context"
-	"fmt"
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/ilnurmamatkazin/go-devops/cmd/agent/models"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestMetricSender_sendRequest(t *testing.T) {
-	fmt.Println("^^^^^^^^^^^^^")
 	type args struct {
-		data   interface{}
+		data   string
 		layout string
 	}
 	tests := []struct {
@@ -24,30 +24,25 @@ func TestMetricSender_sendRequest(t *testing.T) {
 		{
 			name: "Ok",
 			args: args{
-				data:   `{"id": Alloc}`,
-				layout: "http://%s/update",
+				data:   `{"id": "Alloc", "type": "gauge", "value": 123.5}`,
+				layout: "/update",
 			},
 			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-
-			// if err := ms.sendRequest(tt.args.data, tt.args.layout); (err != nil) != tt.wantErr {
-			// 	t.Errorf("MetricSender.sendRequest() error = %v, wantErr %v", err, tt.wantErr)
-			// }
-
-			// expected := "dummy data"
-			// Start a local HTTP server
 			server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
-				// Test request parameters
-				// equals(t, req.URL.String(), "/some/path")
-				fmt.Println("@@@@", req.URL.String())
-				// Send response to be tested
-				rw.Write([]byte(`OK`))
-			}))
+				var metric models.Metric
 
-			// Close the server when test finishes
+				assert.Equal(t, req.URL.String(), tt.args.layout)
+
+				err := json.NewDecoder(req.Body).Decode(&metric)
+				assert.NoError(t, err)
+
+				strMetric, _ := json.Marshal(metric)
+				assert.JSONEq(t, string(strMetric), tt.args.data)
+			}))
 			defer server.Close()
 
 			ms := MetricSender{
@@ -56,11 +51,11 @@ func TestMetricSender_sendRequest(t *testing.T) {
 				ctx:    context.Background(),
 			}
 
-			fmt.Println("####", ms)
+			var metric models.Metric
+			_ = json.Unmarshal([]byte(tt.args.data), &metric)
 
-			if err := ms.sendRequest(tt.args.data, tt.args.layout); (err != nil) != tt.wantErr {
-				t.Errorf("MetricSender.sendRequest() error = %v, wantErr %v", err, tt.wantErr)
-			}
+			err := ms.sendRequest(metric, "%s"+tt.args.layout)
+			assert.NoError(t, err)
 		})
 	}
 }

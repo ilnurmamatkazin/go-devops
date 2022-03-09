@@ -12,6 +12,7 @@ import (
 	"github.com/ilnurmamatkazin/go-devops/cmd/server/models"
 	"github.com/ilnurmamatkazin/go-devops/cmd/server/service"
 	"github.com/ilnurmamatkazin/go-devops/cmd/server/storage"
+	"github.com/ilnurmamatkazin/go-devops/cmd/server/storage/pg"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -46,12 +47,19 @@ func TestNewRouter(t *testing.T) {
 		os.Exit(2)
 	}
 
-	repository := storage.NewStorage(&cfg)
-
-	if err := repository.ConnectPG(); err != nil {
+	db, err := pg.NewRepository(&cfg)
+	if err != nil {
 		log.Println("ошибка подключения к бд: ", err.Error())
 	} else {
-		defer repository.Close()
+		defer func() {
+			db.Close()
+		}()
+	}
+	repository := storage.NewStorage(&cfg, db)
+
+	if err = repository.Metric.ConnectPG(); err != nil {
+		log.Println("ошибка загрузки сохраненых данных", err.Error())
+		os.Exit(2)
 	}
 
 	service := service.NewService(&cfg, repository)

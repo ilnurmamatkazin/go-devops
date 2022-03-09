@@ -14,6 +14,7 @@ import (
 	"github.com/ilnurmamatkazin/go-devops/cmd/server/models"
 	"github.com/ilnurmamatkazin/go-devops/cmd/server/service"
 	"github.com/ilnurmamatkazin/go-devops/cmd/server/storage"
+	"github.com/ilnurmamatkazin/go-devops/cmd/server/storage/pg"
 )
 
 func main() {
@@ -26,15 +27,19 @@ func main() {
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
 
-	repository := storage.NewStorage(&cfg)
-
-	if err = repository.ConnectPG(); err != nil {
+	db, err := pg.NewRepository(&cfg)
+	if err != nil {
 		log.Println("ошибка подключения к бд: ", err.Error())
 	} else {
 		defer func() {
-			repository.Save()
-			repository.Close()
+			db.Close()
 		}()
+	}
+	repository := storage.NewStorage(&cfg, db)
+
+	if err = repository.Metric.ConnectPG(); err != nil {
+		log.Println("ошибка загрузки сохраненых данных", err.Error())
+		os.Exit(2)
 	}
 
 	service := service.NewService(&cfg, repository)
@@ -44,6 +49,7 @@ func main() {
 	go http.ListenAndServe(":"+strings.Split(cfg.Address, ":")[1], router)
 
 	<-quit
+	repository.Metric.Save()
 }
 
 func parseConfig() (cfg models.Config, err error) {

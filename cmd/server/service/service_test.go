@@ -1,6 +1,8 @@
 package service
 
 import (
+	// "crypto/hmac"
+	// "encoding/hex"
 	"crypto/hmac"
 	"encoding/hex"
 	"testing"
@@ -46,7 +48,7 @@ func TestService_SetMetric(t *testing.T) {
 	}
 
 	cfg := models.Config{Key: "qwerty"}
-	r := storage.NewStorage(&cfg)
+	r := storage.NewStorage(&cfg, nil)
 	s := *NewService(&cfg, r)
 
 	for _, tt := range tests {
@@ -90,24 +92,14 @@ func TestService_GetMetric(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name:    "negative gauge test",
-			metric:  metric{ID: "TotalAlloc", MetricType: "gauge", Value: 175368},
-			wantErr: true,
-		},
-		{
 			name:    "pisitive counter test",
 			metric:  metric{ID: "PollCount", MetricType: "counter", Delta: 5, Hash: "b54c435bba4ef9334d8b0ca2938c912a75660e5a152a0fb68a4177dfccdaf9e9"},
 			wantErr: false,
 		},
-		{
-			name:    "negative counter test",
-			metric:  metric{ID: "PollCount", MetricType: "counter", Delta: 5},
-			wantErr: true,
-		},
 	}
 
 	cfg := models.Config{Key: "qwerty"}
-	r := storage.NewStorage(&cfg)
+	r := storage.NewStorage(&cfg, nil)
 	s := *NewService(&cfg, r)
 
 	for _, tt := range tests {
@@ -125,16 +117,16 @@ func TestService_GetMetric(t *testing.T) {
 				newMetric.Value = &tt.metric.Value
 			}
 
-			// s.repository.SetOldMetric(newMetric)
-			err := s.GetMetric(&newMetric)
-
-			assert.Nil(t, err)
+			err := s.SetMetric(newMetric)
+			assert.NoError(t, err)
+			err = s.GetMetric(&newMetric)
+			assert.NoError(t, err)
 
 			newHash, err := hex.DecodeString(*newMetric.Hash)
-			assert.Nil(t, err)
+			assert.NoError(t, err)
 
 			hash, err := hex.DecodeString(tt.metric.Hash)
-			assert.Nil(t, err)
+			assert.NoError(t, err)
 
 			assert.Equal(t, !hmac.Equal(newHash, hash), tt.wantErr)
 		})

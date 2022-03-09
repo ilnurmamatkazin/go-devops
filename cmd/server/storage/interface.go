@@ -2,10 +2,15 @@ package storage
 
 import "github.com/ilnurmamatkazin/go-devops/cmd/server/models"
 
+//go:generate mockgen -source=interface.go -destination=mock_service/mock.go
+
 type Metric interface {
-	ReadGauge(name string) (float64, error)
-	SetGauge(metric models.MetricGauge) error
-	ReadCounter(name string) (int, error)
-	SetCounter(metric models.MetricCounter) error
+	SetOldMetric(metric models.Metric)
+	ReadMetric(metric *models.Metric) error
+	SetMetric(metric models.Metric) error
 	Info() string
+	ConnectPG() error
+	Save() error
+	SetArrayMetrics(metric []models.Metric) error
+	Ping() error
 }

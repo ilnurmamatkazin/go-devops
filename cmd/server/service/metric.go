@@ -12,23 +12,23 @@ import (
 )
 
 type ServiceMetric struct {
-	repository *storage.Storage
-	cfg        *models.Config
+	storage *storage.Storage
+	cfg     *models.Config
 }
 
-func NewServiceMetric(cfg *models.Config, repository *storage.Storage) *ServiceMetric {
+func NewServiceMetric(cfg *models.Config, storage *storage.Storage) *ServiceMetric {
 	return &ServiceMetric{
-		cfg:        cfg,
-		repository: repository,
+		cfg:     cfg,
+		storage: storage,
 	}
 }
 
 func (s *ServiceMetric) SetOldMetric(metric models.Metric) {
-	s.repository.SetOldMetric(metric)
+	s.storage.SetOldMetric(metric)
 }
 
 func (s *ServiceMetric) GetOldMetric(metric *models.Metric) (err error) {
-	return s.repository.ReadMetric(metric)
+	return s.storage.ReadMetric(metric)
 }
 
 func (s *ServiceMetric) SetMetric(metric models.Metric) (err error) {
@@ -51,7 +51,7 @@ func (s *ServiceMetric) SetMetric(metric models.Metric) (err error) {
 		}
 	}
 
-	err = s.repository.SetMetric(metric)
+	err = s.storage.SetMetric(metric)
 
 	return
 }
@@ -63,7 +63,7 @@ func (s *ServiceMetric) SetArrayMetrics(metrics []models.Metric) (err error) {
 		}
 	}
 
-	return s.repository.SetArrayMetrics(metrics)
+	return s.storage.SetArrayMetrics(metrics)
 }
 
 func (s *ServiceMetric) GetMetric(metric *models.Metric) (err error) {
@@ -78,7 +78,7 @@ func (s *ServiceMetric) GetMetric(metric *models.Metric) (err error) {
 }
 
 func (s *ServiceMetric) GetInfo() string {
-	return s.repository.Info()
+	return s.storage.Info()
 }
 
 func checkHash(key string, metric models.Metric) (err error) {
