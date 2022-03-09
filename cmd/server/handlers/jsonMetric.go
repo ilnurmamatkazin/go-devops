@@ -7,6 +7,8 @@ import (
 	"github.com/ilnurmamatkazin/go-devops/cmd/server/models"
 )
 
+// getMetric функция получения значения метрики по имени и типу метрики.
+// Имя и тип метрики получают из теле http запроса.
 func (h *Handler) getMetric(w http.ResponseWriter, r *http.Request) {
 	var (
 		metric models.Metric
@@ -33,6 +35,8 @@ func (h *Handler) getMetric(w http.ResponseWriter, r *http.Request) {
 	sendOkJSONData(w, metric)
 }
 
+// parseMetric функция сохранения метрики в системе.
+// Имя, тип и значение метрики получают из теле http запроса.
 func (h *Handler) parseMetric(w http.ResponseWriter, r *http.Request) {
 	var (
 		metric models.Metric
@@ -53,6 +57,8 @@ func (h *Handler) parseMetric(w http.ResponseWriter, r *http.Request) {
 	sendOkJSONData(w, metric)
 }
 
+// parseMetrics функция группового сохранения метрик в системе.
+// Массив метрик получают из теле http запроса.
 func (h *Handler) parseMetrics(w http.ResponseWriter, r *http.Request) {
 	var (
 		metrics []models.Metric
@@ -76,6 +82,7 @@ func (h *Handler) parseMetrics(w http.ResponseWriter, r *http.Request) {
 	sendOkJSONData(w, status)
 }
 
+// sendOkJSONData вспомогательная функция, формирующая ответ 200.
 func sendOkJSONData(w http.ResponseWriter, object interface{}) {
 	w.WriteHeader(http.StatusOK)
 
@@ -85,6 +92,7 @@ func sendOkJSONData(w http.ResponseWriter, object interface{}) {
 	}
 }
 
+// sendError вспомогательная функция, формирующая ответы с ошибками.
 func sendError(w http.ResponseWriter, err error) {
 	re, ok := err.(*models.RequestError)
 	if ok {

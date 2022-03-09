@@ -88,7 +88,7 @@ func (ms MetricSender) sendRequest(data interface{}, layout string) (err error) 
 		log.Println(ok)
 	} else {
 		// печатаем код ответа
-		fmt.Println("Статус-код ", response.Status)
+		// fmt.Println("Статус-код ", response.Status)
 		defer response.Body.Close()
 	}
 

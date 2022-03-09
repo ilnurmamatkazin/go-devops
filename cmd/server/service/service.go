@@ -6,8 +6,6 @@ import (
 )
 
 type Service struct {
-	// repository *storage.Storage
-	// cfg        *models.Config
 	Metric
 }
 

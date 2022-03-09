@@ -11,16 +11,19 @@ import (
 	"github.com/ilnurmamatkazin/go-devops/cmd/server/service"
 )
 
+// Handler структура, формирующая слой работы с функциями, принимающими апи запросы.
 type Handler struct {
 	service *service.Service
 }
 
+// NewHandler конструктор для структуры Handler.
 func NewHandler(service *service.Service) *Handler {
 	return &Handler{
 		service: service,
 	}
 }
 
+// NewRouter функция, которая создает роутер для приема апи запросов.
 func (h *Handler) NewRouter() *chi.Mux {
 	// определяем роутер chi
 	r := chi.NewRouter()
@@ -63,16 +66,19 @@ func (h *Handler) NewRouter() *chi.Mux {
 
 }
 
+// gzipWriter структура для работы с запросами использующих сжатие.
 type gzipWriter struct {
 	http.ResponseWriter
 	Writer io.Writer
 }
 
+// Write функция отправки сжатого контента.
 func (w gzipWriter) Write(b []byte) (int, error) {
 	// w.Writer будет отвечать за gzip-сжатие, поэтому пишем в него
 	return w.Writer.Write(b)
 }
 
+// middlewareGzip миделваер, обрабатывающий запросы с жатым контентом.
 func middlewareGzip(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// проверяем, что клиент поддерживает gzip-сжатие

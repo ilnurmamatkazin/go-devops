@@ -1,8 +1,6 @@
 package service
 
 import (
-	// "crypto/hmac"
-	// "encoding/hex"
 	"crypto/hmac"
 	"encoding/hex"
 	"testing"

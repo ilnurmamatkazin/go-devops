@@ -7,6 +7,7 @@ import (
 	"github.com/ilnurmamatkazin/go-devops/cmd/server/models"
 )
 
+// getOldMetric устаревшая функция получения значения метрики по ее имени и типу.
 func (h *Handler) getOldMetric(w http.ResponseWriter, r *http.Request) {
 	metric := getMetricFromRequest(r)
 

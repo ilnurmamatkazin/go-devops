@@ -9,6 +9,8 @@ import (
 	"github.com/ilnurmamatkazin/go-devops/cmd/server/models"
 )
 
+// parseOldMetric устаревшая функция сохранения метрики в системе.
+// Значение, имя и тип метрики берется из строки http запроса.
 func (h *Handler) parseOldMetric(w http.ResponseWriter, r *http.Request) {
 	metric := getMetricFromRequest(r)
 
@@ -29,6 +31,7 @@ func (h *Handler) parseOldMetric(w http.ResponseWriter, r *http.Request) {
 
 }
 
+// setMetricValue вспомогательная функция, проверяющая соответсвие значению метрики ее типу.
 func setMetricValue(metric *models.Metric, value string) (err error) {
 	switch metric.MetricType {
 	case "counter":

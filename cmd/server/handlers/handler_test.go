@@ -45,21 +45,6 @@ func TestNewRouter(t *testing.T) {
 		os.Exit(2)
 	}
 
-	// db, err := pg.NewRepository(&cfg)
-	// if err != nil {
-	// 	log.Println("ошибка подключения к бд: ", err.Error())
-	// } else {
-	// 	defer func() {
-	// 		db.Close()
-	// 	}()
-	// }
-	// repository := storage.NewStorage(&cfg, db)
-
-	// if err = repository.Metric.ConnectPG(); err != nil {
-	// 	log.Println("ошибка загрузки сохраненых данных", err.Error())
-	// 	os.Exit(2)
-	// }
-
 	service := service.NewService(&cfg, nil)
 	hendler := NewHandler(service)
 	router := hendler.NewRouter()
