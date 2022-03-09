@@ -8,11 +8,21 @@ import (
 	"time"
 
 	"github.com/ilnurmamatkazin/go-devops/cmd/server/models"
+	"github.com/jackc/pgconn"
 	"github.com/jackc/pgx/v4"
 )
 
+type PgxIface interface {
+	Begin(context.Context) (pgx.Tx, error)
+	Exec(context.Context, string, ...interface{}) (pgconn.CommandTag, error)
+	Query(context.Context, string, ...interface{}) (pgx.Rows, error)
+	Ping(context.Context) error
+	Prepare(context.Context, string, string) (*pgconn.StatementDescription, error)
+	Close(context.Context) error
+}
+
 type Repository struct {
-	conn *pgx.Conn
+	conn PgxIface
 }
 
 func NewRepository(cfg *models.Config) (repository *Repository, err error) {
@@ -127,15 +137,7 @@ func (r *Repository) Save(mutex *sync.RWMutex, metrics map[string]models.Metric)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(models.DatabaseTimeout)*time.Second)
 	defer cancel()
 
-	query := `
-	INSERT INTO public.metrics (id, type, delta, value, hash)
-	VALUES ($1, $2, $3, $4, $5)
-	ON CONFLICT (id)
-	DO UPDATE SET
-	delta=$3,
-	value=$4,
-	hash=$5
-	`
+	query := `INSERT INTO public.metrics (id, type, delta, value, hash) VALUES ($1, $2, $3, $4, $5) ON CONFLICT (id) DO UPDATE SET delta=$3, value=$4, hash=$5`
 
 	mutex.Lock()
 	for key, value := range metrics {
