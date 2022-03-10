@@ -37,7 +37,7 @@ func (h *Handler) GetMetric(w http.ResponseWriter, r *http.Request) {
 
 // parseMetric функция сохранения метрики в системе.
 // Имя, тип и значение метрики получают из теле http запроса.
-func (h *Handler) parseMetric(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) ParseMetric(w http.ResponseWriter, r *http.Request) {
 	var (
 		metric models.Metric
 		err    error
@@ -59,7 +59,7 @@ func (h *Handler) parseMetric(w http.ResponseWriter, r *http.Request) {
 
 // parseMetrics функция группового сохранения метрик в системе.
 // Массив метрик получают из теле http запроса.
-func (h *Handler) parseMetrics(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) ParseMetrics(w http.ResponseWriter, r *http.Request) {
 	var (
 		metrics []models.Metric
 		err     error

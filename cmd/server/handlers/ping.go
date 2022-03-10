@@ -3,7 +3,7 @@ package handlers
 import "net/http"
 
 // ping функция пингующая соединение с базой данных.
-func (h *Handler) ping(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) Ping(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	if err := h.Service.Ping(); err != nil {

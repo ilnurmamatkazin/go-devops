@@ -11,7 +11,7 @@ import (
 
 // parseOldMetric устаревшая функция сохранения метрики в системе.
 // Значение, имя и тип метрики берется из строки http запроса.
-func (h *Handler) parseOldMetric(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) ParseOldMetric(w http.ResponseWriter, r *http.Request) {
 	metric := getMetricFromRequest(r)
 
 	if checkMetricType(metric.MetricType) {

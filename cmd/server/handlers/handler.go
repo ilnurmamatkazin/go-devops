@@ -36,20 +36,20 @@ func (h *Handler) NewRouter() *chi.Mux {
 	r.Use(middlewareGzip)
 
 	r.Route("/update", func(r chi.Router) {
-		r.Post("/{typeMetric}/{nameMetric}/{valueMetric}", h.parseOldMetric)
-		r.With(middleware.AllowContentType("application/json")).Post("/", h.parseMetric)
+		r.Post("/{typeMetric}/{nameMetric}/{valueMetric}", h.ParseOldMetric)
+		r.With(middleware.AllowContentType("application/json")).Post("/", h.ParseMetric)
 	})
 
 	r.Route("/ping", func(r chi.Router) {
-		r.With(middleware.AllowContentType("application/json")).Get("/", h.ping)
+		r.With(middleware.AllowContentType("application/json")).Get("/", h.Ping)
 	})
 
 	r.Route("/", func(r chi.Router) {
-		r.Get("/", h.getInfo)
-		r.Get("/value/{typeMetric}/{nameMetric}", h.getOldMetric)
+		r.Get("/", h.GetInfo)
+		r.Get("/value/{typeMetric}/{nameMetric}", h.GetOldMetric)
 		r.With(middleware.AllowContentType("application/json")).Post("/value/", h.GetMetric)
-		r.With(middleware.AllowContentType("application/json")).Post("/update/", h.parseMetric)
-		r.With(middleware.AllowContentType("application/json")).Post("/updates/", h.parseMetrics)
+		r.With(middleware.AllowContentType("application/json")).Post("/update/", h.ParseMetric)
+		r.With(middleware.AllowContentType("application/json")).Post("/updates/", h.ParseMetrics)
 	})
 
 	r.NotFound(func(w http.ResponseWriter, r *http.Request) {

@@ -8,7 +8,7 @@ import (
 )
 
 // getOldMetric устаревшая функция получения значения метрики по ее имени и типу.
-func (h *Handler) getOldMetric(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) GetOldMetric(w http.ResponseWriter, r *http.Request) {
 	metric := getMetricFromRequest(r)
 
 	if checkMetricType(metric.MetricType) {
