@@ -24,7 +24,7 @@ type PgxIface interface {
 
 // Repository структура для работы с методами взаимодействия с базой данных.
 type Repository struct {
-	conn PgxIface
+	Conn PgxIface
 }
 
 // NewRepository конструктор для создания экземпляра структуры Repository.
@@ -34,7 +34,7 @@ func NewRepository(cfg *models.Config) (repository *Repository, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(models.DatabaseTimeout)*time.Second)
 	defer cancel()
 
-	if repository.conn, err = pgx.Connect(ctx, cfg.Database); err != nil {
+	if repository.Conn, err = pgx.Connect(ctx, cfg.Database); err != nil {
 		return
 	}
 
@@ -62,7 +62,7 @@ func (r *Repository) Init() (err error) {
 	)
 	`
 
-	if _, err = r.conn.Exec(ctx, query); err != nil {
+	if _, err = r.Conn.Exec(ctx, query); err != nil {
 		return
 	}
 
@@ -74,7 +74,7 @@ func (r *Repository) Close() {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(models.DatabaseTimeout)*time.Second)
 	defer cancel()
 
-	r.conn.Close(ctx)
+	r.Conn.Close(ctx)
 }
 
 // Ping функция проверки соединения с базой данных.
@@ -82,8 +82,8 @@ func (r *Repository) Ping() error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(models.DatabaseTimeout)*time.Second)
 	defer cancel()
 
-	if r.conn != nil {
-		return r.conn.Ping(ctx)
+	if r.Conn != nil {
+		return r.Conn.Ping(ctx)
 	} else {
 		return errors.New("соединение с бд отсутствует")
 	}
@@ -103,7 +103,7 @@ func (r *Repository) Load(mutex *sync.RWMutex, metrics map[string]models.Metric)
 
 	query := "select id, type, delta, value, hash from public.metrics"
 
-	rows, err := r.conn.Query(ctx, query)
+	rows, err := r.Conn.Query(ctx, query)
 	if err != nil {
 		return
 	}
@@ -149,7 +149,7 @@ func (r *Repository) Save(mutex *sync.RWMutex, metrics map[string]models.Metric)
 
 	mutex.Lock()
 	for key, value := range metrics {
-		if _, err = r.conn.Exec(ctx, query, key, value.MetricType, value.Delta, value.Value, value.Hash); err != nil {
+		if _, err = r.Conn.Exec(ctx, query, key, value.MetricType, value.Delta, value.Value, value.Hash); err != nil {
 			return
 		}
 	}
@@ -163,7 +163,7 @@ func (r *Repository) Save(mutex *sync.RWMutex, metrics map[string]models.Metric)
 
 // SaveArray функция сохранения массива метрик в базе данных.
 func (r *Repository) SaveArray(metrics []models.Metric) (err error) {
-	if r.conn == nil {
+	if r.Conn == nil {
 		return
 	}
 
@@ -180,7 +180,7 @@ func (r *Repository) SaveArray(metrics []models.Metric) (err error) {
 	hash=$5
 	`
 
-	tx, err := r.conn.Begin(ctx)
+	tx, err := r.Conn.Begin(ctx)
 	if err != nil {
 		return
 	}
@@ -188,7 +188,7 @@ func (r *Repository) SaveArray(metrics []models.Metric) (err error) {
 	defer tx.Rollback(ctx)
 
 	for _, metric := range metrics {
-		if _, err = r.conn.Exec(ctx, query, metric.ID, metric.MetricType, metric.Delta, metric.Value, metric.Hash); err != nil {
+		if _, err = r.Conn.Exec(ctx, query, metric.ID, metric.MetricType, metric.Delta, metric.Value, metric.Hash); err != nil {
 			return
 		}
 	}
@@ -211,7 +211,7 @@ func (r *Repository) SaveCurentMetric(metric models.Metric) (err error) {
 	hash=$5
 	`
 
-	if _, err = r.conn.Exec(ctx, query, metric.ID, metric.MetricType, metric.Delta, metric.Value, metric.Hash); err != nil {
+	if _, err = r.Conn.Exec(ctx, query, metric.ID, metric.MetricType, metric.Delta, metric.Value, metric.Hash); err != nil {
 		return
 	}
 

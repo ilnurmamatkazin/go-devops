@@ -31,11 +31,13 @@ func main() {
 	db, err := pg.NewRepository(&cfg)
 	if err != nil {
 		log.Println("ошибка подключения к бд: ", err.Error())
+		db.Conn = nil
 	} else {
 		defer func() {
 			db.Close()
 		}()
 	}
+
 	repository := storage.NewStorage(&cfg, db)
 
 	if err = repository.Metric.ConnectPG(); err != nil {
@@ -50,7 +52,11 @@ func main() {
 	go http.ListenAndServe(":"+strings.Split(cfg.Address, ":")[1], router)
 
 	<-quit
-	repository.Metric.Save()
+
+	if db.Conn != nil {
+		repository.Metric.Save()
+	}
+
 }
 
 // parseConfig функция получения значений флагов и переменных среды.

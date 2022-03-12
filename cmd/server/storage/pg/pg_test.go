@@ -59,7 +59,7 @@ func TestRepository_Init(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			r := &Repository{
-				conn: tt.fields.conn,
+				Conn: tt.fields.conn,
 			}
 
 			err := r.Init()
@@ -76,7 +76,7 @@ func TestRepository_Load(t *testing.T) {
 	}
 	defer mock.Close(context.Background())
 
-	r := Repository{conn: mock}
+	r := Repository{Conn: mock}
 
 	type args struct {
 		mutex   *sync.RWMutex
@@ -134,7 +134,7 @@ func TestRepository_Save(t *testing.T) {
 	}
 	defer mock.Close(context.Background())
 
-	r := Repository{conn: mock}
+	r := Repository{Conn: mock}
 
 	type args struct {
 		mutex   *sync.RWMutex

@@ -40,7 +40,10 @@ func (s *StorageMetrick) ConnectPG() (err error) {
 		return
 	}
 
-	if s.cfg.Restore {
+	fmt.Println("####", s.cfg.Restore, s.db.Conn)
+	fmt.Println("####2", s.cfg.Restore, s.db.Conn != nil)
+
+	if s.cfg.Restore && s.db.Conn != nil {
 		if err = s.db.Load(&s.RWMutex, s.metrics); err != nil {
 			log.Println(err.Error())
 			return
@@ -56,10 +59,12 @@ func (s *StorageMetrick) ConnectPG() (err error) {
 
 			for {
 				<-ticker.C
-
-				if err = s.db.Save(&s.RWMutex, s.metrics); err != nil {
-					log.Println(err.Error())
+				if s.db.Conn != nil {
+					if err = s.db.Save(&s.RWMutex, s.metrics); err != nil {
+						log.Println(err.Error())
+					}
 				}
+
 			}
 
 		}(s, interval, duration)
