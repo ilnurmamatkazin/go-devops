@@ -104,21 +104,20 @@ func BenchmarkSendMetrics(b *testing.B) {
 			return err
 		})
 
-		select {
-		case <-ctxGroup.Done():
-			tickerPoll.Stop()
-			tickerReport.Stop()
+		<-ctxGroup.Done()
 
-			for i := range chMetrics {
-				log.Println(i)
-				close(chMetrics)
-			}
+		tickerPoll.Stop()
+		tickerReport.Stop()
 
-			for i := range chMetricsGU {
-				log.Println(i)
-				close(chMetricsGU)
+		for i := range chMetrics {
+			log.Println(i)
+			close(chMetrics)
+		}
 
-			}
+		for i := range chMetricsGU {
+			log.Println(i)
+			close(chMetricsGU)
+
 		}
 
 		done()
