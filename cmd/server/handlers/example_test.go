@@ -9,6 +9,12 @@ import (
 	"github.com/ilnurmamatkazin/go-devops/cmd/server/models"
 )
 
+var (
+	w http.ResponseWriter
+	r *http.Request
+	h *Handler
+)
+
 func ExampleHandler_GetMetric() {
 	var metric models.Metric
 
@@ -23,7 +29,7 @@ func ExampleHandler_GetMetric() {
 	}
 
 	// Получаем значение метрики
-	err = h.service.GetMetric(&metric)
+	err = h.Service.GetMetric(&metric)
 	if err != nil {
 		// Обрабатываем ошибку
 	}
