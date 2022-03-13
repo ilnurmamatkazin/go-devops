@@ -14,7 +14,7 @@ import (
 )
 
 // sendMetrics функция, реализующая отправку метрик на сервер.
-func (ms *MetricSender) sendMetrics(tickerReport *time.Ticker, chMetrics chan []models.Metric, chMetricsGopsutil chan []models.Metric) (err error) {
+func (ms *MetricSender) sendMetrics(ctx context.Context, tickerReport *time.Ticker, chMetrics chan []models.Metric, chMetricsGopsutil chan []models.Metric) (err error) {
 	var (
 		metrics         []models.Metric
 		metricsGopsutil []models.Metric
@@ -22,33 +22,33 @@ func (ms *MetricSender) sendMetrics(tickerReport *time.Ticker, chMetrics chan []
 
 	for {
 		select {
-		case <-ms.ctx.Done():
-			return ms.ctx.Err()
+		case <-ctx.Done():
+			return ctx.Err()
 
 		case metrics = <-chMetrics:
 		case metricsGopsutil = <-chMetricsGopsutil:
 
 		case <-tickerReport.C:
 			for _, metric := range metrics {
-				if err = ms.sendRequest(metric, "http://%s/update"); err != nil {
+				if err = ms.sendRequest(ctx, metric, "http://%s/update"); err != nil {
 					return
 				}
 			}
 
 			for _, metric := range metricsGopsutil {
-				if err = ms.sendRequest(metric, "http://%s/update"); err != nil {
+				if err = ms.sendRequest(ctx, metric, "http://%s/update"); err != nil {
 					return
 				}
 			}
 
 			if len(metrics) > 0 {
-				if err = ms.sendRequest(metrics, "http://%s/updates/"); err != nil {
+				if err = ms.sendRequest(ctx, metrics, "http://%s/updates/"); err != nil {
 					return
 				}
 			}
 
 			if len(metricsGopsutil) > 0 {
-				if err = ms.sendRequest(metricsGopsutil, "http://%s/updates/"); err != nil {
+				if err = ms.sendRequest(ctx, metricsGopsutil, "http://%s/updates/"); err != nil {
 					return
 				}
 			}
@@ -59,8 +59,8 @@ func (ms *MetricSender) sendMetrics(tickerReport *time.Ticker, chMetrics chan []
 }
 
 // sendRequest функция, реализующая создание запроса для отправки метрик на сервер.
-func (ms MetricSender) sendRequest(data interface{}, layout string) (err error) {
-	ctx, cancel := context.WithTimeout(ms.ctx, 5*time.Second)
+func (ms MetricSender) sendRequest(ctx context.Context, data interface{}, layout string) (err error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
 	endpoint := fmt.Sprintf(layout, ms.cfg.Address)

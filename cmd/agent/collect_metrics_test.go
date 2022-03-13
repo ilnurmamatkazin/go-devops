@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"log"
 	"net/http"
 	"strings"
 	"testing"
@@ -44,27 +45,30 @@ func TestMetricSender_collectMetrics(t *testing.T) {
 	ms := &MetricSender{
 		cfg:    models.Config{},
 		client: &http.Client{},
-		ctx:    context.Background(),
+		// ctx:    context.Background(),
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			var g *errgroup.Group
+			var (
+				g        *errgroup.Group
+				ctxGroup context.Context
+			)
 
 			tickerPoll, _ := getTicker(tt.args.poll)
 
 			ctx, done := context.WithTimeout(context.Background(), time.Duration(10)*time.Second)
 			// ctx, done := context.WithCancel(context.Background())
-			g, ms.ctx = errgroup.WithContext(ctx)
+			g, ctxGroup = errgroup.WithContext(ctx)
 
 			g.Go(func() error {
-				err := ms.collectMetrics(tickerPoll, tt.args.chMetrics)
+				err := ms.collectMetrics(ctxGroup, tickerPoll, tt.args.chMetrics)
 
 				return err
 			})
 
 			select {
-			case <-ms.ctx.Done():
+			case <-ctxGroup.Done():
 				tickerPoll.Stop()
 
 			case metrics := <-tt.args.chMetrics:
@@ -80,5 +84,46 @@ func TestMetricSender_collectMetrics(t *testing.T) {
 				assert.Equal(t, err.Error(), "context canceled")
 			}
 		})
+	}
+}
+
+func BenchmarkCollectMetrics(b *testing.B) {
+	ms := &MetricSender{
+		cfg:    models.Config{},
+		client: &http.Client{},
+		// ctx:    context.Background(),
+	}
+
+	tickerPoll := time.NewTicker(time.Duration(2) * time.Second)
+	chMetrics := make(chan []models.Metric)
+
+	for i := 0; i < b.N; i++ {
+		var (
+			g        *errgroup.Group
+			ctxGroup context.Context
+		)
+
+		ctx, done := context.WithTimeout(context.Background(), time.Duration(10)*time.Second)
+		g, ctxGroup = errgroup.WithContext(ctx)
+
+		g.Go(func() error {
+			err := ms.collectMetrics(ctxGroup, tickerPoll, chMetrics)
+			log.Println(err.Error())
+			return err
+		})
+
+		select {
+		case <-ctxGroup.Done():
+			tickerPoll.Stop()
+
+		case <-chMetrics:
+		}
+
+		done()
+
+		err := g.Wait()
+		if err != nil {
+			log.Println(err.Error())
+		}
 	}
 }

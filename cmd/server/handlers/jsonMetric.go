@@ -35,7 +35,7 @@ func (h *Handler) GetMetric(w http.ResponseWriter, r *http.Request) {
 	sendOkJSONData(w, metric)
 }
 
-// parseMetric функция сохранения метрики в системе.
+// ParseMetric функция сохранения метрики в системе.
 // Имя, тип и значение метрики получают из теле http запроса.
 func (h *Handler) ParseMetric(w http.ResponseWriter, r *http.Request) {
 	var (
@@ -57,7 +57,7 @@ func (h *Handler) ParseMetric(w http.ResponseWriter, r *http.Request) {
 	sendOkJSONData(w, metric)
 }
 
-// parseMetrics функция группового сохранения метрик в системе.
+// ParseMetrics функция группового сохранения метрик в системе.
 // Массив метрик получают из теле http запроса.
 func (h *Handler) ParseMetrics(w http.ResponseWriter, r *http.Request) {
 	var (

@@ -40,9 +40,6 @@ func (s *StorageMetrick) ConnectPG() (err error) {
 		return
 	}
 
-	fmt.Println("####", s.cfg.Restore, s.db.Conn)
-	fmt.Println("####2", s.cfg.Restore, s.db.Conn != nil)
-
 	if s.cfg.Restore && s.db.Conn != nil {
 		if err = s.db.Load(&s.RWMutex, s.metrics); err != nil {
 			log.Println(err.Error())
@@ -52,24 +49,26 @@ func (s *StorageMetrick) ConnectPG() (err error) {
 
 	if interval == 0 {
 		s.isSyncMode = true
-	} else {
-		go func(s *StorageMetrick, i int, d time.Duration) {
-			var err error
-			ticker := time.NewTicker(time.Duration(i) * d)
-
-			for {
-				<-ticker.C
-				if s.db.Conn != nil {
-					if err = s.db.Save(&s.RWMutex, s.metrics); err != nil {
-						log.Println(err.Error())
-					}
-				}
-
-			}
-
-		}(s, interval, duration)
+		return
 
 	}
+
+	go func(s *StorageMetrick, i int, d time.Duration) {
+		var err error
+		ticker := time.NewTicker(time.Duration(i) * d)
+
+		for {
+			<-ticker.C
+
+			if s.db.Conn != nil {
+				if err = s.db.Save(&s.RWMutex, s.metrics); err != nil {
+					log.Println(err.Error())
+				}
+			}
+
+		}
+
+	}(s, interval, duration)
 
 	return
 }

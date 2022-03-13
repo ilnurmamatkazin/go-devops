@@ -19,6 +19,8 @@ func GetDataForTicker(value string) (interval int, duration time.Duration, err e
 	}
 
 	switch strDuration {
+	case "n":
+		duration = time.Nanosecond
 	case "s":
 		duration = time.Second
 	case "m":

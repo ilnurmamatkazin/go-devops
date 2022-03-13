@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"math/rand"
 	"runtime"
 	"time"
@@ -9,7 +10,7 @@ import (
 )
 
 // collectMetrics функция, реализующая сбор runtime метрик.
-func (ms *MetricSender) collectMetrics(tickerPoll *time.Ticker, chMetrics chan []models.Metric) (err error) {
+func (ms *MetricSender) collectMetrics(ctx context.Context, tickerPoll *time.Ticker, chMetrics chan []models.Metric) (err error) {
 	var (
 		rtm       runtime.MemStats
 		pollCount int64
@@ -17,8 +18,8 @@ func (ms *MetricSender) collectMetrics(tickerPoll *time.Ticker, chMetrics chan [
 
 	for {
 		select {
-		case <-ms.ctx.Done():
-			return ms.ctx.Err()
+		case <-ctx.Done():
+			return ctx.Err()
 
 		case <-tickerPoll.C:
 			runtime.ReadMemStats(&rtm)

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log"
 	"time"
 
@@ -11,7 +12,7 @@ import (
 )
 
 // collectMetricsGopsutil функция, реализуящая сбор gopsutil метрик.
-func (ms *MetricSender) collectMetricsGopsutil(tickerPoll *time.Ticker, chMetrics chan []models.Metric) (err error) {
+func (ms *MetricSender) collectMetricsGopsutil(ctx context.Context, tickerPoll *time.Ticker, chMetrics chan []models.Metric) (err error) {
 	var (
 		v              *mem.VirtualMemoryStat
 		percentage     []float64
@@ -20,8 +21,8 @@ func (ms *MetricSender) collectMetricsGopsutil(tickerPoll *time.Ticker, chMetric
 
 	for {
 		select {
-		case <-ms.ctx.Done():
-			return ms.ctx.Err()
+		case <-ctx.Done():
+			return ctx.Err()
 
 		case <-tickerPoll.C:
 			metrics := make([]models.Metric, 0, 3)

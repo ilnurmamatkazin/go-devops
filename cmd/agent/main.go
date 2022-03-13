@@ -20,24 +20,28 @@ import (
 )
 
 const (
-	Address        = "127.0.0.1:8080" // адрес принимающего сервера
-	PollInterval   = "100s"           // период отправки метрик
-	ReportInterval = "1000s"          // период сбора метрик
-	Key            = ""               // ключ для формирования подписи
+	Address = "127.0.0.1:8080" // адрес принимающего сервера
+	// PollInterval   = "20000000n"      // период сбора  метрик
+	// ReportInterval = "100000000n"     // период отправки метрик
+	PollInterval   = "2s"  // период сбора  метрик
+	ReportInterval = "10s" // период отправки метрик
+	Key            = ""    // ключ для формирования подписи
 )
 
 // MetricSender вспомогательная структура, для проброса вспомогательных структур
 type MetricSender struct {
-	cfg    models.Config   // поле с конфигурационными данными
-	client *http.Client    // поле с созданным http клиентом, для отправки данных на сервер
-	ctx    context.Context // поле с системны контекстом
+	cfg    models.Config // поле с конфигурационными данными
+	client *http.Client  // поле с созданным http клиентом, для отправки данных на сервер
+	// ctx    context.Context // поле с системны контекстом
 }
 
 func main() {
 	go http.ListenAndServe(":6060", nil)
 
-	var g *errgroup.Group
-
+	var (
+		g        *errgroup.Group
+		ctxGroup context.Context
+	)
 	metricSender := MetricSender{
 		cfg:    parseConfig(),
 		client: createClient(),
@@ -47,7 +51,7 @@ func main() {
 	chMetricsGopsutil := make(chan []models.Metric)
 
 	ctx, done := context.WithCancel(context.Background())
-	g, metricSender.ctx = errgroup.WithContext(ctx)
+	g, ctxGroup = errgroup.WithContext(ctx)
 
 	tickerPoll, err := getTicker(metricSender.cfg.PollInterval)
 	if err != nil {
@@ -75,7 +79,7 @@ func main() {
 			for i := range chMetricsGopsutil {
 				log.Println(i)
 			}
-		case <-metricSender.ctx.Done():
+		case <-ctxGroup.Done():
 			tickerPoll.Stop()
 			tickerReport.Stop()
 
@@ -87,28 +91,28 @@ func main() {
 				log.Println(i)
 			}
 
-			return metricSender.ctx.Err()
+			return ctxGroup.Err()
 		}
 
 		return nil
 	})
 
 	g.Go(func() error {
-		err := metricSender.collectMetrics(tickerPoll, chMetrics)
+		err := metricSender.collectMetrics(ctxGroup, tickerPoll, chMetrics)
 		close(chMetrics)
 
 		return err
 	})
 
 	g.Go(func() error {
-		err := metricSender.collectMetricsGopsutil(tickerPoll, chMetricsGopsutil)
+		err := metricSender.collectMetricsGopsutil(ctxGroup, tickerPoll, chMetricsGopsutil)
 		close(chMetricsGopsutil)
 
 		return err
 	})
 
 	g.Go(func() error {
-		err := metricSender.sendMetrics(tickerReport, chMetrics, chMetricsGopsutil)
+		err := metricSender.sendMetrics(ctxGroup, tickerReport, chMetrics, chMetricsGopsutil)
 
 		return err
 	})
@@ -181,5 +185,5 @@ func getTicker(strInterval string) (*time.Ticker, error) {
 		return nil, err
 	}
 
-	return time.NewTicker(time.Duration(interval) * duration / 1000), nil
+	return time.NewTicker(time.Duration(interval) * duration), nil
 }

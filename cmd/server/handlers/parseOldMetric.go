@@ -9,7 +9,7 @@ import (
 	"github.com/ilnurmamatkazin/go-devops/cmd/server/models"
 )
 
-// parseOldMetric устаревшая функция сохранения метрики в системе.
+// ParseOldMetric устаревшая функция сохранения метрики в системе.
 // Значение, имя и тип метрики берется из строки http запроса.
 func (h *Handler) ParseOldMetric(w http.ResponseWriter, r *http.Request) {
 	metric := getMetricFromRequest(r)
