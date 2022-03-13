@@ -113,7 +113,8 @@ func ExampleHandler_GetOldMetric() {
 	// Проверяем тип данных
 	check := checkMetricType(metric.MetricType)
 	if !check {
-		// Обрабатываем ошибку
+		// Формируем ошибку и выходим из функции
+		return
 	}
 
 	// Получаем данные из системы
@@ -158,7 +159,8 @@ func ExampleHandler_ParseOldMetric() {
 	// Проверяем тип данных
 	check := checkMetricType(metric.MetricType)
 	if !check {
-		// Обрабатываем ошибку
+		// Формируем ошибку и выходим из функции
+		return
 	}
 
 	// Получаем значение метрики
