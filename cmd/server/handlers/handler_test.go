@@ -11,7 +11,6 @@ import (
 	"github.com/caarlos0/env/v6"
 	"github.com/ilnurmamatkazin/go-devops/cmd/server/models"
 	"github.com/ilnurmamatkazin/go-devops/cmd/server/service"
-	"github.com/ilnurmamatkazin/go-devops/cmd/server/storage"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -46,15 +45,7 @@ func TestNewRouter(t *testing.T) {
 		os.Exit(2)
 	}
 
-	repository := storage.NewStorage(&cfg)
-
-	if err := repository.ConnectPG(); err != nil {
-		log.Println("ошибка подключения к бд: ", err.Error())
-	} else {
-		defer repository.Close()
-	}
-
-	service := service.NewService(&cfg, repository)
+	service := service.NewService(&cfg, nil)
 	hendler := NewHandler(service)
 	router := hendler.NewRouter()
 

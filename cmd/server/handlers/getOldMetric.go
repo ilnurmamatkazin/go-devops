@@ -7,7 +7,8 @@ import (
 	"github.com/ilnurmamatkazin/go-devops/cmd/server/models"
 )
 
-func (h *Handler) getOldMetric(w http.ResponseWriter, r *http.Request) {
+// GetOldMetric устаревшая функция получения значения метрики по ее имени и типу.
+func (h *Handler) GetOldMetric(w http.ResponseWriter, r *http.Request) {
 	metric := getMetricFromRequest(r)
 
 	if checkMetricType(metric.MetricType) {
@@ -15,7 +16,7 @@ func (h *Handler) getOldMetric(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.service.GetOldMetric(&metric); err != nil {
+	if err := h.Service.GetOldMetric(&metric); err != nil {
 		re, ok := err.(*models.RequestError)
 		if ok {
 			http.Error(w, re.Err.Error(), re.StatusCode)

@@ -5,14 +5,14 @@ import (
 	"github.com/ilnurmamatkazin/go-devops/cmd/server/storage"
 )
 
+// Service структура, описывающая слой бизнес-логики.
 type Service struct {
-	repository *storage.Storage
-	cfg        *models.Config
+	Metric
 }
 
+// NewService конструктор, создающий структуру слоя бизнес-логики.
 func NewService(cfg *models.Config, repository *storage.Storage) *Service {
 	return &Service{
-		repository: repository,
-		cfg:        cfg,
+		Metric: NewServiceMetric(cfg, repository),
 	}
 }

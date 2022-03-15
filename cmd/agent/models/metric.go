@@ -1,5 +1,6 @@
 package models
 
+// Metric структура метрики.
 type Metric struct {
 	ID         string   `json:"id"`              // имя метрики
 	MetricType string   `json:"type"`            // параметр, принимающий значение gauge или counter

@@ -1,5 +1,6 @@
 package service
 
-func (s *Service) Ping() (err error) {
-	return s.repository.Ping()
+// Ping функция проверки соединения с базой данных.
+func (s *ServiceMetric) Ping() (err error) {
+	return s.storage.Ping()
 }

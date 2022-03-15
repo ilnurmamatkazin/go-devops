@@ -7,18 +7,36 @@ import (
 	"net/http"
 
 	"github.com/ilnurmamatkazin/go-devops/cmd/server/models"
+	"github.com/ilnurmamatkazin/go-devops/cmd/server/storage"
 	"github.com/ilnurmamatkazin/go-devops/internal/utils"
 )
 
-func (s *Service) SetOldMetric(metric models.Metric) {
-	s.repository.SetOldMetric(metric)
+// ServiceMetric структура, описывающая слой бизнес-логики по работе с метрикой.
+type ServiceMetric struct {
+	storage *storage.Storage
+	cfg     *models.Config
 }
 
-func (s *Service) GetOldMetric(metric *models.Metric) (err error) {
-	return s.repository.ReadMetric(metric)
+// NewServiceMetric конструктор, создающий структуру слоя бизнес-логики по работе с метрикой.
+func NewServiceMetric(cfg *models.Config, storage *storage.Storage) *ServiceMetric {
+	return &ServiceMetric{
+		cfg:     cfg,
+		storage: storage,
+	}
 }
 
-func (s *Service) SetMetric(metric models.Metric) (err error) {
+// SetOldMetric устаревшия функция сохранения метрики в системе.
+func (s *ServiceMetric) SetOldMetric(metric models.Metric) {
+	s.storage.SetOldMetric(metric)
+}
+
+// GetOldMetric устаревшия функция получения метрики.
+func (s *ServiceMetric) GetOldMetric(metric *models.Metric) (err error) {
+	return s.storage.ReadMetric(metric)
+}
+
+// SetMetric функция сохранения метрики в системе.
+func (s *ServiceMetric) SetMetric(metric models.Metric) (err error) {
 	if s.cfg.Key != "" && metric.Hash != nil {
 		hash, err := hex.DecodeString(*metric.Hash)
 		if err != nil {
@@ -38,22 +56,24 @@ func (s *Service) SetMetric(metric models.Metric) (err error) {
 		}
 	}
 
-	err = s.repository.SetMetric(metric)
+	err = s.storage.SetMetric(metric)
 
 	return
 }
 
-func (s *Service) SetArrayMetrics(metrics []models.Metric) (err error) {
+// SetMetric функция сохранения массива метрик в системе.
+func (s *ServiceMetric) SetArrayMetrics(metrics []models.Metric) (err error) {
 	for _, metric := range metrics {
 		if err = checkHash(s.cfg.Key, metric); err != nil {
 			return
 		}
 	}
 
-	return s.repository.SetArrayMetrics(metrics)
+	return s.storage.SetArrayMetrics(metrics)
 }
 
-func (s *Service) GetMetric(metric *models.Metric) (err error) {
+// GetMetric функция получения метрики.
+func (s *ServiceMetric) GetMetric(metric *models.Metric) (err error) {
 	if err = s.GetOldMetric(metric); err != nil {
 		return
 	}
@@ -64,10 +84,12 @@ func (s *Service) GetMetric(metric *models.Metric) (err error) {
 	return
 }
 
-func (s *Service) GetInfo() string {
-	return s.repository.Info()
+// GetInfo функция получения html страницы со списком метрик.
+func (s *ServiceMetric) GetInfo() string {
+	return s.storage.Info()
 }
 
+// checkHash внутренняя функция проверки подписи метрики.
 func checkHash(key string, metric models.Metric) (err error) {
 	if key != "" && metric.Hash != nil {
 		hash, err := hex.DecodeString(*metric.Hash)

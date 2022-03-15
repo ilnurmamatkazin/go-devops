@@ -9,7 +9,9 @@ import (
 	"github.com/ilnurmamatkazin/go-devops/cmd/server/models"
 )
 
-func (h *Handler) parseOldMetric(w http.ResponseWriter, r *http.Request) {
+// ParseOldMetric устаревшая функция сохранения метрики в системе.
+// Значение, имя и тип метрики берется из строки http запроса.
+func (h *Handler) ParseOldMetric(w http.ResponseWriter, r *http.Request) {
 	metric := getMetricFromRequest(r)
 
 	if checkMetricType(metric.MetricType) {
@@ -22,13 +24,14 @@ func (h *Handler) parseOldMetric(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.service.SetOldMetric(metric)
+	h.Service.SetOldMetric(metric)
 
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
 
 }
 
+// setMetricValue вспомогательная функция, проверяющая соответсвие значению метрики ее типу.
 func setMetricValue(metric *models.Metric, value string) (err error) {
 	switch metric.MetricType {
 	case "counter":

@@ -1,5 +1,6 @@
 package models
 
+// Config структура конфигурации сервера.
 type Config struct {
 	Address       string `env:"ADDRESS"`
 	StoreInterval string `env:"STORE_INTERVAL"`

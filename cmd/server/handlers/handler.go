@@ -11,16 +11,19 @@ import (
 	"github.com/ilnurmamatkazin/go-devops/cmd/server/service"
 )
 
+// Handler структура, формирующая слой работы с функциями, принимающими апи запросы.
 type Handler struct {
-	service *service.Service
+	Service *service.Service
 }
 
+// NewHandler конструктор для структуры Handler.
 func NewHandler(service *service.Service) *Handler {
 	return &Handler{
-		service: service,
+		Service: service,
 	}
 }
 
+// NewRouter функция, которая создает роутер для приема апи запросов.
 func (h *Handler) NewRouter() *chi.Mux {
 	// определяем роутер chi
 	r := chi.NewRouter()
@@ -33,20 +36,20 @@ func (h *Handler) NewRouter() *chi.Mux {
 	r.Use(middlewareGzip)
 
 	r.Route("/update", func(r chi.Router) {
-		r.Post("/{typeMetric}/{nameMetric}/{valueMetric}", h.parseOldMetric)
-		r.With(middleware.AllowContentType("application/json")).Post("/", h.parseMetric)
+		r.Post("/{typeMetric}/{nameMetric}/{valueMetric}", h.ParseOldMetric)
+		r.With(middleware.AllowContentType("application/json")).Post("/", h.ParseMetric)
 	})
 
 	r.Route("/ping", func(r chi.Router) {
-		r.With(middleware.AllowContentType("application/json")).Get("/", h.ping)
+		r.With(middleware.AllowContentType("application/json")).Get("/", h.Ping)
 	})
 
 	r.Route("/", func(r chi.Router) {
-		r.Get("/", h.getInfo)
-		r.Get("/value/{typeMetric}/{nameMetric}", h.getOldMetric)
-		r.With(middleware.AllowContentType("application/json")).Post("/value/", h.getMetric)
-		r.With(middleware.AllowContentType("application/json")).Post("/update/", h.parseMetric)
-		r.With(middleware.AllowContentType("application/json")).Post("/updates/", h.parseMetrics)
+		r.Get("/", h.GetInfo)
+		r.Get("/value/{typeMetric}/{nameMetric}", h.GetOldMetric)
+		r.With(middleware.AllowContentType("application/json")).Post("/value/", h.GetMetric)
+		r.With(middleware.AllowContentType("application/json")).Post("/update/", h.ParseMetric)
+		r.With(middleware.AllowContentType("application/json")).Post("/updates/", h.ParseMetrics)
 	})
 
 	r.NotFound(func(w http.ResponseWriter, r *http.Request) {
@@ -63,16 +66,19 @@ func (h *Handler) NewRouter() *chi.Mux {
 
 }
 
+// gzipWriter структура для работы с запросами использующих сжатие.
 type gzipWriter struct {
 	http.ResponseWriter
 	Writer io.Writer
 }
 
+// Write функция отправки сжатого контента.
 func (w gzipWriter) Write(b []byte) (int, error) {
 	// w.Writer будет отвечать за gzip-сжатие, поэтому пишем в него
 	return w.Writer.Write(b)
 }
 
+// middlewareGzip миделваер, обрабатывающий запросы с жатым контентом.
 func middlewareGzip(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// проверяем, что клиент поддерживает gzip-сжатие

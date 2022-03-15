@@ -1,3 +1,4 @@
+// Сервис сбора системных метрик и отправки их на сервер.
 package main
 
 import (
@@ -10,6 +11,8 @@ import (
 	"syscall"
 	"time"
 
+	_ "net/http/pprof"
+
 	"github.com/caarlos0/env/v6"
 	"github.com/ilnurmamatkazin/go-devops/cmd/agent/models"
 	"github.com/ilnurmamatkazin/go-devops/internal/utils"
@@ -17,21 +20,28 @@ import (
 )
 
 const (
-	Address        = "127.0.0.1:8080"
-	PollInterval   = "2s"
-	ReportInterval = "10s"
-	Key            = ""
+	Address = "127.0.0.1:8080" // адрес принимающего сервера
+	// PollInterval   = "20000000n"      // период сбора  метрик
+	// ReportInterval = "100000000n"     // период отправки метрик
+	PollInterval   = "2s"  // период сбора  метрик
+	ReportInterval = "10s" // период отправки метрик
+	Key            = ""    // ключ для формирования подписи
 )
 
+// MetricSender вспомогательная структура, для проброса вспомогательных структур
 type MetricSender struct {
-	cfg    models.Config
-	client *http.Client
-	ctx    context.Context
+	cfg    models.Config // поле с конфигурационными данными
+	client *http.Client  // поле с созданным http клиентом, для отправки данных на сервер
+	// ctx    context.Context // поле с системны контекстом
 }
 
 func main() {
-	var g *errgroup.Group
+	go http.ListenAndServe(":6060", nil)
 
+	var (
+		g        *errgroup.Group
+		ctxGroup context.Context
+	)
 	metricSender := MetricSender{
 		cfg:    parseConfig(),
 		client: createClient(),
@@ -41,7 +51,7 @@ func main() {
 	chMetricsGopsutil := make(chan []models.Metric)
 
 	ctx, done := context.WithCancel(context.Background())
-	g, metricSender.ctx = errgroup.WithContext(ctx)
+	g, ctxGroup = errgroup.WithContext(ctx)
 
 	tickerPoll, err := getTicker(metricSender.cfg.PollInterval)
 	if err != nil {
@@ -69,7 +79,7 @@ func main() {
 			for i := range chMetricsGopsutil {
 				log.Println(i)
 			}
-		case <-metricSender.ctx.Done():
+		case <-ctxGroup.Done():
 			tickerPoll.Stop()
 			tickerReport.Stop()
 
@@ -81,28 +91,28 @@ func main() {
 				log.Println(i)
 			}
 
-			return metricSender.ctx.Err()
+			return ctxGroup.Err()
 		}
 
 		return nil
 	})
 
 	g.Go(func() error {
-		err := metricSender.collectMetrics(tickerPoll, chMetrics)
+		err := metricSender.collectMetrics(ctxGroup, tickerPoll, chMetrics)
 		close(chMetrics)
 
 		return err
 	})
 
 	g.Go(func() error {
-		err := metricSender.collectMetricsGopsutil(tickerPoll, chMetricsGopsutil)
+		err := metricSender.collectMetricsGopsutil(ctxGroup, tickerPoll, chMetricsGopsutil)
 		close(chMetricsGopsutil)
 
 		return err
 	})
 
 	g.Go(func() error {
-		err := metricSender.sendMetrics(tickerReport, chMetrics, chMetricsGopsutil)
+		err := metricSender.sendMetrics(ctxGroup, tickerReport, chMetrics, chMetricsGopsutil)
 
 		return err
 	})
@@ -114,6 +124,8 @@ func main() {
 
 }
 
+// parseConfig парсит флаги командной строки и получает данные из env переменных.
+// ENV переменные имеют приоритет перед флагами.
 func parseConfig() (cfg models.Config) {
 	address := flag.String("a", Address, "a address")
 	reportInterval := flag.String("r", ReportInterval, "a report_interval")
@@ -134,8 +146,8 @@ func parseConfig() (cfg models.Config) {
 	return
 }
 
+// createClient конструируем HTTP-клиент.
 func createClient() *http.Client {
-	// конструируем HTTP-клиент
 	client := &http.Client{}
 	client.Timeout = time.Second * 2
 
@@ -153,6 +165,7 @@ func createClient() *http.Client {
 	return client
 }
 
+// createMetric внутренняя функция со созданию метрики
 func (ms *MetricSender) createMetric(metricType, id string, value float64, delta int64) (metric models.Metric) {
 	if metricType == "counter" {
 		metric = models.Metric{MetricType: metricType, ID: id, Delta: &delta}
@@ -165,6 +178,7 @@ func (ms *MetricSender) createMetric(metricType, id string, value float64, delta
 	return
 }
 
+// getTicker внутренняя функция по созданию тикера
 func getTicker(strInterval string) (*time.Ticker, error) {
 	interval, duration, err := utils.GetDataForTicker(strInterval)
 	if err != nil {
