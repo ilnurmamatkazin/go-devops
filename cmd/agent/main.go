@@ -4,6 +4,7 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -17,6 +18,12 @@ import (
 	"github.com/ilnurmamatkazin/go-devops/cmd/agent/models"
 	"github.com/ilnurmamatkazin/go-devops/internal/utils"
 	"golang.org/x/sync/errgroup"
+)
+
+var (
+	buildVersion string = "N/A"
+	buildDate    string = "N/A"
+	buildCommit  string = "N/A"
 )
 
 const (
@@ -36,6 +43,10 @@ type MetricSender struct {
 }
 
 func main() {
+	fmt.Printf("Build version: %s\n", buildVersion)
+	fmt.Printf("Build date: %s\n", buildDate)
+	fmt.Printf("Build commit: %s\n", buildCommit)
+
 	go http.ListenAndServe(":6060", nil)
 
 	var (
