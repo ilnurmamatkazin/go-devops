@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/ilnurmamatkazin/go-devops/cmd/server/models"
+	"github.com/ilnurmamatkazin/go-devops/cmd/server/storage/pg"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -76,6 +77,34 @@ func TestSetOldMetric(t *testing.T) {
 			} else {
 				assert.NotNil(t, err)
 			}
+		})
+	}
+}
+
+func TestNewStorage(t *testing.T) {
+	type args struct {
+		cfg *models.Config
+		db  *pg.Repository
+	}
+	tests := []struct {
+		name      string
+		args      args
+		assertion assert.BoolAssertionFunc
+	}{
+		{
+			name: "Positive",
+			args: args{
+				cfg: &models.Config{},
+				db:  &pg.Repository{},
+			},
+			assertion: assert.True,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := NewStorage(tt.args.cfg, tt.args.db)
+			tt.assertion(t, got != nil)
+
 		})
 	}
 }

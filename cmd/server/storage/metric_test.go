@@ -132,3 +132,70 @@ func TestStorageMetrick_Info(t *testing.T) {
 		})
 	}
 }
+
+func TestStorageMetrick_SetOldMetric(t *testing.T) {
+	type metric struct {
+		id         string
+		metricType string
+		value      float64
+		delta      int64
+	}
+	tests := []struct {
+		name      string
+		metrics   map[string]models.Metric
+		metric    metric
+		checkID   string
+		assertion assert.BoolAssertionFunc
+	}{
+		{
+			name:    "Positive gauge",
+			metrics: make(map[string]models.Metric),
+			metric: metric{
+				id:         "Alloc",
+				metricType: "gauge",
+				value:      1234.5,
+			},
+			checkID:   "Alloc",
+			assertion: assert.True,
+		},
+		{
+			name:    "Positive counter",
+			metrics: make(map[string]models.Metric),
+			metric: metric{
+				id:         "Counter",
+				metricType: "counter",
+				delta:      12345,
+			},
+			checkID:   "Counter",
+			assertion: assert.True,
+		},
+		{
+			name:    "Negative gauge",
+			metrics: make(map[string]models.Metric),
+			metric: metric{
+				id:         "Alloc",
+				metricType: "gauge",
+				value:      1234.5,
+			},
+			checkID:   "Alloc1111",
+			assertion: assert.False,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := &StorageMetrick{
+				metrics: tt.metrics,
+			}
+
+			s.SetOldMetric(models.Metric{
+				ID:         tt.metric.id,
+				MetricType: tt.metric.metricType,
+				Value:      &tt.metric.value,
+				Delta:      &tt.metric.delta,
+			})
+
+			_, ok := s.metrics[tt.checkID]
+			tt.assertion(t, ok)
+		})
+	}
+}
