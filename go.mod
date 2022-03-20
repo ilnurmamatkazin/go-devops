@@ -8,7 +8,7 @@ require (
 	github.com/jackc/pgx/v4 v4.15.0
 	github.com/pashagolub/pgxmock v1.4.4
 	github.com/shirou/gopsutil/v3 v3.22.1
-	github.com/stretchr/testify v1.7.0
+	github.com/stretchr/testify v1.7.1
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 	golang.org/x/tools v0.1.10
 	honnef.co/go/tools v0.2.2
@@ -17,6 +17,7 @@ require (
 require (
 	github.com/BurntSushi/toml v0.3.1 // indirect
 	github.com/jackc/puddle v1.2.1 // indirect
+	github.com/stretchr/objx v0.2.0 // indirect
 	golang.org/x/mod v0.6.0-dev.0.20220106191415-9b9b3d81d5e3 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 )

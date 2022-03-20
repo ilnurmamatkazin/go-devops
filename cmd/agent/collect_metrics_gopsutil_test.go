@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"log"
-	"net/http"
 	"strings"
 	"testing"
 	"time"
@@ -39,11 +38,7 @@ func TestMetricSender_collectMetricsGopsutil(t *testing.T) {
 			wantErr: true,
 		},
 	}
-	ms := &MetricSender{
-		cfg:    models.Config{},
-		client: &http.Client{},
-		// ctx:    context.Background(),
-	}
+	ms := &MetricSend{}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -85,11 +80,7 @@ func TestMetricSender_collectMetricsGopsutil(t *testing.T) {
 }
 
 func BenchmarkCollectMetricsGopsutil(b *testing.B) {
-	ms := &MetricSender{
-		cfg:    models.Config{},
-		client: &http.Client{},
-		// ctx:    context.Background(),
-	}
+	ms := &MetricSend{}
 
 	tickerPoll := time.NewTicker(time.Duration(2) * time.Second)
 	chMetrics := make(chan []models.Metric)

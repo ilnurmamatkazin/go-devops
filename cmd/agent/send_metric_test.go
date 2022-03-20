@@ -11,8 +11,18 @@ import (
 
 	"github.com/ilnurmamatkazin/go-devops/cmd/agent/models"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"golang.org/x/sync/errgroup"
 )
+
+type FakeRequestSend struct {
+	mock.Mock
+}
+
+func (mock *FakeRequestSend) Send(ctx context.Context, data interface{}, layout string) error {
+	// args := mock.Called(ctx, data, layout)
+	return nil //args.Error(0)
+}
 
 func TestMetricSender_sendRequest(t *testing.T) {
 	type args struct {
@@ -48,10 +58,11 @@ func TestMetricSender_sendRequest(t *testing.T) {
 			}))
 			defer server.Close()
 
-			ms := MetricSender{
-				cfg:    models.Config{Address: server.URL},
-				client: server.Client(),
-				// ctx:    context.Background(),
+			cfg := parseConfig()
+
+			sr := &RequestSend{
+				cfg:    cfg,
+				client: createClient(),
 			}
 
 			ctx := context.Background()
@@ -59,17 +70,21 @@ func TestMetricSender_sendRequest(t *testing.T) {
 			var metric models.Metric
 			_ = json.Unmarshal([]byte(tt.args.data), &metric)
 
-			err := ms.sendRequest(ctx, metric, "%s"+tt.args.layout)
+			err := sr.Send(ctx, metric, "http://%s"+tt.args.layout)
 			assert.NoError(t, err)
 		})
 	}
 }
 
 func BenchmarkSendMetrics(b *testing.B) {
-	ms := &MetricSender{
-		cfg:    models.Config{Address: Address},
-		client: &http.Client{},
-		// ctx:    context.Background(),
+	cfg := parseConfig()
+
+	ms := MetricSend{
+		cfg: cfg,
+		sender: &RequestSend{
+			cfg:    cfg,
+			client: createClient(),
+		},
 	}
 
 	tickerPoll := time.NewTicker(time.Duration(2) * time.Second)
@@ -126,5 +141,85 @@ func BenchmarkSendMetrics(b *testing.B) {
 		if err != nil {
 			log.Println(err.Error())
 		}
+	}
+}
+
+func TestMetricSender_sendMetrics(t *testing.T) {
+	type args struct {
+		chMetrics   models.Metric
+		chMetricsGU models.Metric
+	}
+
+	tests := []struct {
+		name   string
+		layout string
+		args   args
+		err    error
+	}{
+		{
+			name:   "Positive",
+			layout: "http://%s/update",
+			args: args{
+				chMetrics:   models.Metric{ID: "Alloc", MetricType: "gauge", Value: func(val float64) *float64 { return &val }(123.4)},
+				chMetricsGU: models.Metric{ID: "Alloc", MetricType: "gauge", Value: func(val float64) *float64 { return &val }(123.4)},
+			},
+			err: nil,
+		},
+	}
+	var (
+		g        *errgroup.Group
+		ctxGroup context.Context
+	)
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+
+			chMetrics := make(chan []models.Metric)
+			chMetricsGopsutil := make(chan []models.Metric)
+
+			ctx, done := context.WithTimeout(context.Background(), time.Duration(4)*time.Second)
+			g, ctxGroup = errgroup.WithContext(ctx)
+
+			sender := &FakeRequestSend{}
+			// sender.On("Send", ctxGroup, tt.args.chMetrics, tt.layout).Return(tt.err)
+			sender.On("Send", ctxGroup, mock.Anything, mock.Anything).Return(tt.err)
+
+			ms := &MetricSend{
+				cfg:    models.Config{},
+				sender: sender,
+			}
+
+			tickerReport := time.NewTicker(time.Duration(2) * time.Second)
+
+			g.Go(func() error {
+				metrics := []models.Metric{
+					{ID: "Alloc", MetricType: "gauge", Value: func(val float64) *float64 { return &val }(123.4)},
+				}
+
+				chMetrics <- metrics
+				chMetricsGopsutil <- metrics
+
+				<-ctxGroup.Done()
+				return ctxGroup.Err()
+
+			})
+
+			g.Go(func() error {
+				err := ms.sendMetrics(ctxGroup, tickerReport, chMetrics, chMetricsGopsutil)
+				done()
+				return err
+			})
+
+			err := g.Wait()
+			if err != nil {
+				t.Logf("received error: %v", err)
+
+				if err.Error() == "context deadline exceeded" {
+					err = nil
+				}
+			}
+
+			assert.NoError(t, err)
+		})
 	}
 }
