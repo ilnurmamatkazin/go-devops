@@ -126,9 +126,10 @@ jobs:
       - name: 'Code increment #2'
         if: always()
         run: |
-          devopstest -test.timeout=100s -test.v -test.run=^TestIteration2[b]*$ \
+          devopstest -test.v -test.run=^TestIteration2[b]*$ \
             -source-path=. \
-            -binary-path=cmd/server/server
+            -binary-path=cmd/server/server \
+            -test.timeout=100s
 
       # III. Задание к третьему инкременту.
       # Переписать код с использованием одного из распространенных web-фреймворков. Например: github.com/go-chi/chi
