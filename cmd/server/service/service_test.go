@@ -129,4 +129,5 @@ func TestService_GetMetric(t *testing.T) {
 			assert.Equal(t, !hmac.Equal(newHash, hash), tt.wantErr)
 		})
 	}
+
 }
