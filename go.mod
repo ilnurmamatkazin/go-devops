@@ -16,6 +16,7 @@ require (
 require (
 	github.com/golang/mock v1.6.0
 	github.com/jackc/pgconn v1.11.0
+	github.com/pashagolub/pgxmock v1.4.4
 	golang.org/x/crypto v0.0.0-20211117183948-ae814b36b871 // indirect
 	golang.org/x/sys v0.0.0-20220227234510-4e6760a101f9 // indirect
 )
