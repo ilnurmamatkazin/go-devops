@@ -20,8 +20,8 @@ type FakeRequestSend struct {
 }
 
 func (mock *FakeRequestSend) Send(ctx context.Context, data interface{}, layout string) error {
-	// args := mock.Called(ctx, data, layout)
-	return nil //args.Error(0)
+	args := mock.Called(ctx, data, layout)
+	return args.Error(0)
 }
 
 func TestMetricSender_sendRequest(t *testing.T) {
