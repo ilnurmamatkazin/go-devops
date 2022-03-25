@@ -4,6 +4,7 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -19,6 +20,12 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
+var (
+	buildVersion string = "N/A"
+	buildDate    string = "N/A"
+	buildCommit  string = "N/A"
+)
+
 const (
 	Address = "127.0.0.1:8080" // адрес принимающего сервера
 	// PollInterval   = "20000000n"      // период сбора  метрик
@@ -28,23 +35,41 @@ const (
 	Key            = ""    // ключ для формирования подписи
 )
 
-// MetricSender вспомогательная структура, для проброса вспомогательных структур
-type MetricSender struct {
+type RequestSender interface {
+	Send(ctx context.Context, data interface{}, layout string) error
+}
+
+type RequestSend struct {
 	cfg    models.Config // поле с конфигурационными данными
 	client *http.Client  // поле с созданным http клиентом, для отправки данных на сервер
-	// ctx    context.Context // поле с системны контекстом
+}
+
+// MetricSend вспомогательная структура, для проброса вспомогательных структур
+type MetricSend struct {
+	cfg    models.Config // поле с конфигурационными данными
+	sender RequestSender
 }
 
 func main() {
+	fmt.Printf("Build version: %s\n", buildVersion)
+	fmt.Printf("Build date: %s\n", buildDate)
+	fmt.Printf("Build commit: %s\n", buildCommit)
+
 	go http.ListenAndServe(":6060", nil)
 
 	var (
 		g        *errgroup.Group
 		ctxGroup context.Context
 	)
-	metricSender := MetricSender{
-		cfg:    parseConfig(),
-		client: createClient(),
+
+	cfg := parseConfig()
+
+	metricSend := MetricSend{
+		cfg: cfg,
+		sender: &RequestSend{
+			cfg:    cfg,
+			client: createClient(),
+		},
 	}
 
 	chMetrics := make(chan []models.Metric)
@@ -53,13 +78,13 @@ func main() {
 	ctx, done := context.WithCancel(context.Background())
 	g, ctxGroup = errgroup.WithContext(ctx)
 
-	tickerPoll, err := getTicker(metricSender.cfg.PollInterval)
+	tickerPoll, err := getTicker(metricSend.cfg.PollInterval)
 	if err != nil {
 		log.Fatalf("Ошибка создания тикера")
 		return
 	}
 
-	tickerReport, err := getTicker(metricSender.cfg.ReportInterval)
+	tickerReport, err := getTicker(metricSend.cfg.ReportInterval)
 	if err != nil {
 		log.Fatalf("Ошибка создания тикера")
 		return
@@ -98,21 +123,21 @@ func main() {
 	})
 
 	g.Go(func() error {
-		err := metricSender.collectMetrics(ctxGroup, tickerPoll, chMetrics)
+		err := metricSend.collectMetrics(ctxGroup, tickerPoll, chMetrics)
 		close(chMetrics)
 
 		return err
 	})
 
 	g.Go(func() error {
-		err := metricSender.collectMetricsGopsutil(ctxGroup, tickerPoll, chMetricsGopsutil)
+		err := metricSend.collectMetricsGopsutil(ctxGroup, tickerPoll, chMetricsGopsutil)
 		close(chMetricsGopsutil)
 
 		return err
 	})
 
 	g.Go(func() error {
-		err := metricSender.sendMetrics(ctxGroup, tickerReport, chMetrics, chMetricsGopsutil)
+		err := metricSend.sendMetrics(ctxGroup, tickerReport, chMetrics, chMetricsGopsutil)
 
 		return err
 	})
@@ -166,7 +191,7 @@ func createClient() *http.Client {
 }
 
 // createMetric внутренняя функция со созданию метрики
-func (ms *MetricSender) createMetric(metricType, id string, value float64, delta int64) (metric models.Metric) {
+func (ms *MetricSend) createMetric(metricType, id string, value float64, delta int64) (metric models.Metric) {
 	if metricType == "counter" {
 		metric = models.Metric{MetricType: metricType, ID: id, Delta: &delta}
 	} else {

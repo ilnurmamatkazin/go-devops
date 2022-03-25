@@ -62,10 +62,6 @@ func TestNewRouter(t *testing.T) {
 	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
 	defer resp.Body.Close()
 
-	resp, _ = testRequest(t, ts, "POST", "/update/counter/")
-	assert.Equal(t, http.StatusNotFound, resp.StatusCode)
-	defer resp.Body.Close()
-
 	resp, _ = testRequest(t, ts, "POST", "/update/unknown/testCounter/100")
 	assert.Equal(t, http.StatusNotImplemented, resp.StatusCode)
 	defer resp.Body.Close()

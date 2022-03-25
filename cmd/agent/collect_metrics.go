@@ -10,7 +10,7 @@ import (
 )
 
 // collectMetrics функция, реализующая сбор runtime метрик.
-func (ms *MetricSender) collectMetrics(ctx context.Context, tickerPoll *time.Ticker, chMetrics chan []models.Metric) (err error) {
+func (ms *MetricSend) collectMetrics(ctx context.Context, tickerPoll *time.Ticker, chMetrics chan []models.Metric) (err error) {
 	var (
 		rtm       runtime.MemStats
 		pollCount int64

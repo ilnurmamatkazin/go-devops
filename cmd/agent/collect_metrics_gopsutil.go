@@ -12,7 +12,7 @@ import (
 )
 
 // collectMetricsGopsutil функция, реализуящая сбор gopsutil метрик.
-func (ms *MetricSender) collectMetricsGopsutil(ctx context.Context, tickerPoll *time.Ticker, chMetrics chan []models.Metric) (err error) {
+func (ms *MetricSend) collectMetricsGopsutil(ctx context.Context, tickerPoll *time.Ticker, chMetrics chan []models.Metric) (err error) {
 	var (
 		v              *mem.VirtualMemoryStat
 		percentage     []float64
