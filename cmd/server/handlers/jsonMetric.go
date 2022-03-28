@@ -2,8 +2,10 @@ package handlers
 
 import (
 	"encoding/json"
+	"io"
 	"net/http"
 
+	cr "github.com/ilnurmamatkazin/go-devops/cmd/server/crypto"
 	"github.com/ilnurmamatkazin/go-devops/cmd/server/models"
 )
 
@@ -44,10 +46,26 @@ func (h *Handler) ParseMetric(w http.ResponseWriter, r *http.Request) {
 	)
 	w.Header().Set("Content-Type", "application/json")
 
-	if err = json.NewDecoder(r.Body).Decode(&metric); err != nil {
+	b, err := io.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	decodeBody, err := cr.Decrypt(h.Cfg.PrivateKey, b)
+	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+
+	if err = json.Unmarshal(decodeBody, &metric); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	// if err = json.NewDecoder(r.Body).Decode(&metric); err != nil {
+	// 	http.Error(w, err.Error(), http.StatusBadRequest)
+	// 	return
+	// }
 
 	if err = h.Service.SetMetric(metric); err != nil {
 		sendError(w, err)
@@ -67,10 +85,27 @@ func (h *Handler) ParseMetrics(w http.ResponseWriter, r *http.Request) {
 	)
 	w.Header().Set("Content-Type", "application/json")
 
-	if err = json.NewDecoder(r.Body).Decode(&metrics); err != nil {
+	b, err := io.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	decodeBody, err := cr.Decrypt(h.Cfg.PrivateKey, b)
+	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+
+	if err = json.Unmarshal(decodeBody, &metrics); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	// if err = json.NewDecoder(r.Body).Decode(&metrics); err != nil {
+	// 	http.Error(w, err.Error(), http.StatusBadRequest)
+	// 	return
+	// }
 
 	if err = h.Service.SetArrayMetrics(metrics); err != nil {
 		sendError(w, err)

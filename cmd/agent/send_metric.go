@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"time"
 
+	cr "github.com/ilnurmamatkazin/go-devops/cmd/agent/crypto"
 	"github.com/ilnurmamatkazin/go-devops/cmd/agent/models"
 )
 
@@ -41,8 +42,19 @@ func (ms *MetricSend) sendMetrics(ctx context.Context, tickerReport *time.Ticker
 				}
 			}
 
-			if len(metrics) > 0 {
-				if err = ms.sender.Send(ctx, metrics, "http://%s/updates/"); err != nil {
+			lenMetrics := len(metrics)
+			// part1 := int(math.Round(float64(lenMetrics) / 2))
+
+			if lenMetrics > 0 {
+				if err = ms.sender.Send(ctx, metrics[:9], "http://%s/updates/"); err != nil {
+					return
+				}
+
+				if err = ms.sender.Send(ctx, metrics[10:19], "http://%s/updates/"); err != nil {
+					return
+				}
+
+				if err = ms.sender.Send(ctx, metrics[20:29], "http://%s/updates/"); err != nil {
 					return
 				}
 			}
@@ -71,8 +83,14 @@ func (ms *RequestSend) Send(ctx context.Context, data interface{}, layout string
 		return
 	}
 
+	cryptoText, err := cr.Encrypt(ms.cfg.PublicKey, b)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
 	buf := new(bytes.Buffer)
-	err = binary.Write(buf, binary.LittleEndian, b)
+	err = binary.Write(buf, binary.LittleEndian, []byte(cryptoText))
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, buf)
 	if err != nil {

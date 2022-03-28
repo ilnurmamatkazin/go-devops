@@ -3,6 +3,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"log"
@@ -30,9 +31,11 @@ const (
 	Address = "127.0.0.1:8080" // адрес принимающего сервера
 	// PollInterval   = "20000000n"      // период сбора  метрик
 	// ReportInterval = "100000000n"     // период отправки метрик
-	PollInterval   = "2s"  // период сбора  метрик
-	ReportInterval = "10s" // период отправки метрик
-	Key            = ""    // ключ для формирования подписи
+	PollInterval   = "2s"                 // период сбора  метрик
+	ReportInterval = "10s"                // период отправки метрик
+	Key            = ""                   // ключ для формирования подписи
+	PublicKey      = "../keys/public.pem" // открытый ключ для шифрования
+	Config         = "./config.json"      // имя json файла с конфигурацией
 )
 
 type RequestSender interface {
@@ -152,10 +155,26 @@ func main() {
 // parseConfig парсит флаги командной строки и получает данные из env переменных.
 // ENV переменные имеют приоритет перед флагами.
 func parseConfig() (cfg models.Config) {
+	config := flag.String("json", Config, "a secret key")
+
+	if *config != "" {
+		data, err := os.ReadFile(*config)
+
+		if err != nil {
+			log.Printf("os.ReadFile error: %s", err.Error())
+		} else {
+			err = json.Unmarshal(data, &cfg)
+			if err != nil {
+				log.Printf("json.Unmarshal error: %s", err.Error())
+			}
+		}
+	}
+
 	address := flag.String("a", Address, "a address")
 	reportInterval := flag.String("r", ReportInterval, "a report_interval")
 	pollInterval := flag.String("p", PollInterval, "a poll_interval")
 	key := flag.String("k", Key, "a secret key")
+	publicKey := flag.String("c", PublicKey, "a secret key")
 
 	flag.Parse()
 
@@ -163,6 +182,7 @@ func parseConfig() (cfg models.Config) {
 	cfg.ReportInterval = *reportInterval
 	cfg.PollInterval = *pollInterval
 	cfg.Key = *key
+	cfg.PublicKey = *publicKey
 
 	if err := env.Parse(&cfg); err != nil {
 		log.Fatalf("env.Parse error: %s", err.Error())

@@ -2,6 +2,7 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
 	"log"
@@ -57,7 +58,7 @@ func main() {
 	}
 
 	service := service.NewService(&cfg, repository)
-	hendler := handlers.NewHandler(service)
+	hendler := handlers.NewHandler(&cfg, service)
 	router := hendler.NewRouter()
 
 	go http.ListenAndServe(":"+strings.Split(cfg.Address, ":")[1], router)
@@ -73,12 +74,28 @@ func main() {
 // parseConfig функция получения значений флагов и переменных среды.
 func parseConfig() (cfg models.Config, err error) {
 	if !flag.Parsed() {
+		config := flag.String("json", models.JSONConfig, "a secret key")
+
+		if *config != "" {
+			data, err := os.ReadFile(*config)
+
+			if err != nil {
+				log.Printf("os.ReadFile error: %s", err.Error())
+			} else {
+				err = json.Unmarshal(data, &cfg)
+				if err != nil {
+					log.Printf("json.Unmarshal error: %s", err.Error())
+				}
+			}
+		}
+
 		address := flag.String("a", models.Address, "a address")
 		restore := flag.Bool("r", models.Restore, "a restore")
 		storeInterval := flag.String("i", models.StoreInterval, "a store_interval")
 		storeFile := flag.String("f", models.StoreFile, "a store_file")
 		key := flag.String("k", models.Key, "a secret key")
 		database := flag.String("d", models.Database, "a database")
+		privateKey := flag.String("c", models.PrivateKey, "a secret key")
 
 		flag.Parse()
 
@@ -88,6 +105,8 @@ func parseConfig() (cfg models.Config, err error) {
 		cfg.StoreFile = *storeFile
 		cfg.Key = *key
 		cfg.Database = *database
+		cfg.PrivateKey = *privateKey
+
 	}
 
 	err = env.Parse(&cfg)
