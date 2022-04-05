@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"flag"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -17,6 +16,7 @@ import (
 
 	"github.com/caarlos0/env/v6"
 	"github.com/ilnurmamatkazin/go-devops/cmd/agent/models"
+	"github.com/ilnurmamatkazin/go-devops/internal/model"
 	"github.com/ilnurmamatkazin/go-devops/internal/utils"
 	"golang.org/x/sync/errgroup"
 )
@@ -54,9 +54,8 @@ type MetricSend struct {
 }
 
 func main() {
-	fmt.Printf("Build version: %s\n", buildVersion)
-	fmt.Printf("Build date: %s\n", buildDate)
-	fmt.Printf("Build commit: %s\n", buildCommit)
+	build := model.NewBuild(buildVersion, buildDate, buildCommit)
+	build.Print()
 
 	go http.ListenAndServe(":6060", nil)
 

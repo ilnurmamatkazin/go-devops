@@ -22,22 +22,22 @@ func Encrypt(publicKeyPath string, data []byte) ([]byte, error) {
 	return cipherToPem(cipher), nil
 }
 
-func getPublicKey(file_path string) (*rsa.PublicKey, error) {
-	var public_key *rsa.PublicKey
+func getPublicKey(filePath string) (*rsa.PublicKey, error) {
+	var publicKey *rsa.PublicKey
 
-	keyBytes, err := ioutil.ReadFile(file_path)
+	keyBytes, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		return nil, err
 	}
 
 	block, _ := pem.Decode(keyBytes)
 
-	public_key, err = x509.ParsePKCS1PublicKey(block.Bytes)
+	publicKey, err = x509.ParsePKCS1PublicKey(block.Bytes)
 	if err != nil {
 		return nil, err
 	}
 
-	return public_key, nil
+	return publicKey, nil
 }
 
 func cipherToPem(cipher []byte) []byte {
