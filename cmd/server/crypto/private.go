@@ -23,7 +23,7 @@ func Decrypt(privateKeyPath string, data []byte) ([]byte, error) {
 }
 
 func getPrivateKey(filePath string) (*rsa.PrivateKey, error) {
-	var private_key *rsa.PrivateKey
+	var privateKey *rsa.PrivateKey
 
 	keyBytes, err := ioutil.ReadFile(filePath)
 	if err != nil {
@@ -32,12 +32,12 @@ func getPrivateKey(filePath string) (*rsa.PrivateKey, error) {
 
 	block, _ := pem.Decode(keyBytes)
 
-	private_key, err = x509.ParsePKCS1PrivateKey(block.Bytes)
+	privateKey, err = x509.ParsePKCS1PrivateKey(block.Bytes)
 	if err != nil {
 		return nil, err
 	}
 
-	return private_key, nil
+	return privateKey, nil
 }
 
 func pemToCipher(encryptedMessage []byte) []byte {
