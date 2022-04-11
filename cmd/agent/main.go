@@ -154,7 +154,7 @@ func main() {
 // parseConfig парсит флаги командной строки и получает данные из env переменных.
 // ENV переменные имеют приоритет перед флагами.
 func parseConfig() (cfg models.Config) {
-	config := flag.String("json", Config, "a secret key")
+	config := flag.String("c", Config, "a json config")
 
 	if *config != "" {
 		data, err := os.ReadFile(*config)
@@ -173,7 +173,7 @@ func parseConfig() (cfg models.Config) {
 	reportInterval := flag.String("r", ReportInterval, "a report_interval")
 	pollInterval := flag.String("p", PollInterval, "a poll_interval")
 	key := flag.String("k", Key, "a secret key")
-	publicKey := flag.String("c", PublicKey, "a secret key")
+	publicKey := flag.String("crypto-key", PublicKey, "a crypto key")
 
 	flag.Parse()
 

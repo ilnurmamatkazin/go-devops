@@ -9,7 +9,7 @@ import (
 )
 
 func Encrypt(publicKeyPath string, data []byte) ([]byte, error) {
-	publicKey, err := getPublicKey(publicKeyPath)
+	publicKey, err := newPublicKey(publicKeyPath)
 	if err != nil {
 		return nil, err
 	}
@@ -22,7 +22,7 @@ func Encrypt(publicKeyPath string, data []byte) ([]byte, error) {
 	return cipherToPem(cipher), nil
 }
 
-func getPublicKey(filePath string) (*rsa.PublicKey, error) {
+func newPublicKey(filePath string) (*rsa.PublicKey, error) {
 	var publicKey *rsa.PublicKey
 
 	keyBytes, err := ioutil.ReadFile(filePath)

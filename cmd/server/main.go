@@ -73,7 +73,7 @@ func main() {
 // parseConfig функция получения значений флагов и переменных среды.
 func parseConfig() (cfg models.Config, err error) {
 	if !flag.Parsed() {
-		config := flag.String("json", models.JSONConfig, "a secret key")
+		config := flag.String("c", models.JSONConfig, "a json config")
 
 		if *config != "" {
 			data, err := os.ReadFile(*config)
@@ -94,7 +94,7 @@ func parseConfig() (cfg models.Config, err error) {
 		storeFile := flag.String("f", models.StoreFile, "a store_file")
 		key := flag.String("k", models.Key, "a secret key")
 		database := flag.String("d", models.Database, "a database")
-		privateKey := flag.String("c", models.PrivateKey, "a secret key")
+		privateKey := flag.String("crypto-key", models.PrivateKey, "a crypto key")
 
 		flag.Parse()
 

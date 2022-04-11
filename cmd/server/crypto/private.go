@@ -9,7 +9,7 @@ import (
 )
 
 func Decrypt(privateKeyPath string, data []byte) ([]byte, error) {
-	privateKey, err := getPrivateKey(privateKeyPath)
+	privateKey, err := newPrivateKey(privateKeyPath)
 	if err != nil {
 		return nil, err
 	}
@@ -22,7 +22,7 @@ func Decrypt(privateKeyPath string, data []byte) ([]byte, error) {
 	return cipher, nil
 }
 
-func getPrivateKey(filePath string) (*rsa.PrivateKey, error) {
+func newPrivateKey(filePath string) (*rsa.PrivateKey, error) {
 	var privateKey *rsa.PrivateKey
 
 	keyBytes, err := ioutil.ReadFile(filePath)
