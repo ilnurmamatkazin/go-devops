@@ -3,8 +3,8 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"flag"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -16,6 +16,7 @@ import (
 
 	"github.com/caarlos0/env/v6"
 	"github.com/ilnurmamatkazin/go-devops/cmd/agent/models"
+	"github.com/ilnurmamatkazin/go-devops/internal/model"
 	"github.com/ilnurmamatkazin/go-devops/internal/utils"
 	"golang.org/x/sync/errgroup"
 )
@@ -30,9 +31,11 @@ const (
 	Address = "127.0.0.1:8080" // адрес принимающего сервера
 	// PollInterval   = "20000000n"      // период сбора  метрик
 	// ReportInterval = "100000000n"     // период отправки метрик
-	PollInterval   = "2s"  // период сбора  метрик
-	ReportInterval = "10s" // период отправки метрик
-	Key            = ""    // ключ для формирования подписи
+	PollInterval   = "2s"                 // период сбора  метрик
+	ReportInterval = "10s"                // период отправки метрик
+	Key            = ""                   // ключ для формирования подписи
+	PublicKey      = "../keys/public.pem" // открытый ключ для шифрования
+	Config         = "./config.json"      // имя json файла с конфигурацией
 )
 
 type RequestSender interface {
@@ -51,9 +54,8 @@ type MetricSend struct {
 }
 
 func main() {
-	fmt.Printf("Build version: %s\n", buildVersion)
-	fmt.Printf("Build date: %s\n", buildDate)
-	fmt.Printf("Build commit: %s\n", buildCommit)
+	build := model.NewBuild(buildVersion, buildDate, buildCommit)
+	build.Print()
 
 	go http.ListenAndServe(":6060", nil)
 
@@ -152,10 +154,26 @@ func main() {
 // parseConfig парсит флаги командной строки и получает данные из env переменных.
 // ENV переменные имеют приоритет перед флагами.
 func parseConfig() (cfg models.Config) {
+	config := flag.String("json", Config, "a secret key")
+
+	if *config != "" {
+		data, err := os.ReadFile(*config)
+
+		if err != nil {
+			log.Printf("os.ReadFile error: %s", err.Error())
+		} else {
+			err = json.Unmarshal(data, &cfg)
+			if err != nil {
+				log.Printf("json.Unmarshal error: %s", err.Error())
+			}
+		}
+	}
+
 	address := flag.String("a", Address, "a address")
 	reportInterval := flag.String("r", ReportInterval, "a report_interval")
 	pollInterval := flag.String("p", PollInterval, "a poll_interval")
 	key := flag.String("k", Key, "a secret key")
+	publicKey := flag.String("c", PublicKey, "a secret key")
 
 	flag.Parse()
 
@@ -163,6 +181,7 @@ func parseConfig() (cfg models.Config) {
 	cfg.ReportInterval = *reportInterval
 	cfg.PollInterval = *pollInterval
 	cfg.Key = *key
+	cfg.PublicKey = *publicKey
 
 	if err := env.Parse(&cfg); err != nil {
 		log.Fatalf("env.Parse error: %s", err.Error())

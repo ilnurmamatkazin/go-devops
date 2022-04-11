@@ -113,45 +113,45 @@ func Start() {
 		mychecks = append(mychecks, v.Analyzer)
 	}
 
+	// создаем перечень для анализаторов из simple
+	checksSimple := map[string]bool{
+		"S1001": true,
+		"S1003": true,
+		"S1008": true,
+	}
+
 	// добавляем анализаторы из simple
 	for _, v := range simple.Analyzers {
-		switch v.Analyzer.Name {
-		case "S1001":
+		if checksSimple[v.Analyzer.Name] {
 			mychecks = append(mychecks, v.Analyzer)
-		case "S1003":
-			mychecks = append(mychecks, v.Analyzer)
-		case "S1008":
-			mychecks = append(mychecks, v.Analyzer)
-		default:
-			continue
 		}
+	}
+
+	// создаем перечень для анализаторов из stylecheck
+	checksStylecheck := map[string]bool{
+		"ST1001": true,
+		"ST1005": true,
+		"ST1013": true,
 	}
 
 	// добавляем анализаторы из stylecheck
 	for _, v := range stylecheck.Analyzers {
-		switch v.Analyzer.Name {
-		case "ST1001":
+		if checksStylecheck[v.Analyzer.Name] {
 			mychecks = append(mychecks, v.Analyzer)
-		case "ST1005":
-			mychecks = append(mychecks, v.Analyzer)
-		case "ST1013":
-			mychecks = append(mychecks, v.Analyzer)
-		default:
-			continue
 		}
+	}
+
+	// создаем перечень для анализаторов из quickfix
+	checksQuickfix := map[string]bool{
+		"QF1001": true,
+		"QF1004": true,
+		"QF1010": true,
 	}
 
 	// добавляем анализаторы из quickfix
 	for _, v := range quickfix.Analyzers {
-		switch v.Analyzer.Name {
-		case "QF1001":
+		if checksQuickfix[v.Analyzer.Name] {
 			mychecks = append(mychecks, v.Analyzer)
-		case "QF1004":
-			mychecks = append(mychecks, v.Analyzer)
-		case "QF1010":
-			mychecks = append(mychecks, v.Analyzer)
-		default:
-			continue
 		}
 	}
 

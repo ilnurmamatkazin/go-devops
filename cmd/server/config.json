@@ -1,0 +1,9 @@
+{
+  "address": "localhost:8080",
+  "restore": true,
+  "store_interval": "10s",
+  "store_file": "/tmp/devops-metrics-db.json",
+  "database_dsn": "postgres://postgres:12345@localhost:5434/postgres?sslmode=disable",
+  "hash_key": "",
+  "crypto_key": "../keys/private.pem"
+}

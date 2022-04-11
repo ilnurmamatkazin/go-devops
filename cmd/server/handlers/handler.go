@@ -8,18 +8,21 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/ilnurmamatkazin/go-devops/cmd/server/models"
 	"github.com/ilnurmamatkazin/go-devops/cmd/server/service"
 )
 
 // Handler структура, формирующая слой работы с функциями, принимающими апи запросы.
 type Handler struct {
 	Service *service.Service
+	Cfg     *models.Config
 }
 
 // NewHandler конструктор для структуры Handler.
-func NewHandler(service *service.Service) *Handler {
+func NewHandler(cfg *models.Config, service *service.Service) *Handler {
 	return &Handler{
 		Service: service,
+		Cfg:     cfg,
 	}
 }
 
