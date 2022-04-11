@@ -11,5 +11,5 @@ const (
 	Database        = "postgres://postgres:12345@localhost:5434/postgres?sslmode=disable"
 	DatabaseTimeout = 30
 	PrivateKey      = "../keys/private.pem"
-	JSONConfig      = "./config.json"
+	JSONConfig      = "./cmd/server/config.json"
 )
