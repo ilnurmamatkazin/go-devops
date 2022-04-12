@@ -98,12 +98,12 @@ jobs:
 #   * в формате: "http://<АДРЕС_СЕРВЕРА>/update/<ТИП_МЕТРИКИ>/<ИМЯ_МЕТРИКИ>/<ЗНАЧЕНИЕ_МЕТРИКИ>"
 #   * application-type: "text/plain"
 # Агент должен штатно завершаться по сигналам: syscall.SIGTERM, syscall.SIGINT, syscall.SIGQUIT
-
       - name: "Code increment #1"
         if: always()
         run: |
           devopstest -test.v -test.run=^TestIteration1$ \
             -agent-binary-path=cmd/agent/agent
+            -database-dsn='postgres://postgres:postgres@postgres:5432/praktikum?sslmode=disable'
 
       - name: Build server binary
         run: |
