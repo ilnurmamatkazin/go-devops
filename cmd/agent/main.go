@@ -28,18 +28,18 @@ var (
 )
 
 const (
-	Address = "127.0.0.1:8080" // адрес принимающего сервера
+	Address = "localhost:8080" // адрес принимающего сервера
 	// PollInterval   = "20000000n"      // период сбора  метрик
 	// ReportInterval = "100000000n"     // период отправки метрик
-	PollInterval   = "2s"                 // период сбора  метрик
-	ReportInterval = "10s"                // период отправки метрик
+	PollInterval   = "1s"                 // период сбора  метрик
+	ReportInterval = "1s"                 // период отправки метрик
 	Key            = ""                   // ключ для формирования подписи
 	PublicKey      = "../keys/public.pem" // открытый ключ для шифрования
 	Config         = "./config.json"      // имя json файла с конфигурацией
 )
 
 type RequestSender interface {
-	Send(ctx context.Context, data interface{}, layout string) error
+	Send(ctx context.Context, data models.Metric, layout string) error
 }
 
 type RequestSend struct {
