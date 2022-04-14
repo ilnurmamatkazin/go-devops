@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+
+package proto;
+option go_package = "./;grpc";
+
+// Metrics Service
+// в обоих функциях возвращается пустой ответ, так как клиенту достаточно только
+// факта того, что метрика сохранена, если что-то пойдет на сервере не так, то
+// на клиенте будет обработана rpc ошибка с извлечением кода и описания
+service Metrics {
+  // SendMetric отправка атомарной метрики
+  rpc SendMetric(GRPCMetric) returns (google.protobuf.Empty) {};
+  // SendMetrics отправка слайса метрик
+  rpc SendMetrics(GRPCMetrics) returns (google.protobuf.Empty) {};
+}
+
+// Metric структура для отправки на сервер атомарной метрики
+message GRPCMetric {
+  string id = 1;
+  string metricType = 2;
+  float value = 3;
+  int64 delta = 4;
+}
+
+// Metrics структура для отправки на сервер слайса метрик
+message GRPCMetrics {
+  repeated GRPCMetric metrics = 1;
+}
+
