@@ -13,19 +13,13 @@ service Metrics {
   // SendMetric отправка атомарной метрики
   rpc SendMetric(GRPCMetric) returns (google.protobuf.Empty) {};
   // SendMetrics отправка слайса метрик
-  rpc SendMetrics(GRPCMetrics) returns (google.protobuf.Empty) {};
+  rpc SendMetrics(GRPCMetric) returns (google.protobuf.Empty) {};
 }
 
-// Metric структура для отправки на сервер атомарной метрики
+// Metric структура для отправки данных на сервер
 message GRPCMetric {
-  string id = 1;
-  string metricType = 2;
-  float value = 3;
-  int64 delta = 4;
+  // зашифрованная строка с данными
+  string metric = 1;
 }
 
-// Metrics структура для отправки на сервер слайса метрик
-message GRPCMetrics {
-  repeated GRPCMetric metrics = 1;
-}
 

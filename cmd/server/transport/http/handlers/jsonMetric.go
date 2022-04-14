@@ -44,14 +44,6 @@ func (h *Handler) ParseMetric(w http.ResponseWriter, r *http.Request) {
 		metric models.Metric
 		err    error
 	)
-
-	ipClient := r.Header.Get("X-Real-IP")
-
-	if !checkTrustedSubnet(h.Cfg.TrustedSubnet, ipClient) {
-		http.Error(w, "Доступ запрещен", http.StatusForbidden)
-		return
-	}
-
 	w.Header().Set("Content-Type", "application/json")
 
 	b, err := io.ReadAll(r.Body)
@@ -92,13 +84,6 @@ func (h *Handler) ParseMetrics(w http.ResponseWriter, r *http.Request) {
 		status  models.Status
 	)
 	w.Header().Set("Content-Type", "application/json")
-
-	ipClient := r.Header.Get("X-Real-IP")
-
-	if !checkTrustedSubnet(h.Cfg.TrustedSubnet, ipClient) {
-		http.Error(w, "Доступ запрещен", http.StatusForbidden)
-		return
-	}
 
 	b, err := io.ReadAll(r.Body)
 	if err != nil {

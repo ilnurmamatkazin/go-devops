@@ -7,11 +7,11 @@ import (
 	"os"
 	"testing"
 
-	"github.com/ilnurmamatkazin/go-devops/cmd/server/handlers"
 	"github.com/ilnurmamatkazin/go-devops/cmd/server/models"
 	"github.com/ilnurmamatkazin/go-devops/cmd/server/service"
 	"github.com/ilnurmamatkazin/go-devops/cmd/server/storage"
 	"github.com/ilnurmamatkazin/go-devops/cmd/server/storage/pg"
+	"github.com/ilnurmamatkazin/go-devops/cmd/server/transport/http/handlers"
 	"github.com/stretchr/testify/assert"
 )
 
