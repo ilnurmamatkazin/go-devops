@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"net"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -18,4 +19,20 @@ func getMetricFromRequest(r *http.Request) (metric models.Metric) {
 // checkMetricType функция проверки типа метрики.
 func checkMetricType(metricType string) bool {
 	return (metricType != "counter") && (metricType != "gauge")
+}
+
+func checkTrustedSubnet(server, client string) bool {
+	if server == "" {
+		return true
+	}
+
+	_, ipnetServer, _ := net.ParseCIDR(server)
+	ipClient := net.ParseIP(client)
+
+	if !ipnetServer.Contains(ipClient) {
+		return false
+	}
+
+	return true
+
 }

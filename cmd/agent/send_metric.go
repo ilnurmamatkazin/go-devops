@@ -7,7 +7,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"net"
 	"net/http"
+	"os"
 	"time"
 
 	cr "github.com/ilnurmamatkazin/go-devops/cmd/agent/crypto"
@@ -98,7 +100,14 @@ func (ms *RequestSend) Send(ctx context.Context, data interface{}, layout string
 		return
 	}
 
+	ipv4 := getIPAdress()
+	if ipv4 == nil {
+		log.Println("неудалось получить ip адрес хоста")
+		return
+	}
+
 	request.Header.Set("Content-Type", "application/json")
+	request.Header.Set("X-REAL-IP", ipv4.String())
 
 	// отправляем запрос и получаем ответ
 	response, ok := ms.client.Do(request)
@@ -111,4 +120,14 @@ func (ms *RequestSend) Send(ctx context.Context, data interface{}, layout string
 	}
 
 	return
+}
+
+func getIPAdress() net.IP {
+	host, _ := os.Hostname()
+	addrs, _ := net.LookupIP(host)
+	for _, addr := range addrs {
+		return addr.To4()
+	}
+
+	return nil
 }

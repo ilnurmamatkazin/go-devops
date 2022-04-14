@@ -95,6 +95,7 @@ func parseConfig() (cfg models.Config, err error) {
 		key := flag.String("k", models.Key, "a secret key")
 		database := flag.String("d", models.Database, "a database")
 		privateKey := flag.String("crypto-key", models.PrivateKey, "a crypto key")
+		trustedSubnet := flag.String("t", models.TrustedSubnet, "a CIDR")
 
 		flag.Parse()
 
@@ -105,6 +106,7 @@ func parseConfig() (cfg models.Config, err error) {
 		cfg.Key = *key
 		cfg.Database = *database
 		cfg.PrivateKey = *privateKey
+		cfg.TrustedSubnet = *trustedSubnet
 
 	}
 
