@@ -2,27 +2,46 @@ package grpc
 
 import (
 	"context"
-	"fmt"
 
-	g "github.com/ilnurmamatkazin/go-devops/cmd/server/grpc"
+	g "github.com/ilnurmamatkazin/go-devops/cmd/agent/grpc"
 
-	"google.golang.org/protobuf/types/known/emptypb"
+	"google.golang.org/grpc/metadata"
 )
 
-func (c *GRPCClient) SendMetrics(data []byte) error {
-	req := &g.GRPCMetrics{
-		// Metrics: string(data),
+func (c *GRPCClient) SendMetrics(ctx context.Context, metrics string) error {
+	md := metadata.Pairs("key", c.cfg.Key)
+	ctx = metadata.NewOutgoingContext(ctx, md)
+
+	req := &g.GRPCMetric{
+		Metric: metrics,
 	}
 
-	_, err := c.mc.SendMetrics(context.Background(), req)
+	_, err := c.mc.SendMetrics(ctx, req)
 	if err != nil {
-		return fmt.Errorf("Error on GetUsers rpc call: %v \n", err)
+		return err
 	}
 
 	return nil
 }
 
-func (c *GRPCClient) SendMetric(m g.MetricsClient) (*emptypb.Empty, error) {
+func (c *GRPCClient) SendMetric(ctx context.Context, metrics []string) error {
+	md := metadata.Pairs("key", c.cfg.Key)
+	ctx = metadata.NewOutgoingContext(ctx, md)
 
-	return nil, nil
+	stream, err := c.mc.SendMetric(ctx)
+	if err != nil {
+		return err
+	}
+
+	for _, metric := range metrics {
+		stream.Send(&g.GRPCMetric{
+			Metric: metric,
+		})
+	}
+
+	if _, err := stream.CloseAndRecv(); err != nil {
+		return err
+	}
+
+	return nil
 }

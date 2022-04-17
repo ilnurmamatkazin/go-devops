@@ -32,38 +32,51 @@ func (ms *MetricSend) sendMetrics(ctx context.Context, tickerReport *time.Ticker
 		case metricsGopsutil = <-chMetricsGopsutil:
 
 		case <-tickerReport.C:
-			for _, metric := range metrics {
-				if err = ms.sender.Send(ctx, metric, "http://%s/update"); err != nil {
-					return
+			if ms.cfg.NeedGRPC {
+
+			} else {
+				for _, metric := range metrics {
+					if err = ms.sender.Send(ctx, metric, "http://%s/update"); err != nil {
+						return
+					}
 				}
 			}
 
-			for _, metric := range metricsGopsutil {
-				if err = ms.sender.Send(ctx, metric, "http://%s/update"); err != nil {
-					return
+			if ms.cfg.NeedGRPC {
+
+			} else {
+				for _, metric := range metricsGopsutil {
+					if err = ms.sender.Send(ctx, metric, "http://%s/update"); err != nil {
+						return
+					}
 				}
 			}
 
-			lenMetrics := len(metrics)
-			// part1 := int(math.Round(float64(lenMetrics) / 2))
+			if len(metrics) > 0 {
+				if ms.cfg.NeedGRPC {
 
-			if lenMetrics > 0 {
-				if err = ms.sender.Send(ctx, metrics[:9], "http://%s/updates/"); err != nil {
-					return
-				}
+				} else {
+					if err = ms.sender.Send(ctx, metrics[:9], "http://%s/updates/"); err != nil {
+						return
+					}
 
-				if err = ms.sender.Send(ctx, metrics[10:19], "http://%s/updates/"); err != nil {
-					return
-				}
+					if err = ms.sender.Send(ctx, metrics[10:19], "http://%s/updates/"); err != nil {
+						return
+					}
 
-				if err = ms.sender.Send(ctx, metrics[20:29], "http://%s/updates/"); err != nil {
-					return
+					if err = ms.sender.Send(ctx, metrics[20:29], "http://%s/updates/"); err != nil {
+						return
+					}
 				}
 			}
 
 			if len(metricsGopsutil) > 0 {
-				if err = ms.sender.Send(ctx, metricsGopsutil, "http://%s/updates/"); err != nil {
-					return
+				if ms.cfg.NeedGRPC {
+
+				} else {
+					if err = ms.sender.Send(ctx, metricsGopsutil, "http://%s/updates/"); err != nil {
+						return
+					}
 				}
 			}
 
@@ -79,13 +92,7 @@ func (ms *RequestSend) Send(ctx context.Context, data interface{}, layout string
 
 	endpoint := fmt.Sprintf(layout, ms.cfg.Address)
 
-	b, err := json.Marshal(data)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-
-	cryptoText, err := cr.Encrypt(ms.cfg.PublicKey, b)
+	cryptoText, err := getCryptoText(ms.cfg.PublicKey, data)
 	if err != nil {
 		log.Println(err)
 		return
@@ -122,6 +129,34 @@ func (ms *RequestSend) Send(ctx context.Context, data interface{}, layout string
 	return
 }
 
+func (ms *RequestSend) GRPCSendMetric(ctx context.Context, metrics []models.Metric) error {
+	cryptoMetrics := make([]string, 0, len(metrics))
+
+	for _, metric := range metrics {
+		cryptoText, err := getCryptoText(ms.cfg.PublicKey, metric)
+		if err != nil {
+			return err
+		}
+
+		cryptoMetrics = append(cryptoMetrics, string(cryptoText))
+	}
+
+	ms.grpcClient.SendMetric(ctx, cryptoMetrics)
+
+	return nil
+}
+
+func (ms *RequestSend) GRPCSendMetrics(ctx context.Context, metrics []models.Metric) error {
+	cryptoText, err := getCryptoText(ms.cfg.PublicKey, metrics)
+	if err != nil {
+		return err
+	}
+
+	ms.grpcClient.SendMetrics(ctx, string(cryptoText))
+
+	return nil
+}
+
 func getIPAdress() net.IP {
 	host, _ := os.Hostname()
 	addrs, _ := net.LookupIP(host)
@@ -130,4 +165,13 @@ func getIPAdress() net.IP {
 	}
 
 	return nil
+}
+
+func getCryptoText(publicKey string, data interface{}) ([]byte, error) {
+	b, err := json.Marshal(data)
+	if err != nil {
+		return b, err
+	}
+
+	return cr.Encrypt(publicKey, b)
 }

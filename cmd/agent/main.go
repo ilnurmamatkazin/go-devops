@@ -16,6 +16,7 @@ import (
 
 	"github.com/caarlos0/env/v6"
 	"github.com/ilnurmamatkazin/go-devops/cmd/agent/models"
+	"github.com/ilnurmamatkazin/go-devops/cmd/agent/transport/grpc"
 	"github.com/ilnurmamatkazin/go-devops/internal/model"
 	"github.com/ilnurmamatkazin/go-devops/internal/utils"
 	"golang.org/x/sync/errgroup"
@@ -36,6 +37,8 @@ const (
 	Key            = ""                   // ключ для формирования подписи
 	PublicKey      = "../keys/public.pem" // открытый ключ для шифрования
 	Config         = "./config.json"      // имя json файла с конфигурацией
+	NeedGRPC       = true                 // флаг, указывающий протокол передачи данных
+	AddressGRPC    = "localhost:8000"     // адрес grpc сервера
 )
 
 type RequestSender interface {
@@ -43,8 +46,9 @@ type RequestSender interface {
 }
 
 type RequestSend struct {
-	cfg    models.Config // поле с конфигурационными данными
-	client *http.Client  // поле с созданным http клиентом, для отправки данных на сервер
+	cfg        models.Config    // поле с конфигурационными данными
+	client     *http.Client     // поле с созданным http клиентом, для отправки данных на сервер
+	grpcClient *grpc.GRPCClient // поле с созданным grpc клиентом, для отправки данных на сервер
 }
 
 // MetricSend вспомогательная структура, для проброса вспомогательных структур
@@ -66,11 +70,17 @@ func main() {
 
 	cfg := parseConfig()
 
+	grpcClient, err := grpc.NewGRPCClient(cfg)
+	if err != nil {
+		log.Println(err)
+	}
+
 	metricSend := MetricSend{
 		cfg: cfg,
 		sender: &RequestSend{
-			cfg:    cfg,
-			client: createClient(),
+			cfg:        cfg,
+			client:     createClient(),
+			grpcClient: grpcClient,
 		},
 	}
 
@@ -148,6 +158,8 @@ func main() {
 		log.Printf("received error: %v", err)
 
 	}
+
+	grpcClient.Close()
 
 }
 

@@ -11,4 +11,5 @@ type Config struct {
 	PrivateKey    string `json:"crypto_key" env:"CRYPTO_KEY"`
 	Config        string `env:"CONFIG"`
 	TrustedSubnet string `env:"TRUSTED_SUBNET"`
+	GRPCPort      string `json:"grpc_port" env:"GRPC_PORT"`
 }

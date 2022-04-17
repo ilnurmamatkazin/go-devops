@@ -23,10 +23,10 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type MetricsClient interface {
-	// SendMetric отправка атомарной метрики
-	SendMetric(ctx context.Context, in *GRPCMetric, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	// SendMetric отправка в потоке атомарной метрики
+	SendMetric(ctx context.Context, opts ...grpc.CallOption) (Metrics_SendMetricClient, error)
 	// SendMetrics отправка слайса метрик
-	SendMetrics(ctx context.Context, in *GRPCMetrics, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	SendMetrics(ctx context.Context, in *GRPCMetric, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type metricsClient struct {
@@ -37,16 +37,41 @@ func NewMetricsClient(cc grpc.ClientConnInterface) MetricsClient {
 	return &metricsClient{cc}
 }
 
-func (c *metricsClient) SendMetric(ctx context.Context, in *GRPCMetric, opts ...grpc.CallOption) (*emptypb.Empty, error) {
-	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, "/proto.Metrics/SendMetric", in, out, opts...)
+func (c *metricsClient) SendMetric(ctx context.Context, opts ...grpc.CallOption) (Metrics_SendMetricClient, error) {
+	stream, err := c.cc.NewStream(ctx, &Metrics_ServiceDesc.Streams[0], "/proto.Metrics/SendMetric", opts...)
 	if err != nil {
 		return nil, err
 	}
-	return out, nil
+	x := &metricsSendMetricClient{stream}
+	return x, nil
 }
 
-func (c *metricsClient) SendMetrics(ctx context.Context, in *GRPCMetrics, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+type Metrics_SendMetricClient interface {
+	Send(*GRPCMetric) error
+	CloseAndRecv() (*emptypb.Empty, error)
+	grpc.ClientStream
+}
+
+type metricsSendMetricClient struct {
+	grpc.ClientStream
+}
+
+func (x *metricsSendMetricClient) Send(m *GRPCMetric) error {
+	return x.ClientStream.SendMsg(m)
+}
+
+func (x *metricsSendMetricClient) CloseAndRecv() (*emptypb.Empty, error) {
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	m := new(emptypb.Empty)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+func (c *metricsClient) SendMetrics(ctx context.Context, in *GRPCMetric, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, "/proto.Metrics/SendMetrics", in, out, opts...)
 	if err != nil {
@@ -59,10 +84,10 @@ func (c *metricsClient) SendMetrics(ctx context.Context, in *GRPCMetrics, opts .
 // All implementations must embed UnimplementedMetricsServer
 // for forward compatibility
 type MetricsServer interface {
-	// SendMetric отправка атомарной метрики
-	SendMetric(context.Context, *GRPCMetric) (*emptypb.Empty, error)
+	// SendMetric отправка в потоке атомарной метрики
+	SendMetric(Metrics_SendMetricServer) error
 	// SendMetrics отправка слайса метрик
-	SendMetrics(context.Context, *GRPCMetrics) (*emptypb.Empty, error)
+	SendMetrics(context.Context, *GRPCMetric) (*emptypb.Empty, error)
 	mustEmbedUnimplementedMetricsServer()
 }
 
@@ -70,10 +95,10 @@ type MetricsServer interface {
 type UnimplementedMetricsServer struct {
 }
 
-func (UnimplementedMetricsServer) SendMetric(context.Context, *GRPCMetric) (*emptypb.Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method SendMetric not implemented")
+func (UnimplementedMetricsServer) SendMetric(Metrics_SendMetricServer) error {
+	return status.Errorf(codes.Unimplemented, "method SendMetric not implemented")
 }
-func (UnimplementedMetricsServer) SendMetrics(context.Context, *GRPCMetrics) (*emptypb.Empty, error) {
+func (UnimplementedMetricsServer) SendMetrics(context.Context, *GRPCMetric) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SendMetrics not implemented")
 }
 func (UnimplementedMetricsServer) mustEmbedUnimplementedMetricsServer() {}
@@ -89,26 +114,34 @@ func RegisterMetricsServer(s grpc.ServiceRegistrar, srv MetricsServer) {
 	s.RegisterService(&Metrics_ServiceDesc, srv)
 }
 
-func _Metrics_SendMetric_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GRPCMetric)
-	if err := dec(in); err != nil {
+func _Metrics_SendMetric_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(MetricsServer).SendMetric(&metricsSendMetricServer{stream})
+}
+
+type Metrics_SendMetricServer interface {
+	SendAndClose(*emptypb.Empty) error
+	Recv() (*GRPCMetric, error)
+	grpc.ServerStream
+}
+
+type metricsSendMetricServer struct {
+	grpc.ServerStream
+}
+
+func (x *metricsSendMetricServer) SendAndClose(m *emptypb.Empty) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func (x *metricsSendMetricServer) Recv() (*GRPCMetric, error) {
+	m := new(GRPCMetric)
+	if err := x.ServerStream.RecvMsg(m); err != nil {
 		return nil, err
 	}
-	if interceptor == nil {
-		return srv.(MetricsServer).SendMetric(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/proto.Metrics/SendMetric",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MetricsServer).SendMetric(ctx, req.(*GRPCMetric))
-	}
-	return interceptor(ctx, in, info, handler)
+	return m, nil
 }
 
 func _Metrics_SendMetrics_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GRPCMetrics)
+	in := new(GRPCMetric)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -120,7 +153,7 @@ func _Metrics_SendMetrics_Handler(srv interface{}, ctx context.Context, dec func
 		FullMethod: "/proto.Metrics/SendMetrics",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MetricsServer).SendMetrics(ctx, req.(*GRPCMetrics))
+		return srv.(MetricsServer).SendMetrics(ctx, req.(*GRPCMetric))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -133,14 +166,16 @@ var Metrics_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*MetricsServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "SendMetric",
-			Handler:    _Metrics_SendMetric_Handler,
-		},
-		{
 			MethodName: "SendMetrics",
 			Handler:    _Metrics_SendMetrics_Handler,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "SendMetric",
+			Handler:       _Metrics_SendMetric_Handler,
+			ClientStreams: true,
+		},
+	},
 	Metadata: "metrics.proto",
 }

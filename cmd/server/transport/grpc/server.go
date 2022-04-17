@@ -20,9 +20,9 @@ type server struct {
 func StartGRPC(cfg models.Config, service *service.Service) {
 	log.Println("Starting server..")
 
-	lis, err := net.Listen("tcp", ":3000")
+	lis, err := net.Listen("tcp", cfg.GRPCPort)
 	if err != nil {
-		log.Fatalf("Unable to listen on port 3000: %v", err)
+		log.Printf("Unable to listen on port %s: %v", cfg.GRPCPort, err)
 	}
 
 	s := grpc.NewServer()

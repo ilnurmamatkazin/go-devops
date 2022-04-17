@@ -6,5 +6,6 @@
   "database_dsn": "postgres://postgres:12345@localhost:5434/postgres?sslmode=disable",
   "hash_key": "",
   "crypto_key": "../keys/private.pem",
-  "trusted_subnet": "CIDR"
+  "trusted_subnet": "CIDR",
+  "grpc_port": ":8000"
 }

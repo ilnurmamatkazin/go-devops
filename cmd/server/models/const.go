@@ -13,4 +13,5 @@ const (
 	PrivateKey      = "../keys/private.pem"
 	JSONConfig      = "./cmd/server/config.json"
 	TrustedSubnet   = "192.168.1.1/24"
+	GRPCPort        = ":8000"
 )

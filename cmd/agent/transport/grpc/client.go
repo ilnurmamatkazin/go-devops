@@ -5,8 +5,8 @@ import (
 
 	"google.golang.org/grpc"
 
-	g "github.com/ilnurmamatkazin/go-devops/cmd/server/grpc"
-	"github.com/ilnurmamatkazin/go-devops/cmd/server/models"
+	g "github.com/ilnurmamatkazin/go-devops/cmd/agent/grpc"
+	"github.com/ilnurmamatkazin/go-devops/cmd/agent/models"
 )
 
 type GRPCClient struct {
@@ -23,14 +23,13 @@ func NewGRPCClient(cfg models.Config) (*GRPCClient, error) {
 	client := GRPCClient{cfg: cfg}
 	opts := grpc.WithInsecure()
 
-	client.con, err = grpc.Dial("localhost:3000", opts)
+	client.con, err = grpc.Dial(cfg.AddressGRPC, opts)
 	if err != nil {
 		return nil, fmt.Errorf("Error connecting: %v \n", err)
 	}
 
 	// defer con.Close()
 	client.mc = g.NewMetricsClient(client.con)
-	// getUsers(c)
 
 	return &client, nil
 }
