@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 
 	g "github.com/ilnurmamatkazin/go-devops/cmd/agent/grpc"
 	"github.com/ilnurmamatkazin/go-devops/cmd/agent/models"
@@ -23,14 +24,12 @@ func NewGRPCClient(cfg models.Config) (*GRPCClient, error) {
 	var err error
 
 	client := GRPCClient{cfg: cfg}
-	opts := grpc.WithInsecure()
 
-	client.con, err = grpc.Dial(cfg.AddressGRPC, opts)
+	client.con, err = grpc.Dial(cfg.AddressGRPC, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
-		return nil, fmt.Errorf("Error connecting: %v \n", err)
+		return nil, fmt.Errorf("error connecting: %v \n", err)
 	}
 
-	// defer con.Close()
 	client.mc = g.NewMetricsClient(client.con)
 
 	return &client, nil
