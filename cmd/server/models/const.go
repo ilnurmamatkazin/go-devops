@@ -10,7 +10,7 @@ const (
 	// Database      = "postgres://postgres:1qaz@WSX@localhost:5432/postgres?sslmode=disable"
 	Database        = "postgres://postgres:12345@localhost:5434/postgres?sslmode=disable"
 	DatabaseTimeout = 30
-	PrivateKey      = "../keys/private.pem"
+	PrivateKey      = "./cmd/keys/private.pem"
 	JSONConfig      = "./cmd/server/config.json"
 	TrustedSubnet   = "192.168.1.1/24"
 	GRPCPort        = ":8000"

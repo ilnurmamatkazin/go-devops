@@ -14,18 +14,21 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
+// SendMetric обработка потоковой передачи атомарных метрик.
+// Идея заключается в том, что бы получить все метрики в одном сеансе.
 func (s *server) SendMetric(stream g.Metrics_SendMetricServer) error {
 	var (
 		metric models.Metric
 	)
 
+	// получаем ключ из метаданных
 	md, ok := metadata.FromIncomingContext(stream.Context())
-	fmt.Println("!!!!!!!!!!!!! md, ok", md, ok, md.Get("key")[0])
 
-	if md.Get("protocol")[0] != s.Cfg.Key {
+	if !ok || md.Get("key")[0] != s.Cfg.Key {
 		return fmt.Errorf("для протокола grpc не совпадают ключи")
 	}
 
+	// в цикле читаем все атомарные метрики метрики
 	for {
 		req, err := stream.Recv()
 		if err != nil {
@@ -36,9 +39,7 @@ func (s *server) SendMetric(stream g.Metrics_SendMetricServer) error {
 			return fmt.Errorf("Ошибка чтения клиентского запроса: %v", err)
 		}
 
-		// Get the title, pages and year fields from the req
 		strMetric := req.GetMetric()
-
 		b := []byte(strMetric)
 
 		decodeBody, err := cr.Decrypt(s.Cfg.PrivateKey, b)
@@ -53,37 +54,38 @@ func (s *server) SendMetric(stream g.Metrics_SendMetricServer) error {
 		if err = s.Service.SetMetric(metric); err != nil {
 			return err
 		}
-
 	}
 }
 
+// SendMetrics стандартный механизм запрос-ответ.
+// В запросе приходит массив метрик, который целиком обрабатывается.
 func (s *server) SendMetrics(ctx context.Context, req *g.GRPCMetric) (*emptypb.Empty, error) {
 	var (
-		metric []models.Metric
-		err    error
+		metrics []models.Metric
+		err     error
 	)
 
+	// получаем ключ из метаданных
 	md, ok := metadata.FromIncomingContext(ctx)
-	fmt.Println("!!!!!!!!!!!!! md, ok", md, ok, md.Get("key")[0])
 
-	if md.Get("protocol")[0] != s.Cfg.Key {
-		return nil, fmt.Errorf("для протокола grpc не совпадают ключи")
+	if !ok || md.Get("key")[0] != s.Cfg.Key {
+		return new(emptypb.Empty), fmt.Errorf("для протокола grpc не совпадают ключи")
 	}
 
 	b := []byte(req.Metric)
 
 	decodeBody, err := cr.Decrypt(s.Cfg.PrivateKey, b)
 	if err != nil {
-		return nil, err
+		return new(emptypb.Empty), err
 	}
 
-	if err = json.Unmarshal(decodeBody, &metric); err != nil {
-		return nil, err
+	if err = json.Unmarshal(decodeBody, &metrics); err != nil {
+		return new(emptypb.Empty), err
 	}
 
-	if err = s.Service.SetArrayMetrics(metric); err != nil {
-		return nil, err
+	if err = s.Service.SetArrayMetrics(metrics); err != nil {
+		return new(emptypb.Empty), err
 	}
 
-	return nil, nil
+	return new(emptypb.Empty), nil
 }

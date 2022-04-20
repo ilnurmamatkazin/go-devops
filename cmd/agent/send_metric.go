@@ -33,9 +33,9 @@ func (ms *MetricSend) sendMetrics(ctx context.Context, tickerReport *time.Ticker
 
 		case <-tickerReport.C:
 			if ms.cfg.NeedGRPC {
-				if err = ms.sender.GRPCSendMetric(ctx, metrics); err != nil {
-					return
-				}
+				// if err = ms.sender.GRPCSendMetric(ctx, metrics); err != nil {
+				// 	return
+				// }
 			} else {
 				for _, metric := range metrics {
 					if err = ms.sender.Send(ctx, metric, "http://%s/update"); err != nil {
@@ -45,9 +45,9 @@ func (ms *MetricSend) sendMetrics(ctx context.Context, tickerReport *time.Ticker
 			}
 
 			if ms.cfg.NeedGRPC {
-				if err = ms.sender.GRPCSendMetric(ctx, metricsGopsutil); err != nil {
-					return
-				}
+				// if err = ms.sender.GRPCSendMetric(ctx, metricsGopsutil); err != nil {
+				// 	return
+				// }
 			} else {
 				for _, metric := range metricsGopsutil {
 					if err = ms.sender.Send(ctx, metric, "http://%s/update"); err != nil {
@@ -58,17 +58,17 @@ func (ms *MetricSend) sendMetrics(ctx context.Context, tickerReport *time.Ticker
 
 			if len(metrics) > 0 {
 				if ms.cfg.NeedGRPC {
-					if err = ms.sender.GRPCSendMetrics(ctx, metrics[:9]); err != nil {
-						return
-					}
+					// if err = ms.sender.GRPCSendMetrics(ctx, metrics[:9]); err != nil {
+					// 	return
+					// }
 
-					if err = ms.sender.GRPCSendMetrics(ctx, metrics[10:19]); err != nil {
-						return
-					}
+					// if err = ms.sender.GRPCSendMetrics(ctx, metrics[10:19]); err != nil {
+					// 	return
+					// }
 
-					if err = ms.sender.GRPCSendMetrics(ctx, metrics[20:29]); err != nil {
-						return
-					}
+					// if err = ms.sender.GRPCSendMetrics(ctx, metrics[20:29]); err != nil {
+					// 	return
+					// }
 				} else {
 					if err = ms.sender.Send(ctx, metrics[:9], "http://%s/updates/"); err != nil {
 						return
@@ -157,9 +157,7 @@ func (ms *RequestSend) GRPCSendMetric(ctx context.Context, metrics []models.Metr
 		cryptoMetrics = append(cryptoMetrics, string(cryptoText))
 	}
 
-	ms.grpcClient.SendMetric(ctx, cryptoMetrics)
-
-	return nil
+	return ms.grpcClient.SendMetric(ctx, cryptoMetrics)
 }
 
 func (ms *RequestSend) GRPCSendMetrics(ctx context.Context, metrics []models.Metric) error {
@@ -168,9 +166,7 @@ func (ms *RequestSend) GRPCSendMetrics(ctx context.Context, metrics []models.Met
 		return err
 	}
 
-	ms.grpcClient.SendMetrics(ctx, string(cryptoText))
-
-	return nil
+	return ms.grpcClient.SendMetrics(ctx, string(cryptoText))
 }
 
 func getIPAdress() net.IP {

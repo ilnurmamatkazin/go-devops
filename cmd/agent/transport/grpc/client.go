@@ -2,6 +2,7 @@ package grpc
 
 import (
 	"fmt"
+	"log"
 
 	"google.golang.org/grpc"
 
@@ -15,8 +16,9 @@ type GRPCClient struct {
 	mc  g.MetricsClient
 }
 
+// Создание стандартного gRPC клиента
 func NewGRPCClient(cfg models.Config) (*GRPCClient, error) {
-	fmt.Println("GRPC Client..")
+	log.Println("GRPC Client..")
 
 	var err error
 

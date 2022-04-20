@@ -77,6 +77,8 @@ func main() {
 		log.Println(err)
 	}
 
+	defer grpcClient.Close()
+
 	metricSend := MetricSend{
 		cfg: cfg,
 		sender: &RequestSend{
@@ -160,8 +162,6 @@ func main() {
 		log.Printf("received error: %v", err)
 
 	}
-
-	grpcClient.Close()
 
 }
 

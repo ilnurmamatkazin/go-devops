@@ -17,6 +17,7 @@ type server struct {
 	Service *service.Service
 }
 
+// StartGRPC создаем стандартный gRPC сервер
 func StartGRPC(cfg models.Config, service *service.Service) {
 	log.Println("Starting server..")
 
