@@ -26,7 +26,7 @@ func (c *GRPCClient) SendMetrics(ctx context.Context, metrics string) error {
 	return nil
 }
 
-// SendMetric потоковая отправка атомарных метрик в одном сеансе
+// SendMetric потоковая отправка атомарных метрик в одном сеансе.
 func (c *GRPCClient) SendMetric(ctx context.Context, metrics []string) error {
 	// передача значения ключа в метаданных
 	md := metadata.Pairs("key", c.cfg.Key)
