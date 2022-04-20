@@ -27,7 +27,7 @@ func NewGRPCClient(cfg models.Config) (*GRPCClient, error) {
 
 	client.con, err = grpc.Dial(cfg.AddressGRPC, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
-		return nil, fmt.Errorf("error connecting: %v \n", err)
+		return nil, fmt.Errorf("error connecting %v", err)
 	}
 
 	client.mc = g.NewMetricsClient(client.con)

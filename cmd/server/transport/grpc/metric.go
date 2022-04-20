@@ -36,7 +36,7 @@ func (s *server) SendMetric(stream g.Metrics_SendMetricServer) error {
 				return stream.SendAndClose(&emptypb.Empty{})
 			}
 
-			return fmt.Errorf("Ошибка чтения клиентского запроса: %v", err)
+			return fmt.Errorf("ошибка чтения клиентского запроса %v", err)
 		}
 
 		strMetric := req.GetMetric()
