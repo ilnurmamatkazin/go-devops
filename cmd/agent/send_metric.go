@@ -19,8 +19,8 @@ import (
 // sendMetrics функция, реализующая отправку метрик на сервер.
 func (ms *MetricSend) sendMetrics(ctx context.Context, tickerReport *time.Ticker, chMetrics chan []models.Metric, chMetricsGopsutil chan []models.Metric) (err error) {
 	var (
-		metrics         []models.Metric
-		metricsGopsutil []models.Metric
+		metrics []models.Metric
+		// metricsGopsutil []models.Metric
 	)
 
 	for {
@@ -29,7 +29,7 @@ func (ms *MetricSend) sendMetrics(ctx context.Context, tickerReport *time.Ticker
 			return ctx.Err()
 
 		case metrics = <-chMetrics:
-		case metricsGopsutil = <-chMetricsGopsutil:
+		// case metricsGopsutil = <-chMetricsGopsutil:
 
 		case <-tickerReport.C:
 			if ms.cfg.NeedGRPC {
@@ -95,18 +95,26 @@ func (ms *MetricSend) sendMetrics(ctx context.Context, tickerReport *time.Ticker
 					}
 				}
 			}
-
 		}
 
 	}
 }
 
 // Send функция, реализующая создание запроса для отправки метрик на сервер.
-func (ms *RequestSend) Send(ctx context.Context, data interface{}, layout string) (err error) {
+func (ms *RequestSend) Send(ctx context.Context, data models.Metric, layout string) (err error) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
-	endpoint := fmt.Sprintf(layout, ms.cfg.Address)
+	var endpoint string
+
+	if data.MetricType == "gauge" {
+		endpoint = fmt.Sprintf("%s/%s/%s/%f", fmt.Sprintf(layout, ms.cfg.Address), data.MetricType, data.ID, *data.Value)
+	} else {
+		endpoint = fmt.Sprintf("%s/%s/%s/%d", fmt.Sprintf(layout, ms.cfg.Address), data.MetricType, data.ID, *data.Delta)
+	}
+
+	fmt.Println(endpoint)
+	// endpoint := fmt.Sprintf(layout, ms.cfg.Address)
 
 	cryptoText, err := getCryptoText(ms.cfg.PublicKey, data)
 	if err != nil {
