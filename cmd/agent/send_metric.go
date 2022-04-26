@@ -19,8 +19,8 @@ import (
 // sendMetrics функция, реализующая отправку метрик на сервер.
 func (ms *MetricSend) sendMetrics(ctx context.Context, tickerReport *time.Ticker, chMetrics chan []models.Metric, chMetricsGopsutil chan []models.Metric) (err error) {
 	var (
-		metrics []models.Metric
-		// metricsGopsutil []models.Metric
+		metrics         []models.Metric
+		metricsGopsutil []models.Metric
 	)
 
 	for {
@@ -29,7 +29,7 @@ func (ms *MetricSend) sendMetrics(ctx context.Context, tickerReport *time.Ticker
 			return ctx.Err()
 
 		case metrics = <-chMetrics:
-		// case metricsGopsutil = <-chMetricsGopsutil:
+		case metricsGopsutil = <-chMetricsGopsutil:
 
 		case <-tickerReport.C:
 			if ms.cfg.NeedGRPC {
@@ -46,17 +46,17 @@ func (ms *MetricSend) sendMetrics(ctx context.Context, tickerReport *time.Ticker
 				}
 			}
 
-			// if ms.cfg.NeedGRPC {
-			// 	if err = ms.sender.GRPCSendMetric(ctx, metricsGopsutil); err != nil {
-			// 		return
-			// 	}
-			// } else {
-			// 	for _, metric := range metricsGopsutil {
-			// 		if err = ms.sender.Send(ctx, metric, "http://%s/update"); err != nil {
-			// 			return
-			// 		}
-			// 	}
-			// }
+			if ms.cfg.NeedGRPC {
+				if err = ms.sender.GRPCSendMetric(ctx, metricsGopsutil); err != nil {
+					return
+				}
+			} else {
+				for _, metric := range metricsGopsutil {
+					if err = ms.sender.Send(ctx, metric, "http://%s/update"); err != nil {
+						return
+					}
+				}
+			}
 
 			if len(metrics) > 0 {
 				if ms.cfg.NeedGRPC {
@@ -86,17 +86,17 @@ func (ms *MetricSend) sendMetrics(ctx context.Context, tickerReport *time.Ticker
 				}
 			}
 
-			// if len(metricsGopsutil) > 0 {
-			// 	if ms.cfg.NeedGRPC {
-			// 		if err = ms.sender.GRPCSendMetrics(ctx, metricsGopsutil); err != nil {
-			// 			return
-			// 		}
-			// 	} else {
-			// 		if err = ms.sender.Send(ctx, metricsGopsutil, "http://%s/updates/"); err != nil {
-			// 			return
-			// 		}
-			// 	}
-			// }
+			if len(metricsGopsutil) > 0 {
+				if ms.cfg.NeedGRPC {
+					if err = ms.sender.GRPCSendMetrics(ctx, metricsGopsutil); err != nil {
+						return
+					}
+				} else {
+					if err = ms.sender.Send(ctx, metricsGopsutil, "http://%s/updates/"); err != nil {
+						return
+					}
+				}
+			}
 		}
 
 	}
