@@ -5,5 +5,5 @@
   "hash_key": "",
   "crypto_key": "../keys/public.pem",
   "address_grpc": "localhost:8000",
-  "need_grpc": true
+  "need_grpc": false
 }
