@@ -40,9 +40,9 @@ func (ms *MetricSend) sendMetrics(ctx context.Context, tickerReport *time.Ticker
 				for _, metric := range metrics {
 					ms.sender.OldSendMetric(ctx, metric)
 
-					// if err = ms.sender.Send(ctx, metric, "http://%s/update"); err != nil {
-					// 	return
-					// }
+					if err = ms.sender.Send(ctx, metric, "http://%s/update"); err != nil {
+						return
+					}
 				}
 			}
 
