@@ -118,7 +118,7 @@ func (ms *RequestSend) Send(ctx context.Context, data interface{}, layout string
 	}
 
 	buf := new(bytes.Buffer)
-	err = binary.Write(buf, binary.LittleEndian, []byte(cryptoText))
+	err = binary.Write(buf, binary.LittleEndian, cryptoText)
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, buf)
 	if err != nil {
@@ -186,6 +186,10 @@ func getCryptoText(publicKey string, data interface{}) ([]byte, error) {
 	b, err := json.Marshal(data)
 	if err != nil {
 		return b, err
+	}
+
+	if publicKey == "" {
+		return b, nil
 	}
 
 	return cr.Encrypt(publicKey, b)

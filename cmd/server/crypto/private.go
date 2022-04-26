@@ -9,6 +9,10 @@ import (
 )
 
 func Decrypt(privateKeyPath string, data []byte) ([]byte, error) {
+	if privateKeyPath == "" {
+		return data, nil
+	}
+
 	privateKey, err := newPrivateKey(privateKeyPath)
 	if err != nil {
 		return nil, err

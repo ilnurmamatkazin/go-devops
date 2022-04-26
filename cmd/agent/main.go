@@ -32,13 +32,16 @@ const (
 	Address = "localhost:8080" // адрес принимающего сервера
 	// PollInterval   = "20000000n"      // период сбора  метрик
 	// ReportInterval = "100000000n"     // период отправки метрик
-	PollInterval   = "1s"                 // период сбора  метрик
-	ReportInterval = "1s"                 // период отправки метрик
-	Key            = ""                   // ключ для формирования подписи
-	PublicKey      = "../keys/public.pem" // открытый ключ для шифрования
-	Config         = "./config.json"      // имя json файла с конфигурацией
-	NeedGRPC       = true                 // флаг, указывающий протокол передачи данных
-	AddressGRPC    = "localhost:8000"     // адрес grpc сервера
+	PollInterval   = "1s" // период сбора  метрик
+	ReportInterval = "1s" // период отправки метрик
+	Key            = ""   // ключ для формирования подписи
+	// PublicKey      = "../keys/public.pem" // открытый ключ для шифрования
+	PublicKey = "" // открытый ключ для шифрования
+	// Config      = "./config.json"  // имя json файла с конфигурацией
+	Config   = "./config.json" // имя json файла с конфигурацией
+	NeedGRPC = false           // флаг, указывающий протокол передачи данных
+	// AddressGRPC = "localhost:8000" // адрес grpc сервера
+	AddressGRPC = "" // адрес grpc сервера
 )
 
 type RequestSender interface {
