@@ -1,217 +1,43 @@
-// Сервис сбора системных метрик и отправки их на сервер.
 package main
 
 import (
+	"bytes"
 	"context"
-	"encoding/json"
-	"flag"
-	"log"
+	"encoding/binary"
+	"errors"
+	"fmt"
+	"io"
+	"math/rand"
 	"net/http"
 	"os"
 	"os/signal"
+	"runtime"
+	"sync"
 	"syscall"
 	"time"
-
-	_ "net/http/pprof"
-
-	"github.com/caarlos0/env/v6"
-	"github.com/ilnurmamatkazin/go-devops/cmd/agent/models"
-	"github.com/ilnurmamatkazin/go-devops/cmd/agent/transport/grpc"
-	"github.com/ilnurmamatkazin/go-devops/internal/model"
-	"github.com/ilnurmamatkazin/go-devops/internal/utils"
-	"golang.org/x/sync/errgroup"
-)
-
-var (
-	buildVersion string = "N/A"
-	buildDate    string = "N/A"
-	buildCommit  string = "N/A"
 )
 
 const (
-	Address = "localhost:8080" // адрес принимающего сервера
-	// PollInterval   = "20000000n"      // период сбора  метрик
-	// ReportInterval = "100000000n"     // период отправки метрик
-	PollInterval   = "1s"                 // период сбора  метрик
-	ReportInterval = "1s"                 // период отправки метрик
-	Key            = ""                   // ключ для формирования подписи
-	PublicKey      = "../keys/public.pem" // открытый ключ для шифрования
-	Config         = "./config.json"      // имя json файла с конфигурацией
-	NeedGRPC       = true                 // флаг, указывающий протокол передачи данных
-	AddressGRPC    = "localhost:8000"     // адрес grpc сервера
+	url            = "127.0.0.1"
+	port           = 8080
+	pollInterval   = 2
+	reportInterval = 10
 )
 
-type RequestSender interface {
-	Send(ctx context.Context, data interface{}, layout string) error
-	GRPCSendMetric(ctx context.Context, metrics []models.Metric) error
-	GRPCSendMetrics(ctx context.Context, metrics []models.Metric) error
-}
-
-type RequestSend struct {
-	cfg        models.Config    // поле с конфигурационными данными
-	client     *http.Client     // поле с созданным http клиентом, для отправки данных на сервер
-	grpcClient *grpc.GRPCClient // поле с созданным grpc клиентом, для отправки данных на сервер
-}
-
-// MetricSend вспомогательная структура, для проброса вспомогательных структур
-type MetricSend struct {
-	cfg    models.Config // поле с конфигурационными данными
-	sender RequestSender
-}
-
 func main() {
-	build := model.NewBuild(buildVersion, buildDate, buildCommit)
-	build.Print()
-
-	go http.ListenAndServe(":6060", nil)
-
 	var (
-		g        *errgroup.Group
-		ctxGroup context.Context
+		mutex     sync.Mutex
+		rtm       runtime.MemStats
+		pollCount uint64
 	)
 
-	cfg := parseConfig()
-
-	grpcClient, err := grpc.NewGRPCClient(cfg)
-	if err != nil {
-		log.Println(err)
-	}
-
-	defer grpcClient.Close()
-
-	metricSend := MetricSend{
-		cfg: cfg,
-		sender: &RequestSend{
-			cfg:        cfg,
-			client:     createClient(),
-			grpcClient: grpcClient,
-		},
-	}
-
-	chMetrics := make(chan []models.Metric)
-	chMetricsGopsutil := make(chan []models.Metric)
-
-	ctx, done := context.WithCancel(context.Background())
-	g, ctxGroup = errgroup.WithContext(ctx)
-
-	tickerPoll, err := getTicker(metricSend.cfg.PollInterval)
-	if err != nil {
-		log.Fatalf("Ошибка создания тикера")
-		return
-	}
-
-	tickerReport, err := getTicker(metricSend.cfg.ReportInterval)
-	if err != nil {
-		log.Fatalf("Ошибка создания тикера")
-		return
-	}
-
-	g.Go(func() error {
-		signalChannel := make(chan os.Signal, 1)
-		signal.Notify(signalChannel, os.Interrupt, syscall.SIGTERM)
-
-		select {
-		case <-signalChannel:
-			done()
-			for i := range chMetrics {
-				log.Println(i)
-			}
-
-			for i := range chMetricsGopsutil {
-				log.Println(i)
-			}
-		case <-ctxGroup.Done():
-			tickerPoll.Stop()
-			tickerReport.Stop()
-
-			for i := range chMetrics {
-				log.Println(i)
-			}
-
-			for i := range chMetricsGopsutil {
-				log.Println(i)
-			}
-
-			return ctxGroup.Err()
-		}
-
-		return nil
-	})
-
-	g.Go(func() error {
-		err := metricSend.collectMetrics(ctxGroup, tickerPoll, chMetrics)
-		close(chMetrics)
-
-		return err
-	})
-
-	g.Go(func() error {
-		err := metricSend.collectMetricsGopsutil(ctxGroup, tickerPoll, chMetricsGopsutil)
-		close(chMetricsGopsutil)
-
-		return err
-	})
-
-	g.Go(func() error {
-		err := metricSend.sendMetrics(ctxGroup, tickerReport, chMetrics, chMetricsGopsutil)
-
-		return err
-	})
-
-	if err := g.Wait(); err != nil {
-		log.Printf("received error: %v", err)
-
-	}
-
-}
-
-// parseConfig парсит флаги командной строки и получает данные из env переменных.
-// ENV переменные имеют приоритет перед флагами.
-func parseConfig() (cfg models.Config) {
-	config := flag.String("c", Config, "a json config")
-
-	if *config != "" {
-		data, err := os.ReadFile(*config)
-
-		if err != nil {
-			log.Printf("os.ReadFile error: %s", err.Error())
-		} else {
-			err = json.Unmarshal(data, &cfg)
-			if err != nil {
-				log.Printf("json.Unmarshal error: %s", err.Error())
-			}
-		}
-	}
-
-	address := flag.String("a", Address, "a address")
-	reportInterval := flag.String("r", ReportInterval, "a report_interval")
-	pollInterval := flag.String("p", PollInterval, "a poll_interval")
-	key := flag.String("k", Key, "a secret key")
-	publicKey := flag.String("crypto-key", PublicKey, "a crypto key")
-
-	flag.Parse()
-
-	cfg.Address = *address
-	cfg.ReportInterval = *reportInterval
-	cfg.PollInterval = *pollInterval
-	cfg.Key = *key
-	cfg.PublicKey = *publicKey
-
-	if err := env.Parse(&cfg); err != nil {
-		log.Fatalf("env.Parse error: %s", err.Error())
-	}
-
-	return
-}
-
-// createClient конструируем HTTP-клиент.
-func createClient() *http.Client {
+	// конструируем HTTP-клиент
 	client := &http.Client{}
 	client.Timeout = time.Second * 2
 
 	client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
 		if len(via) >= 2 {
-			log.Fatalf("Количество редиректов %d больше 2", len(via))
+			return errors.New("остановлено после двух redirect")
 		}
 		return nil
 	}
@@ -220,28 +46,119 @@ func createClient() *http.Client {
 	transport.MaxIdleConns = 20
 	client.Transport = transport
 
-	return client
+	ctx := context.Background()
+	tickerPoll := time.NewTicker(pollInterval * time.Second)
+	tickerReport := time.NewTicker(reportInterval * time.Second)
+
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
+
+	done := make(chan bool, 1)
+
+	go func() {
+	loop:
+		for {
+			select {
+			case <-quit:
+				fmt.Println("Shutdown Server ...")
+				t := time.NewTicker(5 * time.Second)
+				<-t.C
+				done <- true
+
+				break loop
+
+			case <-tickerPoll.C:
+				mutex.Lock()
+
+				runtime.ReadMemStats(&rtm)
+				pollCount++
+
+				mutex.Unlock()
+			case <-tickerReport.C:
+				mutex.Lock()
+
+				sendMetric(ctx, client, "gauge", "Alloc", rtm.Alloc)
+				sendMetric(ctx, client, "gauge", "BuckHashSys", rtm.BuckHashSys)
+				sendMetric(ctx, client, "gauge", "Frees", rtm.Frees)
+				sendMetric(ctx, client, "gauge", "GCCPUFraction", rtm.GCCPUFraction)
+				sendMetric(ctx, client, "gauge", "GCSys", rtm.GCSys)
+				sendMetric(ctx, client, "gauge", "HeapAlloc", rtm.HeapAlloc)
+				sendMetric(ctx, client, "gauge", "HeapIdle", rtm.HeapIdle)
+				sendMetric(ctx, client, "gauge", "HeapInuse", rtm.HeapInuse)
+				sendMetric(ctx, client, "gauge", "HeapObjects", rtm.HeapObjects)
+				sendMetric(ctx, client, "gauge", "HeapReleased", rtm.HeapReleased)
+				sendMetric(ctx, client, "gauge", "HeapSys", rtm.HeapSys)
+				sendMetric(ctx, client, "gauge", "LastGC", rtm.LastGC)
+				sendMetric(ctx, client, "gauge", "Lookups", rtm.Lookups)
+				sendMetric(ctx, client, "gauge", "MCacheInuse", rtm.MCacheInuse)
+				sendMetric(ctx, client, "gauge", "MCacheSys", rtm.MCacheSys)
+				sendMetric(ctx, client, "gauge", "MSpanInuse", rtm.MSpanInuse)
+				sendMetric(ctx, client, "gauge", "MSpanSys", rtm.MSpanSys)
+				sendMetric(ctx, client, "gauge", "Mallocs", rtm.Mallocs)
+				sendMetric(ctx, client, "gauge", "NextGC", rtm.NextGC)
+				sendMetric(ctx, client, "gauge", "NumForcedGC", rtm.NumForcedGC)
+				sendMetric(ctx, client, "gauge", "NumGC", rtm.NumGC)
+				sendMetric(ctx, client, "gauge", "OtherSys", rtm.OtherSys)
+				sendMetric(ctx, client, "gauge", "PauseTotalNs", rtm.PauseTotalNs)
+				sendMetric(ctx, client, "gauge", "StackInuse", rtm.StackInuse)
+				sendMetric(ctx, client, "gauge", "StackSys", rtm.StackSys)
+				sendMetric(ctx, client, "gauge", "Sys", rtm.Sys)
+				sendMetric(ctx, client, "counter", "PollCount", pollCount)
+				sendMetric(ctx, client, "gauge", "RandomValue", rand.Float64())
+
+				mutex.Unlock()
+			}
+
+		}
+	}()
+
+	<-done
+
+	fmt.Println("Server exiting")
+
 }
 
-// createMetric внутренняя функция со созданию метрики
-func (ms *MetricSend) createMetric(metricType, id string, value float64, delta int64) (metric models.Metric) {
-	if metricType == "counter" {
-		metric = models.Metric{MetricType: metricType, ID: id, Delta: &delta}
-	} else {
-		metric = models.Metric{MetricType: metricType, ID: id, Value: &value}
+func sendMetric(ctxBase context.Context, client *http.Client, typeMetric, nameMetric string, value interface{}) (err error) {
+	fmt.Println("sendMetrics")
+
+	ctx, cancel := context.WithTimeout(ctxBase, 1*time.Second)
+	defer cancel()
+
+	endpoint := fmt.Sprintf("http://%s:%d/update/%s/%s/%v", url, port, typeMetric, nameMetric, value)
+
+	// конструируем запрос
+	// запрос методом POST должен, кроме заголовков, содержать тело
+	// тело должно быть источником потокового чтения io.Reader
+	// в большинстве случаев отлично подходит bytes.Buffer
+	buf := new(bytes.Buffer)
+	err = binary.Write(buf, binary.LittleEndian, value)
+
+	request, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, buf)
+	if err != nil {
+		fmt.Println(err)
+		return
 	}
 
-	metric.Hash = utils.SetEncodeHash(metric.ID, metric.MetricType, ms.cfg.Key, metric.Delta, metric.Value)
+	// в заголовках запроса сообщаем, что данные кодированы стандартной URL-схемой
+	request.Header.Set("Content-Type", "text/plain; charset=UTF-8")
+
+	// отправляем запрос и получаем ответ
+	response, err := client.Do(request)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	// печатаем код ответа
+	fmt.Println("Статус-код ", response.Status)
+	defer response.Body.Close()
+	// читаем поток из тела ответа
+	body, err := io.ReadAll(response.Body)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	// и печатаем его
+	fmt.Println(string(body))
 
 	return
-}
-
-// getTicker внутренняя функция по созданию тикера
-func getTicker(strInterval string) (*time.Ticker, error) {
-	interval, duration, err := utils.GetDataForTicker(strInterval)
-	if err != nil {
-		return nil, err
-	}
-
-	return time.NewTicker(time.Duration(interval) * duration), nil
 }
