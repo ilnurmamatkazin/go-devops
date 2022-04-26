@@ -12,11 +12,12 @@ import (
 	"syscall"
 
 	"github.com/caarlos0/env/v6"
-	"github.com/ilnurmamatkazin/go-devops/cmd/server/handlers"
 	"github.com/ilnurmamatkazin/go-devops/cmd/server/models"
 	"github.com/ilnurmamatkazin/go-devops/cmd/server/service"
 	"github.com/ilnurmamatkazin/go-devops/cmd/server/storage"
 	"github.com/ilnurmamatkazin/go-devops/cmd/server/storage/pg"
+	"github.com/ilnurmamatkazin/go-devops/cmd/server/transport/grpc"
+	"github.com/ilnurmamatkazin/go-devops/cmd/server/transport/http/handlers"
 	"github.com/ilnurmamatkazin/go-devops/internal/model"
 )
 
@@ -61,6 +62,7 @@ func main() {
 	router := hendler.NewRouter()
 
 	go http.ListenAndServe(":"+strings.Split(cfg.Address, ":")[1], router)
+	go grpc.StartGRPC(cfg, service)
 
 	<-quit
 
@@ -95,6 +97,7 @@ func parseConfig() (cfg models.Config, err error) {
 		key := flag.String("k", models.Key, "a secret key")
 		database := flag.String("d", models.Database, "a database")
 		privateKey := flag.String("crypto-key", models.PrivateKey, "a crypto key")
+		trustedSubnet := flag.String("t", models.TrustedSubnet, "a CIDR")
 
 		flag.Parse()
 
@@ -105,6 +108,7 @@ func parseConfig() (cfg models.Config, err error) {
 		cfg.Key = *key
 		cfg.Database = *database
 		cfg.PrivateKey = *privateKey
+		cfg.TrustedSubnet = *trustedSubnet
 
 	}
 

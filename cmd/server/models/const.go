@@ -7,9 +7,15 @@ const (
 	StoreFile     = "/tmp/devops-metrics-db.json"
 	Restore       = true
 	Key           = ""
-	// Database      = "postgres://postgres:1qaz@WSX@localhost:5432/postgres?sslmode=disable"
-	Database        = "postgres://postgres:12345@localhost:5434/postgres?sslmode=disable"
+	Database      = "postgres://postgres:1qaz@WSX@localhost:5432/postgres?sslmode=disable"
+	// Database        = "postgres://postgres:12345@localhost:5434/postgres?sslmode=disable"
 	DatabaseTimeout = 30
-	PrivateKey      = "../keys/private.pem"
-	JSONConfig      = "./cmd/server/config.json"
+	// PrivateKey      = "./cmd/keys/private.pem"
+	PrivateKey = ""
+	// JSONConfig    = "./cmd/server/config.json"
+	JSONConfig = ""
+	// TrustedSubnet = "192.168.1.1/24"
+	TrustedSubnet = ""
+	// GRPCPort      = ":8000"
+	GRPCPort = ""
 )

@@ -10,4 +10,6 @@ type Config struct {
 	Database      string `json:"database_dsn" env:"DATABASE_DSN"`
 	PrivateKey    string `json:"crypto_key" env:"CRYPTO_KEY"`
 	Config        string `env:"CONFIG"`
+	TrustedSubnet string `env:"TRUSTED_SUBNET"`
+	GRPCPort      string `json:"grpc_port" env:"GRPC_PORT"`
 }

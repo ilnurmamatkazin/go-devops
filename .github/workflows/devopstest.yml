@@ -103,7 +103,6 @@ jobs:
         run: |
           devopstest -test.v -test.run=^TestIteration1$ \
             -agent-binary-path=cmd/agent/agent
-            -database-dsn='postgres://postgres:postgres@postgres:5432/praktikum?sslmode=disable'
 
       - name: Build server binary
         run: |

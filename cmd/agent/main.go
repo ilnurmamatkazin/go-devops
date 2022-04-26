@@ -16,6 +16,7 @@ import (
 
 	"github.com/caarlos0/env/v6"
 	"github.com/ilnurmamatkazin/go-devops/cmd/agent/models"
+	"github.com/ilnurmamatkazin/go-devops/cmd/agent/transport/grpc"
 	"github.com/ilnurmamatkazin/go-devops/internal/model"
 	"github.com/ilnurmamatkazin/go-devops/internal/utils"
 	"golang.org/x/sync/errgroup"
@@ -31,20 +32,29 @@ const (
 	Address = "localhost:8080" // адрес принимающего сервера
 	// PollInterval   = "20000000n"      // период сбора  метрик
 	// ReportInterval = "100000000n"     // период отправки метрик
-	PollInterval   = "1s"                 // период сбора  метрик
-	ReportInterval = "1s"                 // период отправки метрик
-	Key            = ""                   // ключ для формирования подписи
-	PublicKey      = "../keys/public.pem" // открытый ключ для шифрования
-	Config         = "./config.json"      // имя json файла с конфигурацией
+	PollInterval   = "1s" // период сбора  метрик
+	ReportInterval = "1s" // период отправки метрик
+	Key            = ""   // ключ для формирования подписи
+	// PublicKey      = "../keys/public.pem" // открытый ключ для шифрования
+	PublicKey = "" // открытый ключ для шифрования
+	// Config      = "./config.json"  // имя json файла с конфигурацией
+	Config   = "./config.json" // имя json файла с конфигурацией
+	NeedGRPC = false           // флаг, указывающий протокол передачи данных
+	// AddressGRPC = "localhost:8000" // адрес grpc сервера
+	AddressGRPC = "" // адрес grpc сервера
 )
 
 type RequestSender interface {
-	Send(ctx context.Context, data models.Metric, layout string) error
+	Send(ctx context.Context, data interface{}, layout string) error
+	GRPCSendMetric(ctx context.Context, metrics []models.Metric) error
+	GRPCSendMetrics(ctx context.Context, metrics []models.Metric) error
+	OldSendMetric(ctx context.Context, metric models.Metric) error
 }
 
 type RequestSend struct {
-	cfg    models.Config // поле с конфигурационными данными
-	client *http.Client  // поле с созданным http клиентом, для отправки данных на сервер
+	cfg        models.Config    // поле с конфигурационными данными
+	client     *http.Client     // поле с созданным http клиентом, для отправки данных на сервер
+	grpcClient *grpc.GRPCClient // поле с созданным grpc клиентом, для отправки данных на сервер
 }
 
 // MetricSend вспомогательная структура, для проброса вспомогательных структур
@@ -66,11 +76,19 @@ func main() {
 
 	cfg := parseConfig()
 
+	grpcClient, err := grpc.NewGRPCClient(cfg)
+	if err != nil {
+		log.Println(err)
+	}
+
+	defer grpcClient.Close()
+
 	metricSend := MetricSend{
 		cfg: cfg,
 		sender: &RequestSend{
-			cfg:    cfg,
-			client: createClient(),
+			cfg:        cfg,
+			client:     createClient(),
+			grpcClient: grpcClient,
 		},
 	}
 
