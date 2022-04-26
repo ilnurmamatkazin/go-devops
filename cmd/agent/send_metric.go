@@ -58,33 +58,33 @@ func (ms *MetricSend) sendMetrics(ctx context.Context, tickerReport *time.Ticker
 			// 	}
 			// }
 
-			// if len(metrics) > 0 {
-			// 	if ms.cfg.NeedGRPC {
-			// 		if err = ms.sender.GRPCSendMetrics(ctx, metrics[:9]); err != nil {
-			// 			return
-			// 		}
+			if len(metrics) > 0 {
+				if ms.cfg.NeedGRPC {
+					if err = ms.sender.GRPCSendMetrics(ctx, metrics[:9]); err != nil {
+						return
+					}
 
-			// 		if err = ms.sender.GRPCSendMetrics(ctx, metrics[10:19]); err != nil {
-			// 			return
-			// 		}
+					if err = ms.sender.GRPCSendMetrics(ctx, metrics[10:19]); err != nil {
+						return
+					}
 
-			// 		if err = ms.sender.GRPCSendMetrics(ctx, metrics[20:29]); err != nil {
-			// 			return
-			// 		}
-			// 	} else {
-			// 		if err = ms.sender.Send(ctx, metrics[:9], "http://%s/updates/"); err != nil {
-			// 			return
-			// 		}
+					if err = ms.sender.GRPCSendMetrics(ctx, metrics[20:29]); err != nil {
+						return
+					}
+				} else {
+					if err = ms.sender.Send(ctx, metrics[:9], "http://%s/updates/"); err != nil {
+						return
+					}
 
-			// 		if err = ms.sender.Send(ctx, metrics[10:19], "http://%s/updates/"); err != nil {
-			// 			return
-			// 		}
+					if err = ms.sender.Send(ctx, metrics[10:19], "http://%s/updates/"); err != nil {
+						return
+					}
 
-			// 		if err = ms.sender.Send(ctx, metrics[20:29], "http://%s/updates/"); err != nil {
-			// 			return
-			// 		}
-			// 	}
-			// }
+					if err = ms.sender.Send(ctx, metrics[20:29], "http://%s/updates/"); err != nil {
+						return
+					}
+				}
+			}
 
 			// if len(metricsGopsutil) > 0 {
 			// 	if ms.cfg.NeedGRPC {
