@@ -45,7 +45,7 @@ type RequestSender interface {
 	Send(ctx context.Context, data interface{}, layout string) error
 	GRPCSendMetric(ctx context.Context, metrics []models.Metric) error
 	GRPCSendMetrics(ctx context.Context, metrics []models.Metric) error
-	SendMetric(ctx context.Context, metric models.Metric) error
+	OldSendMetric(ctx context.Context, metric models.Metric) error
 }
 
 type RequestSend struct {

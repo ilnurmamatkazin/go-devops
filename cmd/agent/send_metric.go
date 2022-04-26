@@ -6,7 +6,6 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
-	"io"
 	"log"
 	"net"
 	"net/http"
@@ -20,8 +19,8 @@ import (
 // sendMetrics функция, реализующая отправку метрик на сервер.
 func (ms *MetricSend) sendMetrics(ctx context.Context, tickerReport *time.Ticker, chMetrics chan []models.Metric, chMetricsGopsutil chan []models.Metric) (err error) {
 	var (
-		metrics []models.Metric
-		//metricsGopsutil []models.Metric
+		metrics         []models.Metric
+		metricsGopsutil []models.Metric
 	)
 
 	for {
@@ -30,7 +29,7 @@ func (ms *MetricSend) sendMetrics(ctx context.Context, tickerReport *time.Ticker
 			return ctx.Err()
 
 		case metrics = <-chMetrics:
-		//case metricsGopsutil = <-chMetricsGopsutil:
+		case metricsGopsutil = <-chMetricsGopsutil:
 
 		case <-tickerReport.C:
 			if ms.cfg.NeedGRPC {
@@ -39,64 +38,65 @@ func (ms *MetricSend) sendMetrics(ctx context.Context, tickerReport *time.Ticker
 				}
 			} else {
 				for _, metric := range metrics {
-					ms.sender.SendMetric(ctx, metric)
-					// if err = ms.sender.Send(ctx, metric, "http://%s/update"); err != nil {
-					// 	return
-					// }
+					ms.sender.OldSendMetric(ctx, metric)
+
+					if err = ms.sender.Send(ctx, metric, "http://%s/update"); err != nil {
+						return
+					}
 				}
 			}
 
-			// if ms.cfg.NeedGRPC {
-			// 	if err = ms.sender.GRPCSendMetric(ctx, metricsGopsutil); err != nil {
-			// 		return
-			// 	}
-			// } else {
-			// 	for _, metric := range metricsGopsutil {
-			// 		if err = ms.sender.Send(ctx, metric, "http://%s/update"); err != nil {
-			// 			return
-			// 		}
-			// 	}
-			// }
+			if ms.cfg.NeedGRPC {
+				if err = ms.sender.GRPCSendMetric(ctx, metricsGopsutil); err != nil {
+					return
+				}
+			} else {
+				for _, metric := range metricsGopsutil {
+					if err = ms.sender.Send(ctx, metric, "http://%s/update"); err != nil {
+						return
+					}
+				}
+			}
 
-			//if len(metrics) > 0 {
-			// if ms.cfg.NeedGRPC {
-			// 	if err = ms.sender.GRPCSendMetrics(ctx, metrics[:9]); err != nil {
-			// 		return
-			// 	}
+			if len(metrics) > 0 {
+				if ms.cfg.NeedGRPC {
+					if err = ms.sender.GRPCSendMetrics(ctx, metrics[:9]); err != nil {
+						return
+					}
 
-			// 	if err = ms.sender.GRPCSendMetrics(ctx, metrics[10:19]); err != nil {
-			// 		return
-			// 	}
+					if err = ms.sender.GRPCSendMetrics(ctx, metrics[10:19]); err != nil {
+						return
+					}
 
-			// 	if err = ms.sender.GRPCSendMetrics(ctx, metrics[20:29]); err != nil {
-			// 		return
-			// 	}
-			// } else {
-			// 	if err = ms.sender.Send(ctx, metrics[:9], "http://%s/updates/"); err != nil {
-			// 		return
-			// 	}
+					if err = ms.sender.GRPCSendMetrics(ctx, metrics[20:29]); err != nil {
+						return
+					}
+				} else {
+					if err = ms.sender.Send(ctx, metrics[:9], "http://%s/updates/"); err != nil {
+						return
+					}
 
-			// 	if err = ms.sender.Send(ctx, metrics[10:19], "http://%s/updates/"); err != nil {
-			// 		return
-			// 	}
+					if err = ms.sender.Send(ctx, metrics[10:19], "http://%s/updates/"); err != nil {
+						return
+					}
 
-			// 	if err = ms.sender.Send(ctx, metrics[20:29], "http://%s/updates/"); err != nil {
-			// 		return
-			// 	}
-			// }
-			//}
+					if err = ms.sender.Send(ctx, metrics[20:29], "http://%s/updates/"); err != nil {
+						return
+					}
+				}
+			}
 
-			//if len(metricsGopsutil) > 0 {
-			// if ms.cfg.NeedGRPC {
-			// 	if err = ms.sender.GRPCSendMetrics(ctx, metricsGopsutil); err != nil {
-			// 		return
-			// 	}
-			// } else {
-			// 	if err = ms.sender.Send(ctx, metricsGopsutil, "http://%s/updates/"); err != nil {
-			// 		return
-			// 	}
-			// }
-			//}
+			if len(metricsGopsutil) > 0 {
+				if ms.cfg.NeedGRPC {
+					if err = ms.sender.GRPCSendMetrics(ctx, metricsGopsutil); err != nil {
+						return
+					}
+				} else {
+					if err = ms.sender.Send(ctx, metricsGopsutil, "http://%s/updates/"); err != nil {
+						return
+					}
+				}
+			}
 		}
 
 	}
@@ -106,6 +106,8 @@ func (ms *MetricSend) sendMetrics(ctx context.Context, tickerReport *time.Ticker
 func (ms *RequestSend) Send(ctx context.Context, data interface{}, layout string) (err error) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
+
+	var strIP string
 
 	endpoint := fmt.Sprintf(layout, ms.cfg.Address)
 
@@ -126,12 +128,12 @@ func (ms *RequestSend) Send(ctx context.Context, data interface{}, layout string
 
 	ipv4 := getIPAdress()
 	if ipv4 == nil {
-		log.Println("неудалось получить ip адрес хоста")
-		return
+		strIP = "неудалось получить ip адрес хоста"
+		log.Println(strIP)
 	}
 
 	request.Header.Set("Content-Type", "application/json")
-	request.Header.Set("X-REAL-IP", ipv4.String())
+	request.Header.Set("X-REAL-IP", strIP)
 
 	// отправляем запрос и получаем ответ
 	response, ok := ms.client.Do(request)
@@ -189,9 +191,7 @@ func getCryptoText(publicKey string, data interface{}) ([]byte, error) {
 	return cr.Encrypt(publicKey, b)
 }
 
-func (ms *RequestSend) SendMetric(ctxBase context.Context, metric models.Metric) (err error) {
-	fmt.Println("sendMetrics")
-
+func (ms *RequestSend) OldSendMetric(ctxBase context.Context, metric models.Metric) (err error) {
 	ctx, cancel := context.WithTimeout(ctxBase, 1*time.Second)
 	defer cancel()
 
@@ -204,13 +204,6 @@ func (ms *RequestSend) SendMetric(ctxBase context.Context, metric models.Metric)
 
 	}
 
-	// конструируем запрос
-	// запрос методом POST должен, кроме заголовков, содержать тело
-	// тело должно быть источником потокового чтения io.Reader
-	// в большинстве случаев отлично подходит bytes.Buffer
-	// buf := new(bytes.Buffer)
-	// err = binary.Write(buf, binary.LittleEndian, metric)
-
 	request, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, nil)
 	if err != nil {
 		fmt.Println(err)
@@ -221,22 +214,14 @@ func (ms *RequestSend) SendMetric(ctxBase context.Context, metric models.Metric)
 	request.Header.Set("Content-Type", "text/plain; charset=UTF-8")
 
 	// отправляем запрос и получаем ответ
-	response, err := ms.client.Do(request)
-	if err != nil {
-		fmt.Println(err)
-		return
+	response, ok := ms.client.Do(request)
+	if ok != nil {
+		log.Println(ok)
+	} else {
+		// печатаем код ответа
+		// fmt.Println("Статус-код ", response.Status)
+		defer response.Body.Close()
 	}
-	// печатаем код ответа
-	fmt.Println("Статус-код ", response.Status)
-	defer response.Body.Close()
-	// читаем поток из тела ответа
-	body, err := io.ReadAll(response.Body)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	// и печатаем его
-	fmt.Println(string(body))
 
 	return
 }
